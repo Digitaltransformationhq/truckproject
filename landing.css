@@ -26,3 +26,6 @@
 /* Production hero artwork generated from the approved visual direction. */
 .hero-illustration.generated{left:1%;top:7%;width:98%;height:76%;object-fit:contain;object-position:center;filter:none}
 @media(max-width:700px){.hero-illustration.generated{left:-6%;top:7%;width:112%;height:68%;object-fit:contain}}
+
+/* Persistent landing navigation */
+.landing-nav{position:sticky;top:0;z-index:50;max-width:none;background:rgba(255,255,255,.92);border-bottom:1px solid rgba(20,20,20,.09);box-shadow:0 5px 18px rgba(20,20,20,.035);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
