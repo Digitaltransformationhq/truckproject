@@ -648,3 +648,14 @@ body { background: var(--paper); }
   .app-shell .support-popover { right: 12px; }
   .app-shell .header-popover:before { display: none; }
 }
+
+/* Clean custom select chevron with comfortable right inset. */
+.app-shell .toolbar select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0 44px 0 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23171717' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px 16px;
+}
