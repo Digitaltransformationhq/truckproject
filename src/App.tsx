@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent, ReactNode, RefObject } from 'react';
 import { Landing } from './components/Landing';
-import { RoleAuthModal, type AccountRole, type AuthMode, type RegistrationProfile } from './components/RoleAuthModal';
+import { ComplianceAuthModal, type AccountRole, type AuthMode, type RegistrationProfile } from './components/ComplianceAuthModal';
 import { Icon, type IconName } from './components/Icon';
 import { MatchRow } from './components/MatchRow';
 import { seedData } from './data/seed';
@@ -178,7 +178,7 @@ export default function App() {
 
   if (!authenticated) {
     const enterWorkspace = (profile?: RegistrationProfile) => { if (profile) { localStorage.setItem('returnrun-role', profile.role); localStorage.setItem('returnrun-profile', JSON.stringify(profile)); } localStorage.setItem('returnrun-auth', '1'); setAuthModal(null); setAuthenticated(true); };
-    return <><Landing onLogin={() => setAuthModal('login')} onSignup={() => setAuthModal('signup')} />{authModal && <RoleAuthModal mode={authModal} onClose={() => setAuthModal(null)} onModeChange={setAuthModal} onComplete={enterWorkspace}/>}</>;
+    return <><Landing onLogin={() => setAuthModal('login')} onSignup={() => setAuthModal('signup')} />{authModal && <ComplianceAuthModal mode={authModal} onClose={() => setAuthModal(null)} onModeChange={setAuthModal} onComplete={enterWorkspace}/>}</>;
   }
   const navigate = (next: ViewName) => { setView(next); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   const globalSearch = (value: string) => { if (value.length > 1) { setLoadQuery(value); navigate('loads'); } };
