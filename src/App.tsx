@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent, ReactNode, RefObject } from 'react';
 import { Login } from './components/Login';
+import { Landing } from './components/Landing';
 import { Icon, type IconName } from './components/Icon';
 import { MatchRow } from './components/MatchRow';
 import { seedData } from './data/seed';
@@ -151,6 +152,7 @@ function EntryModal({ type, onClose, onAddTruck, onAddLoad }: ModalProps) {
 export default function App() {
   const demo = new URLSearchParams(location.search).get('demo') === '1';
   const [authenticated, setAuthenticated] = useState(() => localStorage.getItem('returnrun-auth') === '1' || demo);
+  const [showLogin, setShowLogin] = useState(false);
   const [data, setData] = useLocalStorage<PortalData>(STORE_KEY, seedData);
   const [view, setView] = useState<ViewName>('dashboard');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -168,7 +170,12 @@ export default function App() {
   const notify = (message: string) => { setToast(message); window.clearTimeout(toastTimer.current); toastTimer.current = window.setTimeout(() => setToast(''), 2500); };
   useEffect(() => { const handler = (event: KeyboardEvent) => { if (event.key === 'Escape') setModal(null); if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); searchRef.current?.focus(); } }; document.addEventListener('keydown', handler); return () => document.removeEventListener('keydown', handler); }, []);
 
-  if (!authenticated) return <Login onLogin={() => { localStorage.setItem('returnrun-auth', '1'); setAuthenticated(true); }} />;
+  if (!authenticated) {
+    const enterWorkspace = () => { localStorage.setItem('returnrun-auth', '1'); setAuthenticated(true); };
+    return showLogin
+      ? <Login onLogin={enterWorkspace} />
+      : <Landing onLogin={() => setShowLogin(true)} onSignup={() => setShowLogin(true)} />;
+  }
   const navigate = (next: ViewName) => { setView(next); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   const globalSearch = (value: string) => { if (value.length > 1) { setLoadQuery(value); navigate('loads'); } };
   const addTruck = (truck: Truck) => { setData((current) => ({ ...current, trucks: [truck, ...current.trucks] })); setModal(null); notify('Truck added and matching refreshed'); };
