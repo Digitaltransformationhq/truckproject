@@ -456,3 +456,61 @@ body { background: var(--paper); }
   .app-shell .kyc-modal header h2 { font-size: 21px; }
   .app-shell .kyc-modal .upload-field { min-height: 84px; }
 }
+
+/* KYC step structure: centered progress and document-led final step. */
+.app-shell .kyc-progress {
+  height: 72px;
+  justify-content: center;
+  gap: 18px;
+  padding: 0 36px;
+}
+.app-shell .kyc-progress .kyc-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 150px;
+}
+.app-shell .kyc-progress .kyc-step > span {
+  width: 29px;
+  height: 29px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  border: 1px solid #cfd1cd;
+  border-radius: 50%;
+  background: #fff;
+  color: #8a8f92;
+  font-size: 11px;
+  font-weight: 800;
+}
+.app-shell .kyc-progress .kyc-step > b {
+  color: #777d80;
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.app-shell .kyc-progress .kyc-step.active > span {
+  border-color: #171717;
+  background: #ffa51f;
+  color: #171717;
+}
+.app-shell .kyc-progress .kyc-step.active > b { color: #171717; }
+.app-shell .kyc-progress > i {
+  width: clamp(64px, 10vw, 120px);
+  flex: none;
+}
+.app-shell .kyc-identity-uploads { margin-bottom: 22px; }
+.app-shell .kyc-section-divider {
+  margin-top: 3px !important;
+  padding-top: 20px;
+  border-top: 1px solid #e2e3df;
+}
+
+@media(max-width:700px) {
+  .app-shell .kyc-progress { height: 78px; gap: 9px; padding: 0 14px; }
+  .app-shell .kyc-progress .kyc-step { min-width: 0; flex-direction: column; gap: 5px; }
+  .app-shell .kyc-progress .kyc-step > span { width: 27px; height: 27px; }
+  .app-shell .kyc-progress .kyc-step > b { max-width: 112px; white-space: normal; text-align: center; font-size: 9px; line-height: 1.2; }
+  .app-shell .kyc-progress > i { width: clamp(28px, 8vw, 50px); margin-top: -16px; }
+}
