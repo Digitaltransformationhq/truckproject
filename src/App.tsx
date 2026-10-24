@@ -64,11 +64,48 @@ interface TopbarProps {
 }
 
 function Topbar({ onMenu, onSearch, searchRef }: TopbarProps) {
+  const [openPanel, setOpenPanel] = useState<'support' | 'notifications' | null>(null);
+  const [notificationRead, setNotificationRead] = useState([false, false, true]);
+  const unread = notificationRead.filter(read => !read).length;
+  const actionsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (actionsRef.current && !actionsRef.current.contains(event.target as Node)) setOpenPanel(null);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpenPanel(null);
+    };
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutsideClick);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, []);
+
   return (
     <header className="topbar">
       <button className="menu-btn" onClick={onMenu} aria-label="Open menu"><Icon name="menu" /></button>
       <div className="search-box"><span><Icon name="search" /></span><input ref={searchRef} onChange={(event) => onSearch(event.target.value)} placeholder="Search fleet, loads or locations" aria-label="Global search"/><kbd>Ctrl K</kbd></div>
-      <div className="top-actions"><button className="support-btn" title="Support"><Icon name="headset"/><span>Support</span></button><button className="icon-btn" title="Notifications"><Icon name="bell"/><i/></button></div>
+      <div className="top-actions" ref={actionsRef}>
+        <button className={`support-btn ${openPanel === 'support' ? 'active' : ''}`} title="Support" aria-expanded={openPanel === 'support'} aria-haspopup="dialog" onClick={() => setOpenPanel(current => current === 'support' ? null : 'support')}><Icon name="headset"/><span>Support</span></button>
+        <button className={`icon-btn ${openPanel === 'notifications' ? 'active' : ''}`} title="Notifications" aria-label={`Notifications, ${unread} unread`} aria-expanded={openPanel === 'notifications'} aria-haspopup="dialog" onClick={() => setOpenPanel(current => current === 'notifications' ? null : 'notifications')}><Icon name="bell"/>{unread > 0 && <i/>}</button>
+
+        {openPanel === 'support' && <aside className="header-popover support-popover" role="dialog" aria-label="Support options">
+          <div className="popover-head"><div><span>ReturnRun support</span><strong>How can we help?</strong></div><button onClick={() => setOpenPanel(null)} aria-label="Close support"><Icon name="close"/></button></div>
+          <a href="mailto:support@returnrun.in?subject=ReturnRun%20support%20request"><span className="popover-action-icon"><Icon name="inbox"/></span><span><strong>Email support</strong><small>Usually replies within 2 hours</small></span><Icon name="chevron"/></a>
+          <a href="tel:+919876543210"><span className="popover-action-icon"><Icon name="headset"/></span><span><strong>Call operations desk</strong><small>+91 98765 43210 · 9 AM–7 PM</small></span><Icon name="chevron"/></a>
+          <div className="popover-foot"><i/> Support team is online</div>
+        </aside>}
+
+        {openPanel === 'notifications' && <aside className="header-popover notifications-popover" role="dialog" aria-label="Notifications">
+          <div className="popover-head"><div><span>Updates</span><strong>Notifications</strong></div><button className="mark-read" onClick={() => setNotificationRead(current => current.map(() => true))} disabled={unread === 0}>{unread > 0 ? 'Mark all read' : 'All read'}</button></div>
+          <button className={notificationRead[0] ? 'notification-item' : 'notification-item unread'} onClick={() => setNotificationRead(current => current.map((read, index) => index === 0 ? true : read))}><span className="popover-action-icon"><Icon name="route"/></span><span><strong>5 return matches available</strong><small>High-potential loads were found for your fleet.</small><em>Just now</em></span></button>
+          <button className={notificationRead[1] ? 'notification-item' : 'notification-item unread'} onClick={() => setNotificationRead(current => current.map((read, index) => index === 1 ? true : read))}><span className="popover-action-icon"><Icon name="truck"/></span><span><strong>TN 01 AB 4521 is available</strong><small>Your fleet status was updated successfully.</small><em>35 minutes ago</em></span></button>
+          <button className="notification-item"><span className="popover-action-icon"><Icon name="overview"/></span><span><strong>Fleet sync completed</strong><small>All operational data is up to date.</small><em>Today, 09:15</em></span></button>
+        </aside>}
+      </div>
     </header>
   );
 }
