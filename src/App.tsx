@@ -32,21 +32,21 @@ function Sidebar({ view, counts, open, onClose, onNavigate, onLogout }: SidebarP
   ];
   return (
     <aside className={`sidebar ${open ? 'open' : ''}`}>
-      <div className="brand"><span className="brand-mark">R</span><span>ReturnRun</span></div>
+      <div className="brand"><span className="brand-mark">RR</span><span>ReturnRun<small>Fleet platform</small></span></div>
       <button className="mobile-close" onClick={onClose} aria-label="Close menu"><Icon name="close" /></button>
       <nav>
-        <p className="nav-label">Workspace</p>
+        <p className="nav-label">Fleet operations</p>
         {items.map((item) => (
           <button key={item.label} className={`nav-item ${item.view === view ? 'active' : ''}`} onClick={() => item.view && onNavigate(item.view)}>
             <span><Icon name={item.icon} /></span>{item.label}
             {item.count !== undefined && <b className={item.view === 'matches' ? 'accent-count' : ''}>{item.count}</b>}
           </button>
         ))}
-        <p className="nav-label">Manage</p>
+        <p className="nav-label">Business</p>
         <button className={`nav-item ${view === 'profile' ? 'active' : ''}`} onClick={() => onNavigate('profile')}><span><Icon name="building" /></span>Business profile</button>
         <button className="nav-item disabled" title="Planned for Phase 2" disabled><span><Icon name="inbox" /></span>Enquiries <em>Phase 2</em></button>
       </nav>
-      <div className="phase-card"><span>Current release</span><strong>Core operations</strong><div><i/></div><small><b/> Phase 1 ready for review</small></div>
+      <div className="phase-card"><span>Network status</span><strong>All systems operational</strong><div><i/></div><small><b/> Last synced just now</small></div>
       <div className="sidebar-user"><div className="avatar">RS</div><div><strong>Rajesh Sharma</strong><span>Transport owner</span></div><button onClick={onLogout} title="Sign out"><Icon name="logout" /></button></div>
     </aside>
   );
@@ -64,7 +64,7 @@ function Topbar({ onMenu, onPostLoad, onSearch, searchRef }: TopbarProps) {
     <header className="topbar">
       <button className="menu-btn" onClick={onMenu} aria-label="Open menu"><Icon name="menu" /></button>
       <div className="search-box"><span><Icon name="search" /></span><input ref={searchRef} onChange={(event) => onSearch(event.target.value)} placeholder="Search fleet, loads or locations" aria-label="Global search"/><kbd>Ctrl K</kbd></div>
-      <div className="top-actions"><button className="icon-btn" title="Notifications"><Icon name="bell"/><i/></button><button className="quick-btn" onClick={onPostLoad}>Post a load</button></div>
+      <div className="top-actions"><button className="support-btn" title="Support"><Icon name="headset"/><span>Support</span></button><button className="icon-btn" title="Notifications"><Icon name="bell"/><i/></button><button className="quick-btn" onClick={onPostLoad}>Post a load</button></div>
     </header>
   );
 }
@@ -88,13 +88,30 @@ function Dashboard({ data, matches, onOpenModal, onNavigate }: { data: PortalDat
   const corridors: Array<[string, number]> = [['Ahmedabad → Chennai', 82], ['Chennai → Ahmedabad', 71], ['Bengaluru → Chennai', 58]];
 
   return <section className="view active">
-    <PageHead section="Operations overview" title={`${greeting}, Rajesh`} description="Monitor fleet availability and return-load opportunities across your network." actions={<div className="head-actions"><button className="secondary-btn" onClick={() => onOpenModal('truck')}>Add truck</button><button className="primary-btn" onClick={() => onOpenModal('load')}>Post load</button></div>}/>
+    <PageHead section="Operations control room" title={`${greeting}, Rajesh`} description="Here is what is happening across your transport network today." actions={<div className="head-actions"><button className="secondary-btn" onClick={() => onOpenModal('truck')}>+ Add truck</button><button className="primary-btn" onClick={() => onOpenModal('load')}>Post a load</button></div>}/>
     <div className="metric-grid">
       <article className="metric"><div className="metric-icon"><Icon name="truck"/></div><div><span>Available trucks</span><strong>{available.length}</strong><small><b>1 added</b> since yesterday</small></div></article>
       <article className="metric"><div className="metric-icon"><Icon name="package"/></div><div><span>Open loads</span><strong>{openLoads.length}</strong><small>Across <b>{cities} cities</b></small></div></article>
       <article className="metric highlight"><div className="metric-icon"><Icon name="route"/></div><div><span>Return matches</span><strong>{matches.length}</strong><small><b>High potential</b> right now</small></div><span className="metric-arrow"><Icon name="arrow"/></span></article>
-      <article className="metric"><div className="metric-icon"><Icon name="trend"/></div><div><span>Potential saving</span><strong>₹{savings}K</strong><small>Estimated this week</small></div></article>
+      <article className="metric"><div className="metric-icon"><Icon name="wallet"/></div><div><span>Potential saving</span><strong>₹{savings}K</strong><small>Estimated this week</small></div></article>
     </div>
+    <section className="fleet-map-panel">
+      <div className="fleet-map-copy">
+        <div className="panel-title-row"><div><span className="section-kicker">Live fleet view</span><h2>Vehicles across your network</h2></div><button className="map-link" onClick={() => onNavigate('trucks')}>View all vehicles <Icon name="chevron"/></button></div>
+        <div className="vehicle-statuses">
+          <button className="vehicle-status active"><i className="running"/><span><strong>{available.length}</strong>Available</span></button>
+          <button className="vehicle-status"><i className="moving"/><span><strong>{data.trucks.filter(({ status }) => status === 'In transit').length}</strong>In transit</span></button>
+          <button className="vehicle-status"><i className="offline"/><span><strong>{data.trucks.filter(({ status }) => status === 'Unavailable').length}</strong>Unavailable</span></button>
+        </div>
+        <div className="vehicle-quick-list">{data.trucks.slice(0, 3).map((truck) => <button key={truck.id} onClick={() => onNavigate('trucks')}><span className="vehicle-icon"><Icon name="truck"/></span><span><strong>{truck.registration}</strong><small><Icon name="pin"/>{truck.location} · {truck.status}</small></span><Icon name="chevron"/></button>)}</div>
+      </div>
+      <div className="network-map" aria-label="Illustrated fleet route map">
+        <div className="map-grid"/><div className="india-shape">INDIA</div>
+        <svg className="route-lines" viewBox="0 0 620 280" preserveAspectRatio="none"><path d="M100 80 C220 30 310 210 510 175"/><path d="M155 220 C260 130 340 95 475 60"/><path d="M100 80 C210 150 340 165 510 175"/></svg>
+        <span className="map-pin pin-a"><Icon name="truck"/><b>2</b></span><span className="map-pin pin-b"><Icon name="truck"/></span><span className="map-pin pin-c"><Icon name="truck"/></span><span className="map-pin pin-d"><Icon name="truck"/></span>
+        <div className="map-legend"><span><i/> Available</span><span><i/> In transit</span></div>
+      </div>
+    </section>
     <div className="dashboard-grid">
       <section className="panel matches-panel"><div className="panel-head"><div><h2>Best return-load matches</h2><p>Prioritised by route fit, date and vehicle capacity</p></div><button className="text-link" onClick={() => onNavigate('matches')}>View all →</button></div><div className="match-list">{matches.slice(0, 3).map((match) => <MatchRow key={`${match.truck.id}-${match.load.id}`} match={match} onOpen={() => onNavigate('matches')}/>)}</div></section>
       <aside className="panel activity-panel"><div className="panel-head"><div><h2>Live activity</h2><p>Latest updates</p></div><span className="live-dot">Live</span></div><div className="timeline">{activities.map(([icon, label, time]) => <div className="timeline-item" key={label}><div className="timeline-icon"><Icon name={icon}/></div><div><strong>{label}</strong><span>{time}</span></div></div>)}</div></aside>

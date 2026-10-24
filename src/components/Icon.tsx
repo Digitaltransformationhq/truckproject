@@ -2,7 +2,8 @@ import type { ReactNode, SVGProps } from 'react';
 
 export type IconName =
   | 'overview' | 'truck' | 'package' | 'route' | 'building' | 'inbox'
-  | 'search' | 'bell' | 'logout' | 'arrow' | 'trend' | 'menu' | 'close';
+  | 'search' | 'bell' | 'logout' | 'arrow' | 'trend' | 'menu' | 'close'
+  | 'pin' | 'wallet' | 'headset' | 'chevron';
 
 const paths: Record<IconName, ReactNode> = {
   overview: <><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></>,
@@ -18,6 +19,10 @@ const paths: Record<IconName, ReactNode> = {
   trend: <><path d="m4 16 5-5 4 4 7-8M15 7h5v5"/></>,
   menu: <><path d="M4 7h16M4 12h16M4 17h16"/></>,
   close: <><path d="m6 6 12 12M18 6 6 18"/></>,
+  pin: <><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></>,
+  wallet: <><path d="M3 6h15a2 2 0 0 1 2 2v10H5a2 2 0 0 1-2-2V6Z"/><path d="M3 7V5a2 2 0 0 1 2-2h12M15 11h5v4h-5a2 2 0 1 1 0-4Z"/></>,
+  headset: <><path d="M4 14v-3a8 8 0 0 1 16 0v3M4 14h3v6H5a1 1 0 0 1-1-1v-5ZM20 14h-3v6h2a1 1 0 0 0 1-1v-5ZM17 20c0 1-2 1-3 1"/></>,
+  chevron: <><path d="m9 18 6-6-6-6"/></>,
 };
 
 interface IconProps extends SVGProps<SVGSVGElement> { name: IconName; }
