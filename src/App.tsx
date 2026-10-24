@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent, ReactNode, RefObject } from 'react';
 import { Landing } from './components/Landing';
-import { ComplianceAuthModal, type AccountRole, type AuthMode, type RegistrationProfile } from './components/ComplianceAuthModal';
+import { RoleAuthModal, type AccountRole, type AuthMode, type RegistrationProfile } from './components/RoleAuthModal';
+import { KycModal } from './components/KycModal';
 import { Icon, type IconName } from './components/Icon';
 import { MatchRow } from './components/MatchRow';
 import { seedData } from './data/seed';
@@ -79,6 +80,8 @@ function PageHead({ section, title, description, actions }: PageHeadProps) {
 
 function Dashboard({ data, matches, role, onOpenModal, onNavigate }: { data: PortalData; matches: ReturnMatch[]; role?: AccountRole; onOpenModal: (type: 'truck' | 'load') => void; onNavigate: (view: ViewName) => void }) {
   const activeRole: AccountRole = role ?? (localStorage.getItem('returnrun-role') === 'load_owner' ? 'load_owner' : 'truck_owner');
+  const [kycOpen, setKycOpen] = useState(false);
+  const [kycComplete, setKycComplete] = useState(() => localStorage.getItem('returnrun-kyc') === 'complete');
   const openLoads = data.loads.filter(({ status }) => status === 'Open');
   const available = data.trucks.filter(({ status }) => status === 'Available');
   const cities = new Set(openLoads.flatMap(({ origin, destination }) => [origin, destination])).size;
@@ -93,6 +96,7 @@ function Dashboard({ data, matches, role, onOpenModal, onNavigate }: { data: Por
 
   return <section className="view active">
     <PageHead section="Operations control room" title={`${greeting}, Rajesh`} description={activeRole === 'load_owner' ? 'Manage your open loads and find the right trucks across the network.' : 'Monitor your fleet and find profitable return-load opportunities.'} actions={<div className="head-actions">{activeRole === 'truck_owner' ? <button className="secondary-btn" onClick={() => onOpenModal('truck')}>+ Add truck</button> : <button className="secondary-btn" onClick={() => onNavigate('trucks')}>Find trucks</button>}<button className="primary-btn" onClick={() => onOpenModal('load')}>Post a load</button></div>}/>
+    {!kycComplete && <div className="kyc-banner"><span className="kyc-banner-icon"><Icon name="building"/></span><div><strong>Complete your business KYC</strong><p>Verify identity and company details{activeRole === 'truck_owner' ? ', then add vehicle compliance records.' : ' to activate full platform access.'}</p></div><span className="kyc-banner-state">Pending</span><button onClick={() => setKycOpen(true)}>Complete KYC <Icon name="arrow"/></button></div>}
     <div className="metric-grid">
       <article className="metric"><div className="metric-icon"><Icon name="truck"/></div><div><span>Available trucks</span><strong>{available.length}</strong><small><b>1 added</b> since yesterday</small></div></article>
       <article className="metric"><div className="metric-icon"><Icon name="package"/></div><div><span>Open loads</span><strong>{openLoads.length}</strong><small>Across <b>{cities} cities</b></small></div></article>
@@ -121,6 +125,7 @@ function Dashboard({ data, matches, role, onOpenModal, onNavigate }: { data: Por
       <aside className="panel activity-panel"><div className="panel-head"><div><h2>Live activity</h2><p>Latest updates</p></div><span className="live-dot">Live</span></div><div className="timeline">{activities.map(([icon, label, time]) => <div className="timeline-item" key={label}><div className="timeline-icon"><Icon name={icon}/></div><div><strong>{label}</strong><span>{time}</span></div></div>)}</div></aside>
     </div>
     <section className="panel route-panel"><div className="panel-head"><div><h2>Active route corridors</h2><p>Where supply and demand are strongest</p></div><button className="filter-chip">Last 7 days⌄</button></div><div className="corridor-list">{corridors.map(([route, demand]) => <div className="corridor" key={route}><div><strong>{route}</strong><span>{Math.round(demand / 8)} loads</span></div><span>{demand}% demand</span><div className="corridor-bar"><i style={{ width: `${demand}%` }}/></div></div>)}</div></section>
+    {kycOpen && <KycModal role={activeRole} onClose={() => setKycOpen(false)} onComplete={() => { setKycComplete(true); setKycOpen(false); }}/>} 
   </section>;
 }
 
@@ -177,8 +182,8 @@ export default function App() {
   useEffect(() => { const handler = (event: KeyboardEvent) => { if (event.key === 'Escape') setModal(null); if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); searchRef.current?.focus(); } }; document.addEventListener('keydown', handler); return () => document.removeEventListener('keydown', handler); }, []);
 
   if (!authenticated) {
-    const enterWorkspace = (profile?: RegistrationProfile) => { if (profile) { localStorage.setItem('returnrun-role', profile.role); localStorage.setItem('returnrun-profile', JSON.stringify(profile)); } localStorage.setItem('returnrun-auth', '1'); setAuthModal(null); setAuthenticated(true); };
-    return <><Landing onLogin={() => setAuthModal('login')} onSignup={() => setAuthModal('signup')} />{authModal && <ComplianceAuthModal mode={authModal} onClose={() => setAuthModal(null)} onModeChange={setAuthModal} onComplete={enterWorkspace}/>}</>;
+    const enterWorkspace = (profile?: RegistrationProfile) => { if (profile) { localStorage.setItem('returnrun-role', profile.role); localStorage.setItem('returnrun-profile', JSON.stringify(profile)); localStorage.setItem('returnrun-kyc', 'pending'); } localStorage.setItem('returnrun-auth', '1'); setAuthModal(null); setAuthenticated(true); };
+    return <><Landing onLogin={() => setAuthModal('login')} onSignup={() => setAuthModal('signup')} />{authModal && <RoleAuthModal mode={authModal} onClose={() => setAuthModal(null)} onModeChange={setAuthModal} onComplete={enterWorkspace}/>}</>;
   }
   const navigate = (next: ViewName) => { setView(next); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   const globalSearch = (value: string) => { if (value.length > 1) { setLoadQuery(value); navigate('loads'); } };
