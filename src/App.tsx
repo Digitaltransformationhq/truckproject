@@ -55,17 +55,17 @@ function Sidebar({ view, counts, open, onClose, onNavigate, onLogout }: SidebarP
 
 interface TopbarProps {
   onMenu: () => void;
-  onPostLoad: () => void;
+  onPostLoad?: () => void;
   onSearch: (value: string) => void;
   searchRef: RefObject<HTMLInputElement | null>;
 }
 
-function Topbar({ onMenu, onPostLoad, onSearch, searchRef }: TopbarProps) {
+function Topbar({ onMenu, onSearch, searchRef }: TopbarProps) {
   return (
     <header className="topbar">
       <button className="menu-btn" onClick={onMenu} aria-label="Open menu"><Icon name="menu" /></button>
       <div className="search-box"><span><Icon name="search" /></span><input ref={searchRef} onChange={(event) => onSearch(event.target.value)} placeholder="Search fleet, loads or locations" aria-label="Global search"/><kbd>Ctrl K</kbd></div>
-      <div className="top-actions"><button className="support-btn" title="Support"><Icon name="headset"/><span>Support</span></button><button className="icon-btn" title="Notifications"><Icon name="bell"/><i/></button><button className="quick-btn" onClick={onPostLoad}>Post a load</button></div>
+      <div className="top-actions"><button className="support-btn" title="Support"><Icon name="headset"/><span>Support</span></button><button className="icon-btn" title="Notifications"><Icon name="bell"/><i/></button></div>
     </header>
   );
 }
