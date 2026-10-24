@@ -424,3 +424,35 @@ body { background: var(--paper); }
   .panel-title-row { align-items: flex-end; }
   .panel-title-row h2 { font-size: 14px; }
 }
+
+/* KYC modal: readable hierarchy aligned with the professional dashboard. */
+.app-shell .kyc-modal { width: min(900px, 100%); }
+.app-shell .kyc-modal header small { font-size: 10px; }
+.app-shell .kyc-modal header h2 { font-size: 24px; line-height: 1.2; }
+.app-shell .kyc-progress > span { font-size: 10px; }
+.app-shell .kyc-progress > b { font-size: 12px; }
+.app-shell .kyc-security strong { font-size: 12px; }
+.app-shell .kyc-security span { font-size: 10px; line-height: 1.45; }
+.app-shell .kyc-body .auth-form h3 { font-size: 17px; line-height: 1.3; }
+.app-shell .kyc-modal .auth-form > label,
+.app-shell .kyc-modal .auth-field-row label { font-size: 12px; }
+.app-shell .kyc-modal .auth-form input,
+.app-shell .kyc-modal .auth-form select { height: 46px; font-size: 13px; }
+.app-shell .kyc-modal .upload-field { min-height: 92px; }
+.app-shell .kyc-modal .upload-field strong { font-size: 11px; }
+.app-shell .kyc-modal .upload-field small { font-size: 9px; line-height: 1.4; }
+.app-shell .kyc-modal .upload-field > b { font-size: 10px; }
+.app-shell .kyc-modal .vehicle-compliance-head strong { font-size: 13px; }
+.app-shell .kyc-modal .vehicle-compliance-head button { font-size: 10px; }
+.app-shell .kyc-modal .kyc-helper { font-size: 11px; }
+.app-shell .kyc-modal .auth-check { font-size: 11px !important; }
+.app-shell .kyc-modal .auth-submit,
+.app-shell .kyc-modal .auth-back,
+.app-shell .kyc-modal .add-vehicle-button { font-size: 12px; }
+.app-shell .kyc-modal .kyc-declaration strong { font-size: 14px; }
+.app-shell .kyc-modal .kyc-declaration p { font-size: 11px; line-height: 1.45; }
+
+@media(max-width:700px) {
+  .app-shell .kyc-modal header h2 { font-size: 21px; }
+  .app-shell .kyc-modal .upload-field { min-height: 84px; }
+}
