@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent, ReactNode, RefObject } from 'react';
-import { Login } from './components/Login';
 import { Landing } from './components/Landing';
+import { AuthModal, type AuthMode } from './components/AuthModal';
 import { Icon, type IconName } from './components/Icon';
 import { MatchRow } from './components/MatchRow';
 import { seedData } from './data/seed';
@@ -152,7 +152,10 @@ function EntryModal({ type, onClose, onAddTruck, onAddLoad }: ModalProps) {
 export default function App() {
   const demo = new URLSearchParams(location.search).get('demo') === '1';
   const [authenticated, setAuthenticated] = useState(() => localStorage.getItem('returnrun-auth') === '1' || demo);
-  const [showLogin, setShowLogin] = useState(false);
+  const [authModal, setAuthModal] = useState<AuthMode | null>(() => {
+    const requested = new URLSearchParams(location.search).get('auth');
+    return requested === 'login' || requested === 'signup' ? requested : null;
+  });
   const [data, setData] = useLocalStorage<PortalData>(STORE_KEY, seedData);
   const [view, setView] = useState<ViewName>('dashboard');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -171,10 +174,8 @@ export default function App() {
   useEffect(() => { const handler = (event: KeyboardEvent) => { if (event.key === 'Escape') setModal(null); if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); searchRef.current?.focus(); } }; document.addEventListener('keydown', handler); return () => document.removeEventListener('keydown', handler); }, []);
 
   if (!authenticated) {
-    const enterWorkspace = () => { localStorage.setItem('returnrun-auth', '1'); setAuthenticated(true); };
-    return showLogin
-      ? <Login onLogin={enterWorkspace} />
-      : <Landing onLogin={() => setShowLogin(true)} onSignup={() => setShowLogin(true)} />;
+    const enterWorkspace = () => { localStorage.setItem('returnrun-auth', '1'); setAuthModal(null); setAuthenticated(true); };
+    return <><Landing onLogin={() => setAuthModal('login')} onSignup={() => setAuthModal('signup')} />{authModal && <AuthModal mode={authModal} onClose={() => setAuthModal(null)} onModeChange={setAuthModal} onComplete={enterWorkspace}/>}</>;
   }
   const navigate = (next: ViewName) => { setView(next); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   const globalSearch = (value: string) => { if (value.length > 1) { setLoadQuery(value); navigate('loads'); } };
