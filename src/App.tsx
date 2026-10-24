@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent, ReactNode, RefObject } from 'react';
 import { Landing } from './components/Landing';
-import { AuthModal, type AuthMode } from './components/AuthModal';
+import { RoleAuthModal, type AccountRole, type AuthMode, type RegistrationProfile } from './components/RoleAuthModal';
 import { Icon, type IconName } from './components/Icon';
 import { MatchRow } from './components/MatchRow';
 import { seedData } from './data/seed';
@@ -17,6 +17,7 @@ const greeting = new Date().getHours() < 12 ? 'Good morning' : new Date().getHou
 
 interface SidebarProps {
   view: ViewName;
+  role?: AccountRole;
   counts: { trucks: number; loads: number; matches: number };
   open: boolean;
   onClose: () => void;
@@ -24,12 +25,13 @@ interface SidebarProps {
   onLogout: () => void;
 }
 
-function Sidebar({ view, counts, open, onClose, onNavigate, onLogout }: SidebarProps) {
+function Sidebar({ view, role, counts, open, onClose, onNavigate, onLogout }: SidebarProps) {
+  const activeRole: AccountRole = role ?? (localStorage.getItem('returnrun-role') === 'load_owner' ? 'load_owner' : 'truck_owner');
   const items: Array<{ view?: ViewName; label: string; icon: IconName; count?: number; disabled?: boolean }> = [
     { view: 'dashboard', label: 'Overview', icon: 'overview' },
-    { view: 'trucks', label: 'My trucks', icon: 'truck', count: counts.trucks },
-    { view: 'loads', label: 'Loads', icon: 'package', count: counts.loads },
-    { view: 'matches', label: 'Return matches', icon: 'route', count: counts.matches },
+    { view: 'trucks', label: activeRole === 'load_owner' ? 'Find trucks' : 'My trucks', icon: 'truck', count: counts.trucks },
+    { view: 'loads', label: activeRole === 'load_owner' ? 'My loads' : 'Available loads', icon: 'package', count: counts.loads },
+    { view: 'matches', label: activeRole === 'load_owner' ? 'Truck matches' : 'Return matches', icon: 'route', count: counts.matches },
   ];
   return (
     <aside className={`sidebar ${open ? 'open' : ''}`}>
@@ -48,7 +50,7 @@ function Sidebar({ view, counts, open, onClose, onNavigate, onLogout }: SidebarP
         <button className="nav-item disabled" title="Planned for Phase 2" disabled><span><Icon name="inbox" /></span>Enquiries <em>Phase 2</em></button>
       </nav>
       <div className="phase-card"><span>Network status</span><strong>All systems operational</strong><div><i/></div><small><b/> Last synced just now</small></div>
-      <div className="sidebar-user"><div className="avatar">RS</div><div><strong>Rajesh Sharma</strong><span>Transport owner</span></div><button onClick={onLogout} title="Sign out"><Icon name="logout" /></button></div>
+      <div className="sidebar-user"><div className="avatar">RS</div><div><strong>Rajesh Sharma</strong><span>{activeRole === 'load_owner' ? 'Load owner / shipper' : 'Truck owner / transporter'}</span></div><button onClick={onLogout} title="Sign out"><Icon name="logout" /></button></div>
     </aside>
   );
 }
@@ -75,7 +77,8 @@ function PageHead({ section, title, description, actions }: PageHeadProps) {
   return <div className="page-head"><div><p className="breadcrumb">{section} <span className="date-separator">/</span> {todayLabel}</p><h1>{title}</h1><p>{description}</p></div>{actions}</div>;
 }
 
-function Dashboard({ data, matches, onOpenModal, onNavigate }: { data: PortalData; matches: ReturnMatch[]; onOpenModal: (type: 'truck' | 'load') => void; onNavigate: (view: ViewName) => void }) {
+function Dashboard({ data, matches, role, onOpenModal, onNavigate }: { data: PortalData; matches: ReturnMatch[]; role?: AccountRole; onOpenModal: (type: 'truck' | 'load') => void; onNavigate: (view: ViewName) => void }) {
+  const activeRole: AccountRole = role ?? (localStorage.getItem('returnrun-role') === 'load_owner' ? 'load_owner' : 'truck_owner');
   const openLoads = data.loads.filter(({ status }) => status === 'Open');
   const available = data.trucks.filter(({ status }) => status === 'Available');
   const cities = new Set(openLoads.flatMap(({ origin, destination }) => [origin, destination])).size;
@@ -89,7 +92,7 @@ function Dashboard({ data, matches, onOpenModal, onNavigate }: { data: PortalDat
   const corridors: Array<[string, number]> = [['Ahmedabad → Chennai', 82], ['Chennai → Ahmedabad', 71], ['Bengaluru → Chennai', 58]];
 
   return <section className="view active">
-    <PageHead section="Operations control room" title={`${greeting}, Rajesh`} description="Here is what is happening across your transport network today." actions={<div className="head-actions"><button className="secondary-btn" onClick={() => onOpenModal('truck')}>+ Add truck</button><button className="primary-btn" onClick={() => onOpenModal('load')}>Post a load</button></div>}/>
+    <PageHead section="Operations control room" title={`${greeting}, Rajesh`} description={activeRole === 'load_owner' ? 'Manage your open loads and find the right trucks across the network.' : 'Monitor your fleet and find profitable return-load opportunities.'} actions={<div className="head-actions">{activeRole === 'truck_owner' ? <button className="secondary-btn" onClick={() => onOpenModal('truck')}>+ Add truck</button> : <button className="secondary-btn" onClick={() => onNavigate('trucks')}>Find trucks</button>}<button className="primary-btn" onClick={() => onOpenModal('load')}>Post a load</button></div>}/>
     <div className="metric-grid">
       <article className="metric"><div className="metric-icon"><Icon name="truck"/></div><div><span>Available trucks</span><strong>{available.length}</strong><small><b>1 added</b> since yesterday</small></div></article>
       <article className="metric"><div className="metric-icon"><Icon name="package"/></div><div><span>Open loads</span><strong>{openLoads.length}</strong><small>Across <b>{cities} cities</b></small></div></article>
@@ -174,8 +177,8 @@ export default function App() {
   useEffect(() => { const handler = (event: KeyboardEvent) => { if (event.key === 'Escape') setModal(null); if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); searchRef.current?.focus(); } }; document.addEventListener('keydown', handler); return () => document.removeEventListener('keydown', handler); }, []);
 
   if (!authenticated) {
-    const enterWorkspace = () => { localStorage.setItem('returnrun-auth', '1'); setAuthModal(null); setAuthenticated(true); };
-    return <><Landing onLogin={() => setAuthModal('login')} onSignup={() => setAuthModal('signup')} />{authModal && <AuthModal mode={authModal} onClose={() => setAuthModal(null)} onModeChange={setAuthModal} onComplete={enterWorkspace}/>}</>;
+    const enterWorkspace = (profile?: RegistrationProfile) => { if (profile) { localStorage.setItem('returnrun-role', profile.role); localStorage.setItem('returnrun-profile', JSON.stringify(profile)); } localStorage.setItem('returnrun-auth', '1'); setAuthModal(null); setAuthenticated(true); };
+    return <><Landing onLogin={() => setAuthModal('login')} onSignup={() => setAuthModal('signup')} />{authModal && <RoleAuthModal mode={authModal} onClose={() => setAuthModal(null)} onModeChange={setAuthModal} onComplete={enterWorkspace}/>}</>;
   }
   const navigate = (next: ViewName) => { setView(next); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   const globalSearch = (value: string) => { if (value.length > 1) { setLoadQuery(value); navigate('loads'); } };
