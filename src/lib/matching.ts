@@ -6,7 +6,7 @@ const nearbyWesternHubs = new Set(['vadodara', 'ahmedabad']);
 export function calculateMatches(trucks: Truck[], loads: Load[]): ReturnMatch[] {
   const matches: ReturnMatch[] = [];
   for (const truck of trucks.filter(({ status }) => status === 'Available')) {
-    for (const load of loads.filter(({ status }) => status === 'Open')) {
+    for (const load of loads.filter(({ status }) => status === 'Pending')) {
       let score = 32;
       const reasons: string[] = [];
       if (normalise(truck.location) === normalise(load.origin)) {

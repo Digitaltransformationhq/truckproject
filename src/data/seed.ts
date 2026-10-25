@@ -8,10 +8,10 @@ export const seedData: PortalData = {
     { id: 'truck-4', registration: 'KA 51 MN 7724', type: '14 ft LCV', capacity: 6, location: 'Bengaluru', destination: 'Chennai', status: 'Available' },
   ],
   loads: [
-    { id: '101', origin: 'Ahmedabad', destination: 'Chennai', material: 'Textiles', quantity: 14, type: 'FTL', date: '2026-10-24', status: 'Open' },
-    { id: '102', origin: 'Chennai', destination: 'Ahmedabad', material: 'Auto components', quantity: 12, type: 'FTL', date: '2026-10-25', status: 'Open' },
-    { id: '103', origin: 'Pune', destination: 'Bengaluru', material: 'Industrial equipment', quantity: 8, type: 'PTL', date: '2026-10-25', status: 'Open' },
-    { id: '104', origin: 'Bengaluru', destination: 'Chennai', material: 'Packaged foods', quantity: 5, type: 'PTL', date: '2026-10-26', status: 'Open' },
-    { id: '105', origin: 'Vadodara', destination: 'Chennai', material: 'Chemical drums', quantity: 10, type: 'FTL', date: '2026-10-26', status: 'Open' },
+    { id: '101', origin: 'Ahmedabad', destination: 'Chennai', material: 'Textiles', quantity: 14, type: 'FTL', date: '2026-10-24', status: 'Pending' },
+    { id: '102', origin: 'Chennai', destination: 'Ahmedabad', material: 'Auto components', quantity: 12, type: 'FTL', date: '2026-10-25', status: 'Pending' },
+    { id: '103', origin: 'Pune', destination: 'Bengaluru', material: 'Industrial equipment', quantity: 8, type: 'PTL', date: '2026-10-25', status: 'Accepted' },
+    { id: '104', origin: 'Bengaluru', destination: 'Chennai', material: 'Packaged foods', quantity: 5, type: 'PTL', date: '2026-10-26', status: 'Pending' },
+    { id: '105', origin: 'Vadodara', destination: 'Chennai', material: 'Chemical drums', quantity: 10, type: 'FTL', date: '2026-10-26', status: 'Rejected' },
   ],
 };

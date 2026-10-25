@@ -1,6 +1,6 @@
 export type ViewName = 'dashboard' | 'trucks' | 'loads' | 'matches' | 'profile';
 export type TruckStatus = 'Available' | 'In transit' | 'Unavailable';
-export type LoadStatus = 'Open' | 'Closed';
+export type LoadStatus = 'Pending' | 'Accepted' | 'Rejected';
 export type LoadType = 'FTL' | 'PTL';
 
 export interface Truck {
@@ -11,6 +11,8 @@ export interface Truck {
   location: string;
   destination: string;
   status: TruckStatus;
+  engineNumber?: string;
+  chassisNumber?: string;
 }
 
 export interface Load {

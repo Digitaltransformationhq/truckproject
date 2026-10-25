@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Icon } from './Icon';
+import { GoogleLogo } from './GoogleLogo';
 
 export type AuthMode = 'login' | 'signup';
 
@@ -80,7 +81,7 @@ export function AuthModal({ mode, onClose, onModeChange, onComplete }: AuthModal
           </form>
 
           <div className="auth-divider"><span>or continue with</span></div>
-          <button className="google-button" type="button" onClick={onComplete}><b>G</b> Google</button>
+          <button className="google-button" type="button" onClick={onComplete}><GoogleLogo/> <span>Continue with Google</span></button>
           <p className="auth-switch">{isLogin ? 'New to ReturnRun?' : 'Already have an account?'} <button onClick={() => onModeChange(isLogin ? 'signup' : 'login')}>{isLogin ? 'Create an account' : 'Log in'}</button></p>
           <span className="auth-secure">Secure access · Review environment</span>
         </div>
