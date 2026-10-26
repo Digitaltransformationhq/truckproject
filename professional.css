@@ -716,10 +716,10 @@ body { background: var(--paper); }
 }
 
 @media(max-width:1024px){
-  .app-shell .sidebar{width:min(286px,86vw);transform:translateX(-100%);transition:transform .24s ease;box-shadow:none}
+  .app-shell .sidebar{z-index:40;width:min(286px,86vw);transform:translateX(-100%);transition:transform .24s ease;box-shadow:none}
   .app-shell .sidebar.open{transform:translateX(0);box-shadow:20px 0 60px rgba(5,19,48,.24)}
   .app-shell .main{width:100%;margin-left:0}
-  .sidebar-scrim{position:fixed;z-index:19;inset:0;display:block;border:0;background:rgba(8,18,43,.48);opacity:0;pointer-events:none;transition:opacity .2s ease}
+  .sidebar-scrim{position:fixed;z-index:35;inset:0;display:block;border:0;background:rgba(8,18,43,.48);opacity:0;pointer-events:none;transition:opacity .2s ease}
   .sidebar-scrim.show{opacity:1;pointer-events:auto}
   .app-shell .menu-btn{display:grid;place-items:center;flex:none;width:38px;height:38px;border:0;border-radius:8px;background:#f2f4f8;color:#24344e}
   .app-shell .mobile-close{display:block}
