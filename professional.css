@@ -502,6 +502,9 @@ body { background: var(--paper); }
 .app-shell .kyc-progress .kyc-step.active > b { color: #171717; }
 .app-shell .kyc-progress > i {
   width: clamp(64px, 10vw, 120px);
+  height: 1px;
+  border-radius: 1px;
+  background: #171717;
   flex: none;
 }
 .app-shell .kyc-identity-uploads { margin-bottom: 22px; }
@@ -516,7 +519,7 @@ body { background: var(--paper); }
   .app-shell .kyc-progress .kyc-step { min-width: 0; flex-direction: column; gap: 5px; }
   .app-shell .kyc-progress .kyc-step > span { width: 27px; height: 27px; }
   .app-shell .kyc-progress .kyc-step > b { max-width: 112px; white-space: normal; text-align: center; font-size: 9px; line-height: 1.2; }
-  .app-shell .kyc-progress > i { width: clamp(28px, 8vw, 50px); margin-top: -16px; }
+  .app-shell .kyc-progress > i { width: clamp(34px, 9vw, 54px); margin-top: 0; transform: translate(14px,-7px); }
 }
 
 /* Functional support and notification controls. */
@@ -1055,7 +1058,7 @@ body { background: var(--paper); }
   .app-shell .vehicle-quick-list>button{min-height:56px}
   .app-shell .panel-head{min-height:70px}
   .app-shell .matches-panel{margin-bottom:4px}
-  .mobile-bottom-nav{position:fixed;z-index:18;left:0;right:0;bottom:0;height:calc(68px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));padding:6px 7px env(safe-area-inset-bottom);border-top:1px solid #dde2eb;background:rgba(255,255,255,.97);box-shadow:0 -8px 24px rgba(19,37,76,.09);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+  .mobile-bottom-nav{position:fixed;z-index:25;left:0;right:0;bottom:0;height:calc(68px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));padding:6px 7px env(safe-area-inset-bottom);border-top:1px solid #dde2eb;background:rgba(255,255,255,.97);box-shadow:0 -8px 24px rgba(19,37,76,.09);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
   .mobile-bottom-nav button{min-width:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;border:0;border-radius:11px;background:transparent;color:#7c8799}
   .mobile-bottom-nav button>span{width:30px;height:28px;display:grid;place-items:center;border-radius:9px}
   .mobile-bottom-nav svg{width:18px;height:18px}
@@ -1180,6 +1183,45 @@ body { background: var(--paper); }
 .app-shell .reject-request-btn{border:1px solid #e2c9c9;background:#fff;color:#a64646}
 .app-shell .accept-request-btn{display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid #152344;background:#ffa51f;color:#111827;box-shadow:0 3px 0 #152344}
 .app-shell .accept-request-btn svg{width:15px;height:15px}
+.app-shell .request-decision-modal.request-accepted{min-height:300px;display:grid;place-items:center}
+.app-shell .request-success{width:min(100%,360px);padding:44px 30px;text-align:center;animation:request-success-enter .42s cubic-bezier(.2,.8,.2,1) both}
+.app-shell .request-success-mark{width:184px;height:174px;display:grid;place-items:center;margin:0 auto 10px;color:#07966a;animation:request-success-pop .45s cubic-bezier(.2,.9,.25,1.3) both}
+.app-shell .request-success-mark svg{width:180px;height:170px;overflow:visible}
+.app-shell .request-success-mark .success-road{fill:none;stroke:#aeb8c5;stroke-width:2.2;stroke-linecap:round;stroke-dasharray:4 5;animation:request-road-move .55s linear infinite}
+.app-shell .request-success-mark .success-rear-roof,.app-shell .request-success-mark .success-rear-body{fill:url(#successTruckBody);stroke:#68717b;stroke-width:2.2;stroke-linejoin:round}
+.app-shell .request-success-mark .success-rear-frame{fill:none;stroke:#78818a;stroke-width:2.1;stroke-linejoin:round}
+.app-shell .request-success-mark .success-door{transform-box:fill-box;transform-style:preserve-3d;backface-visibility:visible;filter:drop-shadow(1px 1px 1px rgba(23,36,64,.18))}
+.app-shell .request-success-mark .success-door-left{transform-origin:0% 50%;animation:request-door-close-left .72s 1s cubic-bezier(.2,.7,.25,1) both}
+.app-shell .request-success-mark .success-door-right{transform-origin:100% 50%;animation:request-door-close-right .72s 1s cubic-bezier(.2,.7,.25,1) both}
+.app-shell .request-success-mark .success-door-face{fill:url(#successTruckDoor);stroke:#747c85;stroke-width:1.8;stroke-linejoin:round}
+.app-shell .request-success-mark .success-door-edge{fill:#c9cdd0;stroke:#626b75;stroke-width:1;stroke-linejoin:round}
+.app-shell .request-success-mark .success-door-rib{fill:none;stroke:#d5d8d9;stroke-width:1.4;stroke-linecap:round}
+.app-shell .request-success-mark .success-door-lock,.app-shell .request-success-mark .success-door-hinges{fill:none;stroke:#343b43;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.app-shell .request-success-mark .success-gate-ink-shadow{fill:none;stroke:#6d8553;stroke-width:4.8;stroke-linecap:round;stroke-linejoin:round;opacity:.24}
+.app-shell .request-success-mark .success-gate-tick{fill:none;stroke:#286344;stroke-width:3.1;stroke-linecap:round;stroke-linejoin:round;opacity:.94}
+.app-shell .request-success-mark .success-mirror-stem{fill:none;stroke:#333a42;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.app-shell .request-success-mark .success-mirror{fill:#20252c;stroke:#11161c;stroke-width:1.5}
+.app-shell .request-success-mark .success-crossbar{fill:#e5e7e6;stroke:#7b838b;stroke-width:1.7;stroke-linejoin:round}
+.app-shell .request-success-mark .success-crossbar-detail{fill:#f7f7f5;stroke:#b7bdc1;stroke-width:1.1}
+.app-shell .request-success-mark .success-tail-light{fill:#d44032;stroke:#65231e;stroke-width:1.5}
+.app-shell .request-success-mark .success-amber-light{fill:#ee9b22;stroke:#704b16;stroke-width:1.2}
+.app-shell .request-success-mark .success-undercarriage{fill:#343a41;stroke:#20252b;stroke-width:1.3}
+.app-shell .request-success-mark .success-rear-axle{fill:none;stroke:#4a5159;stroke-width:2.2;stroke-linecap:round}
+.app-shell .request-success-mark .success-plate{fill:#f5f5f2;stroke:#717982;stroke-width:1.2}
+.app-shell .request-success-mark .success-rear-bumper{fill:#30353c;stroke:#171c22;stroke-width:1.7;stroke-linejoin:round}
+.app-shell .request-success-mark .success-rear-tire{fill:#171c24;stroke:#0d1118;stroke-width:1.5;stroke-linejoin:round}
+.app-shell .request-success-mark .success-rear-sidewall{fill:none;stroke:#46505c;stroke-width:.9;stroke-linejoin:round}
+.app-shell .request-success-mark .success-rear-tread{fill:none;stroke:#4b5461;stroke-width:1;stroke-linecap:round}
+.app-shell .request-success-mark .success-mudflap{fill:#242b35;stroke:#111720;stroke-width:1.2;stroke-linejoin:round}
+.app-shell .request-success .eyebrow{color:#07966a}
+.app-shell .request-success h2{margin:8px 0 9px;color:#172440;font:800 22px/1.2 Manrope,sans-serif}
+.app-shell .request-success p{margin:0;color:#748094;font-size:13px;line-height:1.55}
+@keyframes request-success-enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes request-success-pop{0%{opacity:0;transform:scale(.55)}75%{opacity:1;transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes request-road-move{to{stroke-dashoffset:-14}}
+@keyframes request-door-close-left{from{transform:perspective(115px) rotateY(-64deg)}to{transform:perspective(115px) rotateY(0)}}
+@keyframes request-door-close-right{from{transform:perspective(115px) rotateY(64deg)}to{transform:perspective(115px) rotateY(0)}}
+@media(prefers-reduced-motion:reduce){.app-shell .request-success,.app-shell .request-success-mark,.app-shell .request-success-mark .success-road,.app-shell .request-success-mark .success-door-left,.app-shell .request-success-mark .success-door-right{animation:none}.app-shell .request-success-mark .success-door-left{transform:none}.app-shell .request-success-mark .success-door-right{transform:none}}
 
 @media(max-width:700px){
   .app-shell .request-backdrop{place-items:center;padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));overflow:hidden}
@@ -1236,3 +1278,29 @@ body { background: var(--paper); }
   .kyc-progress .kyc-step{min-width:0}
   .kyc-body{flex:1;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;padding:15px 16px max(18px,env(safe-area-inset-bottom))}
 }
+
+/* Compact request summaries expand into readable detail cards on mobile. */
+@media(max-width:700px){
+  .app-shell .request-mobile-cards{display:flex;flex-direction:column;gap:10px}
+  .app-shell .request-mobile-card{overflow:hidden;border:1px solid #e0e5ed;border-radius:14px;background:#fff;box-shadow:0 3px 12px rgba(23,39,69,.035)}
+  .app-shell .request-mobile-card>summary{min-height:76px;display:grid;grid-template-columns:minmax(0,1fr) auto 16px;align-items:center;gap:9px;padding:13px 14px;list-style:none;cursor:pointer}
+  .app-shell .request-mobile-card>summary::-webkit-details-marker{display:none}
+  .app-shell .request-mobile-route{display:flex;min-width:0;flex-direction:column;gap:5px}
+  .app-shell .request-mobile-route strong{overflow-wrap:anywhere;color:#172440;font:800 13px/1.3 Manrope,sans-serif}
+  .app-shell .request-mobile-route strong i{color:#d47a16;font-style:normal}
+  .app-shell .request-mobile-route small{color:#8792a4;font-size:9px}
+  .app-shell .request-mobile-card>summary>.status{white-space:nowrap}
+  .app-shell .request-mobile-card>summary>svg{width:15px;height:15px;color:#8a96a8;transition:transform .18s ease}
+  .app-shell .request-mobile-card[open]>summary{border-bottom:1px solid #edf0f4;background:#fcfcfb}
+  .app-shell .request-mobile-card[open]>summary>svg{transform:rotate(90deg)}
+  .app-shell .request-mobile-body{padding:12px 14px 14px}
+  .app-shell .request-mobile-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .app-shell .request-mobile-facts>div{display:flex;min-width:0;flex-direction:column;gap:4px}
+  .app-shell .request-mobile-facts span{color:#8994a5;font-size:8px;text-transform:uppercase;letter-spacing:.07em}
+  .app-shell .request-mobile-facts strong{overflow-wrap:anywhere;color:#27344c;font-size:11px;line-height:1.35}
+  .app-shell .request-mobile-review{width:100%;height:40px;display:flex;align-items:center;justify-content:center;gap:7px;margin-top:13px;border:1.5px solid #171717;border-radius:9px;background:#ffa51f;color:#171717;font-size:11px;font-weight:800;box-shadow:2px 2px 0 #171717}
+  .app-shell .request-mobile-review svg{width:14px;height:14px}
+}
+
+.app-shell .sidebar-user>button{color:#c83737}
+.app-shell .sidebar-user>button:hover{background:#fff0f0;color:#a92727}

@@ -38,7 +38,7 @@ export function Landing({ onLogin, onSignup }: LandingProps) {
             <span className="landing-eyebrow"><i/> Simple truck booking</span>
             <h1>Need a truck?<br/>Send one <em>request.</em></h1>
             <p>Customers post what they need. Truck owners review the request and either accept or reject it. That is the whole process.</p>
-            <div className="hero-actions"><button className="hero-primary" onClick={onSignup}>Get started <Icon name="arrow"/></button><a href="#how">See how it works <span>↓</span></a></div>
+            <div className="hero-actions"><button className="hero-primary" onClick={onSignup}>Get started <Icon name="arrow"/></button><button className="hero-login" onClick={onLogin}>Log in</button><a href="#how">See how it works <span>↓</span></a></div>
             <div className="hero-proof"><div><strong>1</strong><span>clear request</span></div><div><strong>2</strong><span>simple choices</span></div><div><strong>Fast</strong><span>owner response</span></div></div>
           </div>
           <div className="hero-visual">
