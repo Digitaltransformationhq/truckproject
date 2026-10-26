@@ -1019,7 +1019,7 @@ body { background: var(--paper); }
   .mobile-app-brand strong{color:#172440;font:800 15px/1.15 Manrope,sans-serif}
   .mobile-app-brand small{margin-top:2px;color:#8a94a7;font-size:8px;text-transform:uppercase;letter-spacing:.09em}
   .app-shell .top-actions{grid-column:3;grid-row:1;width:40px;height:40px;margin:0;align-self:center;justify-self:end;display:grid;place-items:center}
-  .app-shell .top-actions .icon-btn{width:40px;height:40px;min-width:40px;margin:0;border:1px solid #e1e5ec;background:#fff}
+  .app-shell .top-actions .icon-btn{width:40px;height:40px;min-width:40px;margin:0;border:0;background:transparent;box-shadow:none}
   .app-shell .search-box{grid-column:1/-1;grid-row:2;width:100%;height:42px;margin:0;padding:0 13px;border:1px solid #e0e5ee;background:#f5f7fa;border-radius:12px}
   .app-shell .search-box input{font-size:12px}
   .app-shell .content{padding:19px 14px calc(98px + env(safe-area-inset-bottom))}
@@ -1190,29 +1190,49 @@ body { background: var(--paper); }
   .app-shell .request-decision-modal .modal-head{flex:none;padding:19px 20px 16px}
   .app-shell .request-decision-modal .modal-head h2{font-size:22px;line-height:1.15}
   .app-shell .request-decision-body{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:16px 16px 18px}
-  .app-shell .request-route-hero{min-height:88px;grid-template-columns:minmax(0,1fr) 52px minmax(0,1fr);gap:8px;padding:14px}
+  .app-shell .request-route-hero{min-height:88px;grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr);gap:6px;padding:14px}
   .app-shell .request-route-point{gap:9px}
   .app-shell .request-route-pin{width:36px;height:36px;flex-basis:36px;border-radius:10px}
-  .app-shell .request-route-hero>i.route-journey{width:52px;height:28px;justify-self:center;transform:none}
-  .app-shell .request-route-hero>i.route-journey svg{width:52px;height:28px}
-  .app-shell .request-route-hero>i.route-journey path{animation:none;clip-path:none;opacity:1}
+  .app-shell .request-route-hero>i.route-journey{width:64px;height:34px;justify-self:center;transform:none}
+  .app-shell .request-route-hero>i.route-journey svg{width:64px;height:34px;stroke-width:4}
   .app-shell .request-route-hero small{font-size:8px}
   .app-shell .request-route-hero strong{font-size:12px;overflow-wrap:anywhere}
   .app-shell .request-detail-grid{gap:8px}
   .app-shell .request-detail-grid>div{padding:11px}
   .app-shell .request-help{font-size:10px;line-height:1.55}
-  .app-shell .request-decision-actions{flex:none;grid-template-columns:1fr 1fr;gap:9px;padding:13px 16px max(16px,env(safe-area-inset-bottom));background:#fff}
-  .app-shell .request-decision-actions button{height:44px}
+  .app-shell .request-decision-actions{flex:none;min-width:0;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:13px 14px max(16px,env(safe-area-inset-bottom));background:#fff}
+  .app-shell .request-decision-actions button{width:100%;min-width:0;height:44px;padding:0 7px;white-space:nowrap;font-size:10px}
 }
 
 @media(max-width:360px){
-  .app-shell .request-route-hero{grid-template-columns:minmax(0,1fr) 38px minmax(0,1fr);gap:5px;padding:12px 10px}
+  .app-shell .request-route-hero{grid-template-columns:minmax(0,1fr) 50px minmax(0,1fr);gap:4px;padding:12px 10px}
   .app-shell .request-route-point{gap:6px}
   .app-shell .request-route-pin{width:32px;height:32px;flex-basis:32px}
-  .app-shell .request-route-hero>i.route-journey,.app-shell .request-route-hero>i.route-journey svg{width:38px}
+  .app-shell .request-route-hero>i.route-journey,.app-shell .request-route-hero>i.route-journey svg{width:50px}
   .app-shell .request-detail-grid{grid-template-columns:1fr}
 }
 
 @media(prefers-reduced-motion:reduce){
   .app-shell .request-route-hero>i.route-journey path{animation:none;clip-path:none;opacity:1}
+}
+
+/* Keep vehicle details centered within the overlay's padded viewport. */
+.app-shell .vehicle-details-backdrop{display:flex;align-items:center;justify-content:center}
+.app-shell .vehicle-details-modal{width:min(690px,100%);max-width:100%;margin:0;box-shadow:0 18px 48px rgba(18,32,52,.16)}
+@media(max-width:700px){
+  .app-shell .vehicle-details-backdrop{padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom))}
+  .app-shell .vehicle-details-modal{width:100%;max-width:100%;max-height:calc(100dvh - 24px);border-radius:18px;box-shadow:0 16px 40px rgba(18,32,52,.14)}
+}
+
+/* Keep KYC controls inside the mobile safe viewport and scroll only the form. */
+@media(max-width:700px){
+  .kyc-modal-backdrop{inset-block-start:env(safe-area-inset-top);inset-block-end:env(safe-area-inset-bottom);display:flex;align-items:center;justify-content:center;overflow:hidden;padding:8px 10px}
+  .kyc-modal{width:100%;height:100%;max-height:100%;min-height:0;display:flex;flex-direction:column;border-radius:18px;box-shadow:0 12px 36px rgba(18,32,52,.18)}
+  .kyc-modal>header{height:auto;min-height:72px;flex:none;padding:12px 16px}
+  .kyc-modal>header>div{min-width:0;gap:10px}
+  .kyc-modal header h2{font-size:20px;line-height:1.15}
+  .kyc-lock{width:38px;height:38px;flex:none}
+  .kyc-progress{height:auto;min-height:72px;flex:none;padding:8px 12px}
+  .kyc-progress .kyc-step{min-width:0}
+  .kyc-body{flex:1;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;padding:15px 16px max(18px,env(safe-area-inset-bottom))}
 }
