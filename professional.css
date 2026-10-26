@@ -713,8 +713,8 @@ body { background: var(--paper); }
 }
 
 @media(max-width:1024px){
-  .app-shell .sidebar{width:min(286px,86vw);transform:translateX(-100%);transition:transform .24s ease;box-shadow:20px 0 60px rgba(5,19,48,.24)}
-  .app-shell .sidebar.open{transform:translateX(0)}
+  .app-shell .sidebar{width:min(286px,86vw);transform:translateX(-100%);transition:transform .24s ease;box-shadow:none}
+  .app-shell .sidebar.open{transform:translateX(0);box-shadow:20px 0 60px rgba(5,19,48,.24)}
   .app-shell .main{width:100%;margin-left:0}
   .sidebar-scrim{position:fixed;z-index:19;inset:0;display:block;border:0;background:rgba(8,18,43,.48);opacity:0;pointer-events:none;transition:opacity .2s ease}
   .sidebar-scrim.show{opacity:1;pointer-events:auto}
@@ -794,7 +794,8 @@ body { background: var(--paper); }
 }
 
 /* Vehicle onboarding lives outside business KYC. */
-.app-shell .vehicle-entry-modal{width:min(900px,calc(100vw - 30px));max-height:calc(100dvh - 30px);display:flex;flex-direction:column}
+.app-shell .vehicle-entry-backdrop{display:flex;align-items:center;justify-content:center;overflow:hidden}
+.app-shell .vehicle-entry-modal{width:min(900px,calc(100vw - 30px));max-height:calc(100dvh - 30px);display:flex;flex-direction:column;box-shadow:0 18px 48px rgba(18,32,52,.16)}
 .app-shell .vehicle-entry-modal .modal-head{flex:none}
 .app-shell .vehicle-entry-form{min-height:0;overflow-y:auto}
 .app-shell .vehicle-form-heading{margin:0 0 16px}
@@ -821,7 +822,9 @@ body { background: var(--paper); }
 .app-shell .vehicle-entry-form>.form-footer{position:sticky;bottom:-25px;margin:20px -28px -25px;padding:16px 28px;border-top:1px solid #e5e9ef;background:#fff}
 
 @media(max-width:700px){
-  .app-shell .vehicle-entry-modal{width:calc(100vw - 20px);max-height:calc(100dvh - 20px)}
+  .app-shell .vehicle-entry-backdrop{padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom))}
+  .app-shell .vehicle-entry-modal{width:min(100%,560px);max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);margin:auto;overflow:hidden;border-radius:16px;box-shadow:0 16px 40px rgba(18,32,52,.14)}
+  .app-shell .vehicle-entry-modal .modal-head{padding:18px 17px 15px}
   .app-shell .vehicle-entry-form{padding:19px 17px}
   .app-shell .vehicle-document-grid{grid-template-columns:1fr 1fr}
   .app-shell .vehicle-upload-field,.app-shell .vehicle-upload-field:nth-child(4),.app-shell .vehicle-upload-field:nth-child(5){grid-column:auto}
@@ -1155,13 +1158,15 @@ body { background: var(--paper); }
 .app-shell .request-result{color:#8994a3;font-size:10px;font-weight:700}
 .app-shell .request-decision-modal{width:min(560px,calc(100vw - 28px));overflow:hidden}
 .app-shell .request-decision-body{padding:20px 28px 24px}
-.app-shell .request-route-hero{min-height:108px;display:grid;grid-template-columns:48px minmax(110px,1fr) 130px minmax(110px,1fr);align-items:center;gap:12px;padding:22px;border:1px solid #dfe5ee;border-radius:13px;background:linear-gradient(135deg,#f8fbff,#fffaf4)}
-.app-shell .request-route-hero>span{width:42px;height:42px;display:grid;place-items:center;border-radius:11px;background:#ffa51f;color:#172440}
-.app-shell .request-route-hero>span svg{width:19px;height:19px}
-.app-shell .request-route-hero>div{display:flex;min-width:0;flex-direction:column}
+.app-shell .request-route-hero{min-height:108px;display:grid;grid-template-columns:minmax(0,1fr) 130px minmax(0,1fr);align-items:center;gap:18px;padding:22px;border:1px solid #dfe5ee;border-radius:13px;background:linear-gradient(135deg,#f8fbff,#fffaf4)}
+.app-shell .request-route-point{display:flex;min-width:0;align-items:center;gap:12px}
+.app-shell .request-route-point>div{display:flex;min-width:0;flex-direction:column}
+.app-shell .request-route-pin{width:42px;height:42px;display:grid;flex:0 0 42px;place-items:center;border-radius:11px;background:#ffa51f;color:#172440}
+.app-shell .request-route-pin svg{width:19px;height:19px}
+.app-shell .request-route-delivery{justify-content:flex-end;text-align:right}
 .app-shell .request-route-hero small{color:#8b96a6;font-size:9px;text-transform:uppercase;letter-spacing:.08em}
 .app-shell .request-route-hero strong{margin-top:3px;color:#172440;font:800 14px Manrope,sans-serif}
-.app-shell .request-route-hero>i.route-journey{width:130px;height:38px;display:grid;place-items:center;justify-self:center;color:#d58321;transform:translateX(-20px)}
+.app-shell .request-route-hero>i.route-journey{width:130px;height:38px;display:grid;place-items:center;justify-self:center;color:#d58321}
 .app-shell .request-route-hero>i.route-journey svg{width:130px;height:38px;overflow:visible;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .app-shell .request-route-hero>i.route-journey path{clip-path:inset(0 100% 0 0);animation:route-arrow-reveal 2.2s ease-in-out infinite}
 @keyframes route-arrow-reveal{0%{clip-path:inset(0 100% 0 0);opacity:.3}65%,88%{clip-path:inset(0 0 0 0);opacity:1}100%{clip-path:inset(0 0 0 100%);opacity:.2}}
@@ -1177,19 +1182,35 @@ body { background: var(--paper); }
 .app-shell .accept-request-btn svg{width:15px;height:15px}
 
 @media(max-width:700px){
+  .app-shell .request-backdrop{place-items:center;padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));overflow:hidden}
   .app-shell .request-list-item{min-height:72px;grid-template-columns:minmax(0,1fr) auto;padding:13px 15px;gap:10px}
   .app-shell .request-list-item>svg{display:none}
   .app-shell .request-route small{line-height:1.45}
-  .app-shell .request-decision-modal{width:calc(100vw - 20px);max-height:calc(100dvh - 28px);overflow:auto;border-radius:18px;box-shadow:5px 6px 0 #171717}
-  .app-shell .request-decision-body{padding:18px}
-  .app-shell .request-route-hero{min-height:0;grid-template-columns:36px minmax(0,1fr);gap:8px 10px;padding:17px 16px}
-  .app-shell .request-route-hero>span{width:36px;height:36px}
-  .app-shell .request-route-hero>i.route-journey{grid-column:2;width:48px;height:28px;justify-self:start;transform:rotate(90deg);transform-origin:center}
-  .app-shell .request-route-hero>i.route-journey svg{width:48px;height:28px}
-  .app-shell .request-route-hero>div:last-child{grid-column:2}
+  .app-shell .request-decision-modal{width:min(100%,480px);max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);margin:0 auto;display:flex;flex-direction:column;overflow:hidden;border-radius:18px;box-shadow:0 18px 50px rgba(8,18,35,.28)}
+  .app-shell .request-decision-modal .modal-head{flex:none;padding:19px 20px 16px}
+  .app-shell .request-decision-modal .modal-head h2{font-size:22px;line-height:1.15}
+  .app-shell .request-decision-body{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:16px 16px 18px}
+  .app-shell .request-route-hero{min-height:88px;grid-template-columns:minmax(0,1fr) 52px minmax(0,1fr);gap:8px;padding:14px}
+  .app-shell .request-route-point{gap:9px}
+  .app-shell .request-route-pin{width:36px;height:36px;flex-basis:36px;border-radius:10px}
+  .app-shell .request-route-hero>i.route-journey{width:52px;height:28px;justify-self:center;transform:none}
+  .app-shell .request-route-hero>i.route-journey svg{width:52px;height:28px}
+  .app-shell .request-route-hero>i.route-journey path{animation:none;clip-path:none;opacity:1}
+  .app-shell .request-route-hero small{font-size:8px}
+  .app-shell .request-route-hero strong{font-size:12px;overflow-wrap:anywhere}
   .app-shell .request-detail-grid{gap:8px}
   .app-shell .request-detail-grid>div{padding:11px}
-  .app-shell .request-decision-actions{grid-template-columns:1fr 1.35fr;padding:14px 18px 20px}
+  .app-shell .request-help{font-size:10px;line-height:1.55}
+  .app-shell .request-decision-actions{flex:none;grid-template-columns:1fr 1fr;gap:9px;padding:13px 16px max(16px,env(safe-area-inset-bottom));background:#fff}
+  .app-shell .request-decision-actions button{height:44px}
+}
+
+@media(max-width:360px){
+  .app-shell .request-route-hero{grid-template-columns:minmax(0,1fr) 38px minmax(0,1fr);gap:5px;padding:12px 10px}
+  .app-shell .request-route-point{gap:6px}
+  .app-shell .request-route-pin{width:32px;height:32px;flex-basis:32px}
+  .app-shell .request-route-hero>i.route-journey,.app-shell .request-route-hero>i.route-journey svg{width:38px}
+  .app-shell .request-detail-grid{grid-template-columns:1fr}
 }
 
 @media(prefers-reduced-motion:reduce){
