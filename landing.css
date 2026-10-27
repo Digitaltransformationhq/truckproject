@@ -135,6 +135,25 @@
 .role-art-graphic i:after{content:"";position:absolute;left:50%;top:50%;width:13px;height:13px;transform:translate(-50%,-50%);border:2px solid #171717;border-radius:50%;background:#ffa51f}
 @media(max-width:820px){.auth-form-panel h1{font-size:28px}.auth-form-panel>p{font-size:12px}.auth-form>label,.auth-field-row label{font-size:11px}.role-art-graphic{display:none}}
 
+/* Login modal readability scale, aligned with the portal and admin surfaces. */
+.auth-modal .auth-form-eyebrow{font-size:11px}
+.auth-modal .auth-form-panel h1{font-size:32px;line-height:1.15}
+.auth-modal .auth-form-panel>p{font-size:14px;line-height:1.55}
+.auth-modal .demo-account-grid strong{font-size:13px;line-height:1.3}
+.auth-modal .demo-account-grid small{margin-top:4px;font-size:10.5px;line-height:1.45}
+.auth-modal .demo-login-divider{font-size:10.5px}
+.auth-modal .auth-form>label,.auth-modal .auth-field-row label{font-size:12.5px}
+.auth-modal .auth-form input,.auth-modal .auth-form select{font-size:13.5px}
+.auth-modal .password-field button{font-size:11.5px}
+.auth-modal .auth-check{font-size:11.5px!important;line-height:1.4}
+.auth-modal .auth-text-button{font-size:11.5px}
+.auth-modal .auth-submit{font-size:13.5px}
+.auth-modal .auth-divider{font-size:10.5px}
+.auth-modal .google-button{font-size:14px}
+.auth-modal .auth-switch{font-size:11.5px!important}
+.auth-modal .auth-secure{font-size:9.5px;line-height:1.4}
+@media(max-width:520px){.auth-modal .auth-form-panel h1{font-size:29px}.auth-modal .demo-account-grid strong{font-size:12.5px}.auth-modal .demo-account-grid small{font-size:10px}}
+
 .upload-field em{margin-top:2px;color:#8b9192;font-size:7px;font-style:normal;font-weight:600}
 
 .auth-close{border:0;background:transparent;box-shadow:none}
