@@ -1,4 +1,4 @@
-export type ViewName = 'dashboard' | 'trucks' | 'loads' | 'matches' | 'profile';
+export type ViewName = 'dashboard' | 'trucks' | 'loads' | 'matches' | 'profile' | 'admin-users' | 'admin-compliance' | 'admin-operations';
 export type TruckStatus = 'Available' | 'In transit' | 'Unavailable';
 export type LoadStatus = 'Pending' | 'Accepted' | 'Rejected';
 export type LoadType = 'FTL' | 'PTL';

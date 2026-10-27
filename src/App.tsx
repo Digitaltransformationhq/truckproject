@@ -4,6 +4,7 @@ import { Landing } from './components/Landing';
 import { RoleAuthModal, type AccountRole, type AuthMode, type RegistrationProfile } from './components/RoleAuthModal';
 import { KycModal } from './components/KycModal';
 import { Icon, type IconName } from './components/Icon';
+import { AdminConsole } from './components/AdminConsole';
 import { seedData } from './data/seed';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { formatDate } from './lib/matching';
@@ -28,8 +29,14 @@ interface SidebarProps {
 }
 
 function Sidebar({ view, role, profile, counts, open, onClose, onNavigate, onLogout }: SidebarProps) {
-  const activeRole: AccountRole = role ?? (localStorage.getItem('returnrun-role') === 'load_owner' ? 'load_owner' : 'truck_owner');
-  const items: Array<{ view?: ViewName; label: string; icon: IconName; count?: number; disabled?: boolean }> = activeRole === 'load_owner' ? [
+  const storedRole = localStorage.getItem('returnrun-role');
+  const activeRole: AccountRole = role ?? (storedRole === 'admin' ? 'admin' : storedRole === 'load_owner' ? 'load_owner' : 'truck_owner');
+  const items: Array<{ view?: ViewName; label: string; icon: IconName; count?: number; disabled?: boolean }> = activeRole === 'admin' ? [
+    { view: 'dashboard', label: 'Control centre', icon: 'overview' },
+    { view: 'admin-users', label: 'User accounts', icon: 'building' },
+    { view: 'admin-compliance', label: 'KYC verification', icon: 'inbox', count: 3 },
+    { view: 'admin-operations', label: 'Operations', icon: 'route' },
+  ] : activeRole === 'load_owner' ? [
     { view: 'dashboard', label: 'Overview', icon: 'overview' },
     { view: 'loads', label: 'My requests', icon: 'inbox', count: counts.requests },
   ] : [
@@ -37,7 +44,7 @@ function Sidebar({ view, role, profile, counts, open, onClose, onNavigate, onLog
     { view: 'trucks', label: 'My vehicles', icon: 'truck', count: counts.trucks },
     { view: 'loads', label: 'Truck requests', icon: 'inbox', count: counts.requests },
   ];
-  const displayName = profile ? `${profile.firstName} ${profile.lastName}` : activeRole === 'load_owner' ? 'Ananya Mehta' : 'Rajesh Sharma';
+  const displayName = profile ? `${profile.firstName} ${profile.lastName}` : activeRole === 'admin' ? 'Mira Kapoor' : activeRole === 'load_owner' ? 'Ananya Mehta' : 'Rajesh Sharma';
   const initials = displayName.split(' ').map((part) => part[0]).slice(0,2).join('').toUpperCase();
   return (
     <>
@@ -53,18 +60,23 @@ function Sidebar({ view, role, profile, counts, open, onClose, onNavigate, onLog
             {item.count !== undefined && <b className="accent-count">{item.count}</b>}
           </button>
         ))}
-        <p className="nav-label">Account</p>
+        {activeRole !== 'admin' && <><p className="nav-label">Account</p>
         <button className={`nav-item ${view === 'profile' ? 'active' : ''}`} aria-current={view === 'profile' ? 'page' : undefined} onClick={() => onNavigate('profile')}><span><Icon name="building" /></span>Business profile</button>
-        <button className="nav-item disabled" title="Coming soon" disabled><span><Icon name="inbox" /></span>Enquiries <em>Coming soon</em></button>
+        <button className="nav-item disabled" title="Coming soon" disabled><span><Icon name="inbox" /></span>Enquiries <em>Coming soon</em></button></>}
       </nav>
-      <div className="sidebar-user"><div className="avatar">{initials}</div><div><strong>{displayName}</strong><span>{activeRole === 'load_owner' ? 'Customer / shipper' : 'Truck owner / transporter'}</span></div><button onClick={onLogout} title="Sign out" aria-label="Sign out"><Icon name="logout" /></button></div>
+      <div className="sidebar-user"><div className="avatar">{initials}</div><div><strong>{displayName}</strong><span>{activeRole === 'admin' ? 'Platform administrator' : activeRole === 'load_owner' ? 'Customer / shipper' : 'Truck owner / transporter'}</span></div><button onClick={onLogout} title="Sign out" aria-label="Sign out"><Icon name="logout" /></button></div>
     </aside>
     </>
   );
 }
 
 function MobileBottomNav({ view, role, onNavigate }: { view: ViewName; role: AccountRole; onNavigate: (view: ViewName) => void }) {
-  const items: Array<{ view: ViewName; label: string; icon: IconName }> = role === 'load_owner' ? [
+  const items: Array<{ view: ViewName; label: string; icon: IconName }> = role === 'admin' ? [
+    { view: 'dashboard', label: 'Overview', icon: 'overview' },
+    { view: 'admin-users', label: 'Accounts', icon: 'building' },
+    { view: 'admin-compliance', label: 'KYC', icon: 'inbox' },
+    { view: 'admin-operations', label: 'Operations', icon: 'route' },
+  ] : role === 'load_owner' ? [
     { view: 'dashboard', label: 'Home', icon: 'overview' },
     { view: 'loads', label: 'Requests', icon: 'inbox' },
     { view: 'profile', label: 'Profile', icon: 'building' },
@@ -83,9 +95,10 @@ interface TopbarProps {
   onSearch: (value: string) => void;
   onNavigate: (view: ViewName) => void;
   searchRef: RefObject<HTMLInputElement | null>;
+  role: AccountRole;
 }
 
-function Topbar({ onMenu, onSearch, onNavigate, searchRef }: TopbarProps) {
+function Topbar({ onMenu, onSearch, onNavigate, searchRef, role }: TopbarProps) {
   const [openPanel, setOpenPanel] = useState<'support' | 'notifications' | null>(null);
   const [notificationRead, setNotificationRead] = useState([false, false, true]);
   const unread = notificationRead.filter(read => !read).length;
@@ -115,7 +128,7 @@ function Topbar({ onMenu, onSearch, onNavigate, searchRef }: TopbarProps) {
     <header className="topbar">
       <button className="menu-btn" onClick={onMenu} aria-label="Open menu"><Icon name="menu" /></button>
       <div className="mobile-app-brand"><span>RR</span><div><strong>ReturnRun</strong><small>Fleet workspace</small></div></div>
-      <div className="search-box"><span><Icon name="search" /></span><input ref={searchRef} onChange={(event) => onSearch(event.target.value)} placeholder="Search fleet, loads or locations" aria-label="Global search"/></div>
+      <div className="search-box"><span><Icon name="search" /></span><input ref={searchRef} onChange={(event) => onSearch(event.target.value)} placeholder={role === 'admin' ? 'Search users, businesses or account IDs' : 'Search fleet, loads or locations'} aria-label="Global search"/></div>
       <div className="top-actions" ref={actionsRef}>
         <button className={`support-btn ${openPanel === 'support' ? 'active' : ''}`} title="Support" aria-expanded={openPanel === 'support'} aria-haspopup="dialog" onClick={() => setOpenPanel(current => current === 'support' ? null : 'support')}><Icon name="headset"/><span>Support</span></button>
         <button className={`icon-btn ${openPanel === 'notifications' ? 'active' : ''}`} title="Notifications" aria-label={`Notifications, ${unread} unread`} aria-expanded={openPanel === 'notifications'} aria-haspopup="dialog" onClick={() => setOpenPanel(current => current === 'notifications' ? null : 'notifications')}><Icon name="bell"/>{unread > 0 && <span className="notification-count">{unread > 9 ? '9+' : unread}</span>}</button>
@@ -249,7 +262,8 @@ export default function App() {
     return requested === 'login' || requested === 'signup' ? requested : null;
   });
   const [data, setData] = useLocalStorage<PortalData>(STORE_KEY, seedData);
-  const activeRole: AccountRole = localStorage.getItem('returnrun-role') === 'load_owner' ? 'load_owner' : 'truck_owner';
+  const storedRole = localStorage.getItem('returnrun-role');
+  const activeRole: AccountRole = storedRole === 'admin' ? 'admin' : storedRole === 'load_owner' ? 'load_owner' : 'truck_owner';
   const activeProfile = (() => { try { const value = localStorage.getItem('returnrun-profile'); return value ? JSON.parse(value) as RegistrationProfile : null; } catch { return null; } })();
   const [view, setView] = useState<ViewName>('dashboard');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -257,6 +271,7 @@ export default function App() {
   const [truckQuery, setTruckQuery] = useState('');
   const [truckStatus, setTruckStatus] = useState('all');
   const [loadQuery, setLoadQuery] = useState('');
+  const [adminQuery, setAdminQuery] = useState('');
   const [requestStatus, setRequestStatus] = useState('all');
   const [requestModal, setRequestModal] = useState<Load | null>(() => activeRole === 'truck_owner' ? data.loads.find(isPendingRequest) ?? null : null);
   const [selectedTruck, setSelectedTruck] = useState<Truck | null>(null);
@@ -273,10 +288,18 @@ export default function App() {
     return <><Landing onLogin={() => setAuthModal('login')} onSignup={() => setAuthModal('signup')} />{authModal && <RoleAuthModal mode={authModal} onClose={() => setAuthModal(null)} onModeChange={setAuthModal} onComplete={enterWorkspace}/>}</>;
   }
   const navigate = (next: ViewName) => { setView(next); setMenuOpen(false); if (next === 'dashboard' && activeRole === 'truck_owner') setRequestModal(data.loads.find(isPendingRequest) ?? null); window.scrollTo({ top: 0, behavior: 'smooth' }); };
-  const globalSearch = (value: string) => { setLoadQuery(value); if (value.trim().length > 1) navigate('loads'); };
+  const globalSearch = (value: string) => {
+    if (activeRole === 'admin') {
+      setAdminQuery(value);
+      if (value.trim().length > 1) navigate('admin-users');
+      return;
+    }
+    setLoadQuery(value);
+    if (value.trim().length > 1) navigate('loads');
+  };
   const addTruck = (truck: Truck) => { setData((current) => ({ ...current, trucks: [truck, ...current.trucks] })); setModal(null); notify('Vehicle added successfully'); };
   const addLoad = (load: Load) => { setData((current) => ({ ...current, loads: [load, ...current.loads] })); setModal(null); notify('Truck request posted'); };
   const decideRequest = (status: Extract<LoadStatus, 'Accepted' | 'Rejected'>) => { if (!requestModal) return; setData((current) => ({ ...current, loads: current.loads.map((request) => request.id === requestModal.id ? { ...request, status } : request) })); setRequestModal(null); notify(status === 'Accepted' ? 'Request accepted — the customer has been notified' : 'Request rejected'); };
 
-  return <div className="app-shell"><Sidebar view={view} role={activeRole} profile={activeProfile} counts={counts} open={menuOpen} onClose={() => setMenuOpen(false)} onNavigate={navigate} onLogout={() => { localStorage.removeItem('returnrun-auth'); setAuthenticated(false); }}/><main className="main"><Topbar onMenu={() => setMenuOpen(true)} onSearch={globalSearch} onNavigate={navigate} searchRef={searchRef}/><div className="content">{view === 'dashboard' && <Dashboard data={data} role={activeRole} profile={activeProfile} onOpenModal={setModal} onNavigate={navigate} onOpenRequest={setRequestModal}/>} {view === 'trucks' && <TrucksView trucks={data.trucks} query={truckQuery} setQuery={setTruckQuery} status={truckStatus} setStatus={setTruckStatus} onAdd={() => setModal('truck')} onOpen={setSelectedTruck}/>} {view === 'loads' && <RequestsView requests={data.loads} query={loadQuery} setQuery={setLoadQuery} status={requestStatus} setStatus={setRequestStatus} role={activeRole} onAdd={() => setModal('load')} onOpenRequest={setRequestModal}/>} {view === 'profile' && <ProfileView profile={activeProfile} role={activeRole} onSaved={() => notify('Business profile updated')}/>}</div></main><MobileBottomNav view={view} role={activeRole} onNavigate={navigate}/>{modal && <EntryModal type={modal} onClose={() => setModal(null)} onAddTruck={addTruck} onAddLoad={addLoad}/>} {requestModal && activeRole === 'truck_owner' && <RequestDecisionModal request={requestModal} onClose={() => setRequestModal(null)} onDecision={decideRequest}/>} {selectedTruck && <VehicleDetailsModal truck={selectedTruck} onClose={() => setSelectedTruck(null)}/>}<div className={`toast ${toast ? 'show' : ''}`} role="status">{toast}</div></div>;
+  return <div className={`app-shell ${activeRole === 'admin' ? 'admin-shell' : ''}`}><Sidebar view={view} role={activeRole} profile={activeProfile} counts={counts} open={menuOpen} onClose={() => setMenuOpen(false)} onNavigate={navigate} onLogout={() => { localStorage.removeItem('returnrun-auth'); setAuthenticated(false); }}/><main className="main"><Topbar role={activeRole} onMenu={() => setMenuOpen(true)} onSearch={globalSearch} onNavigate={navigate} searchRef={searchRef}/><div className="content">{activeRole === 'admin' ? <AdminConsole view={view} data={data} globalQuery={adminQuery} onNavigate={navigate} notify={notify}/> : <>{view === 'dashboard' && <Dashboard data={data} role={activeRole} profile={activeProfile} onOpenModal={setModal} onNavigate={navigate} onOpenRequest={setRequestModal}/>} {view === 'trucks' && <TrucksView trucks={data.trucks} query={truckQuery} setQuery={setTruckQuery} status={truckStatus} setStatus={setTruckStatus} onAdd={() => setModal('truck')} onOpen={setSelectedTruck}/>} {view === 'loads' && <RequestsView requests={data.loads} query={loadQuery} setQuery={setLoadQuery} status={requestStatus} setStatus={setRequestStatus} role={activeRole} onAdd={() => setModal('load')} onOpenRequest={setRequestModal}/>} {view === 'profile' && <ProfileView profile={activeProfile} role={activeRole} onSaved={() => notify('Business profile updated')}/>}</>}</div></main><MobileBottomNav view={view} role={activeRole} onNavigate={navigate}/>{modal && activeRole !== 'admin' && <EntryModal type={modal} onClose={() => setModal(null)} onAddTruck={addTruck} onAddLoad={addLoad}/>} {requestModal && activeRole === 'truck_owner' && <RequestDecisionModal request={requestModal} onClose={() => setRequestModal(null)} onDecision={decideRequest}/>} {selectedTruck && activeRole !== 'admin' && <VehicleDetailsModal truck={selectedTruck} onClose={() => setSelectedTruck(null)}/>}<div className={`toast ${toast ? 'show' : ''}`} role="status">{toast}</div></div>;
 }
