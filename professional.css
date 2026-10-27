@@ -1389,3 +1389,17 @@ body { background: var(--paper); }
 /* Crisp geometric success mark; replaces the font-dependent check glyph. */
 .admin-empty>span{font-size:0}
 .admin-empty>span::before{content:"";width:10px;height:18px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);transform-origin:center}
+
+/* Readable notification typography, matched to the admin workspace scale. */
+.app-shell .notifications-popover{width:min(390px,calc(100vw - 24px))}
+.app-shell .notifications-popover .popover-head{min-height:76px;padding:17px 19px}
+.app-shell .notifications-popover .popover-head span{font-size:10.5px}
+.app-shell .notifications-popover .popover-head strong{font-size:18px}
+.app-shell .notifications-popover .mark-read{font-size:11px}
+.app-shell .notifications-popover .notification-item{grid-template-columns:40px 1fr;gap:12px;padding:16px 19px}
+.app-shell .notifications-popover .popover-action-icon{width:40px;height:40px}
+.app-shell .notifications-popover .popover-action-icon svg{width:18px;height:18px}
+.app-shell .notifications-popover .notification-item strong{font-size:13px;line-height:1.35}
+.app-shell .notifications-popover .notification-item small{margin-top:4px;font-size:11px;line-height:1.45}
+.app-shell .notifications-popover .notification-item em{margin-top:7px;font-size:10px}
+.app-shell .notifications-popover .notification-item.unread:after{right:17px;top:22px}
