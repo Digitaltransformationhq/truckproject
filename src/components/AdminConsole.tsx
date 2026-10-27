@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Icon } from './Icon';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { formatDate } from '../lib/matching';
-import type { Load, PortalData, Truck, ViewName } from '../types';
+import type { Load, PortalData, SupportTicket, SupportTicketStatus, Truck, ViewName } from '../types';
 
 type AdminAccountStatus = 'Active' | 'Suspended';
 type VerificationStatus = 'Verified' | 'Pending' | 'Needs information';
@@ -128,14 +128,24 @@ function Operations({ data }: { data: PortalData }) {
   </section>;
 }
 
-export function AdminConsole({ view, data, globalQuery, onNavigate, notify, onPendingCountChange }: { view: ViewName; data: PortalData; globalQuery: string; onNavigate:(view:ViewName)=>void; notify:(message:string)=>void; onPendingCountChange:(count:number)=>void }) {
+function SupportRequests({ tickets, setTickets, notify }: { tickets: SupportTicket[]; setTickets: React.Dispatch<React.SetStateAction<SupportTicket[]>>; notify:(message:string)=>void }) {
+  const [filter,setFilter]=useState<'All'|SupportTicketStatus>('All');
+  const [selected,setSelected]=useState<SupportTicket|null>(null);
+  const filtered=tickets.filter(ticket=>filter==='All'||ticket.status===filter);
+  const updateStatus=(ticket:SupportTicket,status:SupportTicketStatus)=>{setTickets(current=>current.map(item=>item.id===ticket.id?{...item,status}:item));setSelected(current=>current?.id===ticket.id?{...current,status}:current);notify(status==='Resolved'?`${ticket.id} resolved`:`${ticket.id} moved to review`)};
+  const dateLabel=(value:string)=>new Intl.DateTimeFormat('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(value));
+  return <section className="admin-view"><AdminHeader eyebrow="Service desk" title="Support requests" description="Review questions submitted by truck owners and customers, then track them through resolution." action={<span className="admin-queue-count"><b>{tickets.filter(ticket=>ticket.status!=='Resolved').length}</b> unresolved</span>}/><div className="support-admin-filters">{(['All','Open','In review','Resolved'] as const).map(status=><button key={status} className={filter===status?'active':''} onClick={()=>setFilter(status)}>{status}<span>{status==='All'?tickets.length:tickets.filter(ticket=>ticket.status===status).length}</span></button>)}</div>{filtered.length===0?<div className="support-admin-empty"><span><Icon name="headset"/></span><h2>No {filter==='All'?'support requests':filter.toLowerCase()+' requests'}</h2><p>New queries submitted by platform users will appear here.</p></div>:<div className="support-ticket-list">{filtered.map(ticket=><button key={ticket.id} onClick={()=>setSelected(ticket)}><span className={`support-priority ${ticket.priority.toLowerCase()}`}>{ticket.priority==='Urgent'?'!':<Icon name="inbox"/>}</span><span className="support-ticket-copy"><span><strong>{ticket.subject}</strong><em className={`admin-badge ${badgeClass(ticket.status)}`}>{ticket.status}</em></span><small>{ticket.business} · {ticket.category}</small><p>{ticket.message}</p><time>{ticket.id} · {dateLabel(ticket.createdAt)}</time></span><Icon name="chevron"/></button>)}</div>}{selected&&<div className="support-detail-backdrop" onMouseDown={event=>event.target===event.currentTarget&&setSelected(null)}><section className="support-detail-modal" role="dialog" aria-modal="true" aria-labelledby="supportDetailTitle"><header><div><span>{selected.id} · {selected.category}</span><h2 id="supportDetailTitle">{selected.subject}</h2><p>Submitted {dateLabel(selected.createdAt)}</p></div><button onClick={()=>setSelected(null)} aria-label="Close support request"><Icon name="close"/></button></header><div className="support-detail-body"><div className="support-detail-message"><span>Customer query</span><p>{selected.message}</p></div><aside><div><span>Submitted by</span><strong>{selected.userName}</strong><small>{selected.business}</small></div><div><span>Account type</span><strong>{selected.role==='load_owner'?'Load owner':'Truck owner'}</strong></div><div><span>Contact</span><strong>{selected.email}</strong><small>{selected.phone}</small></div><div><span>Priority</span><strong>{selected.priority}</strong></div><div><span>Current status</span><em className={`admin-badge ${badgeClass(selected.status)}`}>{selected.status}</em></div></aside></div><footer><button onClick={()=>setSelected(null)}>Close</button>{selected.status!=='In review'&&selected.status!=='Resolved'&&<button className="support-review-btn" onClick={()=>updateStatus(selected,'In review')}>Mark in review</button>}{selected.status!=='Resolved'&&<button className="admin-primary" onClick={()=>updateStatus(selected,'Resolved')}>Resolve query</button>}</footer></section></div>}</section>;
+}
+
+export function AdminConsole({ view, data, globalQuery, onNavigate, notify, onPendingCountChange, supportTickets, setSupportTickets }: { view: ViewName; data: PortalData; globalQuery: string; onNavigate:(view:ViewName)=>void; notify:(message:string)=>void; onPendingCountChange:(count:number)=>void; supportTickets:SupportTicket[]; setSupportTickets:React.Dispatch<React.SetStateAction<SupportTicket[]>> }) {
   const [accounts,setAccounts]=useLocalStorage<AdminAccount[]>('returnrun-admin-accounts-v1',seedAccounts);
   useEffect(() => { onPendingCountChange(accounts.filter(account => account.verification !== 'Verified').length); }, [accounts, onPendingCountChange]);
   const content=useMemo(()=>{
     if(view==='admin-users') return <Accounts accounts={accounts} setAccounts={setAccounts} query={globalQuery} notify={notify}/>;
     if(view==='admin-compliance') return <Compliance accounts={accounts} setAccounts={setAccounts} notify={notify}/>;
     if(view==='admin-operations') return <Operations data={data}/>;
+    if(view==='admin-support') return <SupportRequests tickets={supportTickets} setTickets={setSupportTickets} notify={notify}/>;
     return <Overview accounts={accounts} data={data} navigate={onNavigate}/>;
-  },[accounts,data,globalQuery,notify,onNavigate,setAccounts,view]);
+  },[accounts,data,globalQuery,notify,onNavigate,setAccounts,setSupportTickets,supportTickets,view]);
   return content;
 }

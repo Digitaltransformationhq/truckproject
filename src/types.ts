@@ -1,4 +1,4 @@
-export type ViewName = 'dashboard' | 'trucks' | 'loads' | 'matches' | 'profile' | 'admin-users' | 'admin-compliance' | 'admin-operations';
+export type ViewName = 'dashboard' | 'trucks' | 'loads' | 'matches' | 'profile' | 'admin-users' | 'admin-compliance' | 'admin-operations' | 'admin-support';
 export type TruckStatus = 'Available' | 'In transit' | 'Unavailable';
 export type LoadStatus = 'Pending' | 'Accepted' | 'Rejected';
 export type LoadType = 'FTL' | 'PTL';
@@ -33,4 +33,20 @@ export interface ReturnMatch {
   load: Load;
   score: number;
   reasons: string[];
+}
+
+export type SupportTicketStatus = 'Open' | 'In review' | 'Resolved';
+export interface SupportTicket {
+  id: string;
+  userName: string;
+  business: string;
+  email: string;
+  phone: string;
+  role: 'load_owner' | 'truck_owner';
+  category: string;
+  subject: string;
+  message: string;
+  priority: 'Normal' | 'Urgent';
+  status: SupportTicketStatus;
+  createdAt: string;
 }
