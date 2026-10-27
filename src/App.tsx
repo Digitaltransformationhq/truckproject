@@ -142,9 +142,15 @@ function Topbar({ onMenu, onSearch, onNavigate, searchRef, role }: TopbarProps) 
 
         {openPanel === 'notifications' && <aside className="header-popover notifications-popover" role="dialog" aria-label="Notifications">
           <div className="popover-head"><div><span>Updates</span><strong>Notifications</strong></div><button className="mark-read" onClick={() => setNotificationRead(current => current.map(() => true))} disabled={unread === 0}>{unread > 0 ? 'Mark all read' : 'All read'}</button></div>
-          <button className={notificationRead[0] ? 'notification-item' : 'notification-item unread'} onClick={() => openNotificationTarget(0, 'loads')}><span className="popover-action-icon"><Icon name="inbox"/></span><span><strong>New truck request received</strong><small>Review the route and accept or reject it.</small><em>Just now</em></span></button>
-          <button className={notificationRead[1] ? 'notification-item' : 'notification-item unread'} onClick={() => openNotificationTarget(1, 'trucks')}><span className="popover-action-icon"><Icon name="truck"/></span><span><strong>TN 01 AB 4521 is available</strong><small>Your fleet status was updated successfully.</small><em>35 minutes ago</em></span></button>
-          <button className="notification-item" onClick={() => { setOpenPanel(null); onNavigate('trucks'); }}><span className="popover-action-icon"><Icon name="overview"/></span><span><strong>Fleet sync completed</strong><small>All operational data is up to date.</small><em>Today, 09:15</em></span></button>
+          {role === 'admin' ? <>
+            <button className={notificationRead[0] ? 'notification-item' : 'notification-item unread'} onClick={() => openNotificationTarget(0, 'admin-compliance')}><span className="popover-action-icon"><Icon name="inbox"/></span><span><strong>New KYC submission</strong><small>A business is waiting for verification.</small><em>Just now</em></span></button>
+            <button className={notificationRead[1] ? 'notification-item' : 'notification-item unread'} onClick={() => openNotificationTarget(1, 'admin-operations')}><span className="popover-action-icon"><Icon name="truck"/></span><span><strong>Vehicle document expiring</strong><small>Review upcoming compliance exceptions.</small><em>35 minutes ago</em></span></button>
+            <button className="notification-item" onClick={() => { setOpenPanel(null); onNavigate('admin-users'); }}><span className="popover-action-icon"><Icon name="building"/></span><span><strong>Account review completed</strong><small>Platform access records are up to date.</small><em>Today, 09:15</em></span></button>
+          </> : <>
+            <button className={notificationRead[0] ? 'notification-item' : 'notification-item unread'} onClick={() => openNotificationTarget(0, 'loads')}><span className="popover-action-icon"><Icon name="inbox"/></span><span><strong>New truck request received</strong><small>Review the route and accept or reject it.</small><em>Just now</em></span></button>
+            <button className={notificationRead[1] ? 'notification-item' : 'notification-item unread'} onClick={() => openNotificationTarget(1, 'trucks')}><span className="popover-action-icon"><Icon name="truck"/></span><span><strong>TN 01 AB 4521 is available</strong><small>Your fleet status was updated successfully.</small><em>35 minutes ago</em></span></button>
+            <button className="notification-item" onClick={() => { setOpenPanel(null); onNavigate('trucks'); }}><span className="popover-action-icon"><Icon name="overview"/></span><span><strong>Fleet sync completed</strong><small>All operational data is up to date.</small><em>Today, 09:15</em></span></button>
+          </>}
         </aside>}
       </div>
     </header>
