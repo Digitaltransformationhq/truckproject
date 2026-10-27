@@ -21,7 +21,7 @@ interface SidebarProps {
   view: ViewName;
   role?: AccountRole;
   profile?: RegistrationProfile | null;
-  counts: { trucks: number; requests: number };
+  counts: { trucks: number; requests: number; approvals: number };
   open: boolean;
   onClose: () => void;
   onNavigate: (view: ViewName) => void;
@@ -34,7 +34,7 @@ function Sidebar({ view, role, profile, counts, open, onClose, onNavigate, onLog
   const items: Array<{ view?: ViewName; label: string; icon: IconName; count?: number; disabled?: boolean }> = activeRole === 'admin' ? [
     { view: 'dashboard', label: 'Control centre', icon: 'overview' },
     { view: 'admin-users', label: 'User accounts', icon: 'building' },
-    { view: 'admin-compliance', label: 'KYC verification', icon: 'inbox', count: 3 },
+    { view: 'admin-compliance', label: 'KYC verification', icon: 'inbox', count: counts.approvals > 0 ? counts.approvals : undefined },
     { view: 'admin-operations', label: 'Operations', icon: 'route' },
   ] : activeRole === 'load_owner' ? [
     { view: 'dashboard', label: 'Overview', icon: 'overview' },
@@ -279,12 +279,18 @@ export default function App() {
   const [loadQuery, setLoadQuery] = useState('');
   const [adminQuery, setAdminQuery] = useState('');
   const [requestStatus, setRequestStatus] = useState('all');
+  const [adminPendingCount, setAdminPendingCount] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('returnrun-admin-accounts-v1') || '[]') as Array<{ verification?: string }>;
+      return stored.length ? stored.filter(account => account.verification !== 'Verified').length : 3;
+    } catch { return 3; }
+  });
   const [requestModal, setRequestModal] = useState<Load | null>(() => activeRole === 'truck_owner' ? data.loads.find(isPendingRequest) ?? null : null);
   const [selectedTruck, setSelectedTruck] = useState<Truck | null>(null);
   const [toast, setToast] = useState('');
   const toastTimer = useRef<number | undefined>(undefined);
   const searchRef = useRef<HTMLInputElement>(null);
-  const counts = { trucks: data.trucks.length, requests: data.loads.filter(isPendingRequest).length };
+  const counts = { trucks: data.trucks.length, requests: data.loads.filter(isPendingRequest).length, approvals: adminPendingCount };
 
   const notify = (message: string) => { setToast(message); window.clearTimeout(toastTimer.current); toastTimer.current = window.setTimeout(() => setToast(''), 2500); };
   useEffect(() => { const handler = (event: KeyboardEvent) => { if (event.key === 'Escape') { setModal(null); setRequestModal(null); setSelectedTruck(null); } }; document.addEventListener('keydown', handler); return () => document.removeEventListener('keydown', handler); }, []);
@@ -307,5 +313,5 @@ export default function App() {
   const addLoad = (load: Load) => { setData((current) => ({ ...current, loads: [load, ...current.loads] })); setModal(null); notify('Truck request posted'); };
   const decideRequest = (status: Extract<LoadStatus, 'Accepted' | 'Rejected'>) => { if (!requestModal) return; setData((current) => ({ ...current, loads: current.loads.map((request) => request.id === requestModal.id ? { ...request, status } : request) })); setRequestModal(null); notify(status === 'Accepted' ? 'Request accepted — the customer has been notified' : 'Request rejected'); };
 
-  return <div className={`app-shell ${activeRole === 'admin' ? 'admin-shell' : ''}`}><Sidebar view={view} role={activeRole} profile={activeProfile} counts={counts} open={menuOpen} onClose={() => setMenuOpen(false)} onNavigate={navigate} onLogout={() => { localStorage.removeItem('returnrun-auth'); setAuthenticated(false); }}/><main className="main"><Topbar role={activeRole} onMenu={() => setMenuOpen(true)} onSearch={globalSearch} onNavigate={navigate} searchRef={searchRef}/><div className="content">{activeRole === 'admin' ? <AdminConsole view={view} data={data} globalQuery={adminQuery} onNavigate={navigate} notify={notify}/> : <>{view === 'dashboard' && <Dashboard data={data} role={activeRole} profile={activeProfile} onOpenModal={setModal} onNavigate={navigate} onOpenRequest={setRequestModal}/>} {view === 'trucks' && <TrucksView trucks={data.trucks} query={truckQuery} setQuery={setTruckQuery} status={truckStatus} setStatus={setTruckStatus} onAdd={() => setModal('truck')} onOpen={setSelectedTruck}/>} {view === 'loads' && <RequestsView requests={data.loads} query={loadQuery} setQuery={setLoadQuery} status={requestStatus} setStatus={setRequestStatus} role={activeRole} onAdd={() => setModal('load')} onOpenRequest={setRequestModal}/>} {view === 'profile' && <ProfileView profile={activeProfile} role={activeRole} onSaved={() => notify('Business profile updated')}/>}</>}</div></main><MobileBottomNav view={view} role={activeRole} onNavigate={navigate}/>{modal && activeRole !== 'admin' && <EntryModal type={modal} onClose={() => setModal(null)} onAddTruck={addTruck} onAddLoad={addLoad}/>} {requestModal && activeRole === 'truck_owner' && <RequestDecisionModal request={requestModal} onClose={() => setRequestModal(null)} onDecision={decideRequest}/>} {selectedTruck && activeRole !== 'admin' && <VehicleDetailsModal truck={selectedTruck} onClose={() => setSelectedTruck(null)}/>}<div className={`toast ${toast ? 'show' : ''}`} role="status">{toast}</div></div>;
+  return <div className={`app-shell ${activeRole === 'admin' ? 'admin-shell' : ''}`}><Sidebar view={view} role={activeRole} profile={activeProfile} counts={counts} open={menuOpen} onClose={() => setMenuOpen(false)} onNavigate={navigate} onLogout={() => { localStorage.removeItem('returnrun-auth'); setAuthenticated(false); }}/><main className="main"><Topbar role={activeRole} onMenu={() => setMenuOpen(true)} onSearch={globalSearch} onNavigate={navigate} searchRef={searchRef}/><div className="content">{activeRole === 'admin' ? <AdminConsole view={view} data={data} globalQuery={adminQuery} onNavigate={navigate} notify={notify} onPendingCountChange={setAdminPendingCount}/> : <>{view === 'dashboard' && <Dashboard data={data} role={activeRole} profile={activeProfile} onOpenModal={setModal} onNavigate={navigate} onOpenRequest={setRequestModal}/>} {view === 'trucks' && <TrucksView trucks={data.trucks} query={truckQuery} setQuery={setTruckQuery} status={truckStatus} setStatus={setTruckStatus} onAdd={() => setModal('truck')} onOpen={setSelectedTruck}/>} {view === 'loads' && <RequestsView requests={data.loads} query={loadQuery} setQuery={setLoadQuery} status={requestStatus} setStatus={setRequestStatus} role={activeRole} onAdd={() => setModal('load')} onOpenRequest={setRequestModal}/>} {view === 'profile' && <ProfileView profile={activeProfile} role={activeRole} onSaved={() => notify('Business profile updated')}/>}</>}</div></main><MobileBottomNav view={view} role={activeRole} onNavigate={navigate}/>{modal && activeRole !== 'admin' && <EntryModal type={modal} onClose={() => setModal(null)} onAddTruck={addTruck} onAddLoad={addLoad}/>} {requestModal && activeRole === 'truck_owner' && <RequestDecisionModal request={requestModal} onClose={() => setRequestModal(null)} onDecision={decideRequest}/>} {selectedTruck && activeRole !== 'admin' && <VehicleDetailsModal truck={selectedTruck} onClose={() => setSelectedTruck(null)}/>}<div className={`toast ${toast ? 'show' : ''}`} role="status">{toast}</div></div>;
 }

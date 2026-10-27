@@ -128,8 +128,9 @@ function Operations({ data }: { data: PortalData }) {
   </section>;
 }
 
-export function AdminConsole({ view, data, globalQuery, onNavigate, notify }: { view: ViewName; data: PortalData; globalQuery: string; onNavigate:(view:ViewName)=>void; notify:(message:string)=>void }) {
+export function AdminConsole({ view, data, globalQuery, onNavigate, notify, onPendingCountChange }: { view: ViewName; data: PortalData; globalQuery: string; onNavigate:(view:ViewName)=>void; notify:(message:string)=>void; onPendingCountChange:(count:number)=>void }) {
   const [accounts,setAccounts]=useLocalStorage<AdminAccount[]>('returnrun-admin-accounts-v1',seedAccounts);
+  useEffect(() => { onPendingCountChange(accounts.filter(account => account.verification !== 'Verified').length); }, [accounts, onPendingCountChange]);
   const content=useMemo(()=>{
     if(view==='admin-users') return <Accounts accounts={accounts} setAccounts={setAccounts} query={globalQuery} notify={notify}/>;
     if(view==='admin-compliance') return <Compliance accounts={accounts} setAccounts={setAccounts} notify={notify}/>;
