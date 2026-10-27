@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Icon } from './Icon';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { formatDate } from '../lib/matching';
@@ -6,6 +6,8 @@ import type { Load, PortalData, Truck, ViewName } from '../types';
 
 type AdminAccountStatus = 'Active' | 'Suspended';
 type VerificationStatus = 'Verified' | 'Pending' | 'Needs information';
+type DocumentKind = 'gst' | 'identity' | 'bank';
+type DocumentReviewStatus = 'Verified' | 'Needs information';
 
 interface AdminAccount {
   id: string;
@@ -31,6 +33,44 @@ const seedAccounts: AdminAccount[] = [
 ];
 
 const badgeClass = (value: string) => value.toLowerCase().replaceAll(' ', '-');
+
+const documentMeta: Record<DocumentKind, { title: string; icon: 'package' | 'building' | 'inbox'; filename: string }> = {
+  gst: { title: 'GST registration', icon: 'package', filename: 'gst-registration-certificate.pdf' },
+  identity: { title: 'Business identity', icon: 'building', filename: 'certificate-of-incorporation.pdf' },
+  bank: { title: 'Bank proof', icon: 'inbox', filename: 'cancelled-cheque.pdf' },
+};
+
+function DocumentReviewModal({ account, kind, status, onClose, onDecision }: { account: AdminAccount; kind: DocumentKind; status?: DocumentReviewStatus; onClose: () => void; onDecision: (status: DocumentReviewStatus) => void }) {
+  const docMeta = documentMeta[kind];
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => event.key === 'Escape' && onClose();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', closeOnEscape);
+    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener('keydown', closeOnEscape); };
+  }, [onClose]);
+  const reference = kind === 'gst' ? `33AABCS${account.id.slice(-4)}F1Z2` : kind === 'identity' ? `U60231${account.id.slice(-4)}PTC` : `XXXXXX${account.phone.replace(/\D/g,'').slice(-4)}`;
+  return <div className="document-modal-backdrop" onMouseDown={event => event.target === event.currentTarget && onClose()}>
+    <section className="document-review-modal" role="dialog" aria-modal="true" aria-labelledby="documentReviewTitle">
+      <header><div><span>Document review</span><h2 id="documentReviewTitle">{docMeta.title}</h2><p>{account.business} · {account.id}</p></div><button onClick={onClose} aria-label="Close document preview"><Icon name="close"/></button></header>
+      <div className="document-review-layout">
+        <div className="document-preview-stage">
+          <div className="document-preview-toolbar"><span><b>PDF</b>{docMeta.filename}</span><em>1 of 1</em></div>
+          <div className="document-paper">
+            <div className="document-emblem">RR</div>
+            <small>{kind === 'bank' ? 'ACCOUNT VERIFICATION DOCUMENT' : 'GOVERNMENT OF INDIA'}</small>
+            <h3>{kind === 'gst' ? 'Goods and Services Tax Registration Certificate' : kind === 'identity' ? 'Certificate of Incorporation' : 'Bank Account Confirmation'}</h3>
+            <i/>
+            <dl><div><dt>Legal business name</dt><dd>{account.business}</dd></div><div><dt>Authorised representative</dt><dd>{account.name}</dd></div><div><dt>{kind === 'gst' ? 'GSTIN' : kind === 'identity' ? 'Registration number' : 'Account reference'}</dt><dd>{reference}</dd></div><div><dt>Registered address</dt><dd>{account.city}, India</dd></div><div><dt>Effective date</dt><dd>{formatDate(account.joined)}</dd></div><div><dt>Document status</dt><dd>Valid and active</dd></div></dl>
+            <div className="document-signature"><span><b>Digitally signed</b><small>Issuing authority</small></span><span className="document-stamp">VERIFIED<br/>SOURCE</span></div>
+          </div>
+        </div>
+        <aside className="document-review-sidebar"><span>Uploaded file</span><h3>{docMeta.filename}</h3><div className="document-review-facts"><div><span>Applicant</span><strong>{account.name}</strong></div><div><span>Business</span><strong>{account.business}</strong></div><div><span>Uploaded</span><strong>{formatDate(account.joined)}</strong></div><div><span>File type</span><strong>PDF · 842 KB</strong></div></div><div className="document-security-note"><Icon name="building"/><p><strong>Review the original details</strong><small>Confirm the business name, reference number, address and validity before making a decision.</small></p></div>{status && <div className={`document-current-status ${badgeClass(status)}`}><span>Current review</span><strong>{status}</strong></div>}</aside>
+      </div>
+      <footer><button className="document-flag" onClick={() => onDecision('Needs information')}>Flag for follow-up</button><button className="admin-primary" onClick={() => onDecision('Verified')}>Mark document verified</button></footer>
+    </section>
+  </div>;
+}
 
 function AdminHeader({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: React.ReactNode }) {
   return <div className="admin-page-head"><div><span>{eyebrow}</span><h1>{title}</h1><p>{description}</p></div>{action}</div>;
@@ -69,10 +109,15 @@ function Accounts({ accounts, setAccounts, query, notify }: { accounts: AdminAcc
 }
 
 function Compliance({ accounts, setAccounts, notify }: { accounts: AdminAccount[]; setAccounts: React.Dispatch<React.SetStateAction<AdminAccount[]>>; notify:(message:string)=>void }) {
+  const [selectedDocument,setSelectedDocument] = useState<{ account: AdminAccount; kind: DocumentKind } | null>(null);
+  const [documentReviews,setDocumentReviews] = useLocalStorage<Record<string,DocumentReviewStatus>>('returnrun-admin-document-reviews-v1',{});
   const queue=accounts.filter(account=>account.verification!=='Verified');
   const update=(account:AdminAccount,verification:VerificationStatus)=>{setAccounts(current=>current.map(item=>item.id===account.id?{...item,verification}:item));notify(verification==='Verified'?`${account.business} verified`:`Information requested from ${account.business}`)};
+  const documentKey=(account:AdminAccount,kind:DocumentKind)=>`${account.id}:${kind}`;
+  const reviewDocument=(status:DocumentReviewStatus)=>{if(!selectedDocument)return;const {account,kind}=selectedDocument;setDocumentReviews(current=>({...current,[documentKey(account,kind)]:status}));if(status==='Needs information')setAccounts(current=>current.map(item=>item.id===account.id?{...item,verification:'Needs information'}:item));notify(status==='Verified'?`${documentMeta[kind].title} marked as verified`:`${documentMeta[kind].title} flagged for follow-up`);setSelectedDocument(null)};
   return <section className="admin-view"><AdminHeader eyebrow="Trust & safety" title="KYC verification" description="Review business identity and tax information before granting full access." action={<span className="admin-queue-count"><b>{queue.length}</b> waiting</span>}/>
-    <div className="compliance-layout"><div className="compliance-list">{queue.length===0?<div className="admin-empty"><span>✓</span><h2>Queue cleared</h2><p>There are no businesses waiting for review.</p></div>:queue.map(account=><article key={account.id}><header><span className="admin-account-avatar">{account.name.split(' ').map(p=>p[0]).join('')}</span><div><strong>{account.business}</strong><small>{account.id} · Submitted {formatDate(account.joined)}</small></div><em className={`admin-badge ${badgeClass(account.verification)}`}>{account.verification}</em></header><div className="compliance-facts"><div><span>Applicant</span><strong>{account.name}</strong></div><div><span>Account type</span><strong>{account.role}</strong></div><div><span>Registered city</span><strong>{account.city}</strong></div><div><span>Phone</span><strong>{account.phone}</strong></div></div><div className="document-checks"><div><span><Icon name="package"/> GST registration</span><b className="document-ready">Received</b></div><div><span><Icon name="building"/> Business identity</span><b className="document-ready">Received</b></div><div><span><Icon name="inbox"/> Bank proof</span><b className={account.verification==='Needs information'?'document-issue':'document-ready'}>{account.verification==='Needs information'?'Unclear':'Received'}</b></div></div><footer><button onClick={()=>update(account,'Needs information')}>Request information</button><button className="admin-primary" onClick={()=>update(account,'Verified')}>Approve business</button></footer></article>)}</div><aside className="compliance-guide"><span>Review checklist</span><h3>Before approving</h3><ol><li><b>1</b><p><strong>Business identity</strong><small>Name matches incorporation or GST records.</small></p></li><li><b>2</b><p><strong>Contact ownership</strong><small>Phone and email belong to the applicant.</small></p></li><li><b>3</b><p><strong>Tax registration</strong><small>GSTIN format and business state are consistent.</small></p></li><li><b>4</b><p><strong>Bank beneficiary</strong><small>Beneficiary matches the registered entity.</small></p></li></ol><p className="guide-note">Every decision is recorded in the platform audit history.</p></aside></div>
+    <div className="compliance-layout"><div className="compliance-list">{queue.length===0?<div className="admin-empty"><span>✓</span><h2>Queue cleared</h2><p>There are no businesses waiting for review.</p></div>:queue.map(account=><article key={account.id}><header><span className="admin-account-avatar">{account.name.split(' ').map(p=>p[0]).join('')}</span><div><strong>{account.business}</strong><small>{account.id} · Submitted {formatDate(account.joined)}</small></div><em className={`admin-badge ${badgeClass(account.verification)}`}>{account.verification}</em></header><div className="compliance-facts"><div><span>Applicant</span><strong>{account.name}</strong></div><div><span>Account type</span><strong>{account.role}</strong></div><div><span>Registered city</span><strong>{account.city}</strong></div><div><span>Phone</span><strong>{account.phone}</strong></div></div><div className="document-checks">{(['gst','identity','bank'] as DocumentKind[]).map(kind=>{const meta=documentMeta[kind];const reviewed=documentReviews[documentKey(account,kind)];const issue=reviewed==='Needs information'||(!reviewed&&kind==='bank'&&account.verification==='Needs information');const label=reviewed??(issue?'Unclear':'Received');return <button key={kind} onClick={()=>setSelectedDocument({account,kind})} aria-label={`Open ${meta.title} for ${account.business}`}><span><Icon name={meta.icon}/>{meta.title}</span><b className={issue?'document-issue':'document-ready'}>{label}</b><Icon name="chevron"/></button>})}</div><footer><button onClick={()=>update(account,'Needs information')}>Request information</button><button className="admin-primary" onClick={()=>update(account,'Verified')}>Approve business</button></footer></article>)}</div><aside className="compliance-guide"><span>Review checklist</span><h3>Before approving</h3><ol><li><b>1</b><p><strong>Business identity</strong><small>Name matches incorporation or GST records.</small></p></li><li><b>2</b><p><strong>Contact ownership</strong><small>Phone and email belong to the applicant.</small></p></li><li><b>3</b><p><strong>Tax registration</strong><small>GSTIN format and business state are consistent.</small></p></li><li><b>4</b><p><strong>Bank beneficiary</strong><small>Beneficiary matches the registered entity.</small></p></li></ol><p className="guide-note">Every decision is recorded in the platform audit history.</p></aside></div>
+    {selectedDocument && <DocumentReviewModal account={selectedDocument.account} kind={selectedDocument.kind} status={documentReviews[documentKey(selectedDocument.account,selectedDocument.kind)]} onClose={()=>setSelectedDocument(null)} onDecision={reviewDocument}/>} 
   </section>;
 }
 
