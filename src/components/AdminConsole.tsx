@@ -107,7 +107,17 @@ function Overview({ accounts, data, navigate }: { accounts: AdminAccount[]; data
   const pending = accounts.filter(needsVerificationReview);
   const active = accounts.filter(account => account.status === 'Active');
   const accepted = data.loads.filter(load => load.status === 'Accepted').length;
-  const activity = [42,58,48,72,64,86,78];
+  const pendingRequests = data.loads.filter(load => load.status === 'Pending').length;
+  const availableTrucks = data.trucks.filter(truck => truck.status === 'Available').length;
+  const marketplaceActivity = [
+    { label: 'Requests', value: data.loads.length },
+    { label: 'Pending', value: pendingRequests },
+    { label: 'Accepted', value: accepted },
+    { label: 'Vehicles', value: data.trucks.length },
+    { label: 'Available', value: availableTrucks },
+    { label: 'Accounts', value: accounts.length },
+  ];
+  const chartMaximum = Math.max(1,...marketplaceActivity.map(item=>item.value));
   return <section className="admin-view">
     <AdminHeader eyebrow="Control centre" title="Platform overview" description="Monitor users, verification and marketplace activity from one place." action={<button className="admin-primary" onClick={() => navigate('admin-compliance')}>Review KYC queue <span>{pending.length}</span></button>}/>
     <div className="admin-metric-grid">
@@ -117,7 +127,7 @@ function Overview({ accounts, data, navigate }: { accounts: AdminAccount[]; data
       <button onClick={() => navigate('admin-operations')}><span className="admin-metric-icon violet"><Icon name="route"/></span><div><small>Accepted requests</small><strong>{accepted}</strong><em>{data.loads.length} total requests</em></div><Icon name="chevron"/></button>
     </div>
     <div className="admin-overview-grid">
-      <section className="admin-panel admin-activity-panel"><header><div><span>Marketplace health</span><h2>Weekly activity</h2></div><span className="admin-live"><i/> Live</span></header><div className="admin-chart"><div className="chart-scale"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></div><div className="chart-bars">{activity.map((value,index)=><div key={index}><i style={{height:`${value}%`}}><b>{value}</b></i><span>{['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][index]}</span></div>)}</div></div><footer><div><strong>448</strong><span>Actions this week</span></div><div><strong>+18%</strong><span>vs. last week</span></div><div><strong>2m 18s</strong><span>Median response</span></div></footer></section>
+      <section className="admin-panel admin-activity-panel"><header><div><span>Marketplace activity</span><h2>Live platform snapshot</h2></div><span className="admin-live"><i/> Live</span></header><div className="admin-chart"><div className="chart-scale"><span>{chartMaximum}</span><span>{Math.ceil(chartMaximum*.66)}</span><span>{Math.ceil(chartMaximum*.33)}</span><span>0</span></div><div className="chart-bars">{marketplaceActivity.map(item=><div key={item.label}><i style={{height:`${Math.max(8,(item.value/chartMaximum)*100)}%`}}><b>{item.value}</b></i><span>{item.label}</span></div>)}</div></div><footer><div><strong>{data.loads.length}</strong><span>Total truck requests</span></div><div><strong>{pendingRequests}</strong><span>Awaiting owner response</span></div><div><strong>{availableTrucks}</strong><span>Trucks available now</span></div></footer></section>
       <section className="admin-panel admin-queue"><header><div><span>Action centre</span><h2>Verification queue</h2></div><button onClick={() => navigate('admin-compliance')}>View all</button></header><div>{pending.slice(0,3).map(account=><button key={account.id} onClick={() => navigate('admin-compliance')}><span className="admin-account-avatar">{account.name.split(' ').map(p=>p[0]).join('')}</span><span><strong>{account.business}</strong><small>{account.role} · {account.city}</small></span><em className={`admin-badge ${badgeClass(account.verification)}`}>{account.verification}</em><Icon name="chevron"/></button>)}</div></section>
     </div>
     <section className="admin-panel admin-alerts"><header><div><span>Risk and exceptions</span><h2>Needs attention</h2></div></header><div className="admin-alert-grid"><article><span className="alert-mark high">!</span><div><strong>2 vehicle documents expire soon</strong><p>Insurance or fitness certificates expire within 30 days.</p></div><button onClick={() => navigate('admin-operations')}>Inspect</button></article><article><span className="alert-mark medium">i</span><div><strong>1 account needs more information</strong><p>The submitted GST document could not be verified.</p></div><button onClick={() => navigate('admin-compliance')}>Review</button></article><article><span className="alert-mark neutral"><Icon name="trend"/></span><div><strong>Acceptance is trending upward</strong><p>{accepted} of {data.loads.length} requests are currently confirmed.</p></div><button onClick={() => navigate('admin-operations')}>View activity</button></article></div></section>
