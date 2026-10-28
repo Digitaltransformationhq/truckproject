@@ -62,7 +62,7 @@ function Sidebar({ view, role, profile, counts, open, onClose, onNavigate, onLog
         {items.map((item) => (
           <button key={item.label} className={`nav-item ${item.view === view ? 'active' : ''}`} aria-current={item.view === view ? 'page' : undefined} onClick={() => item.view && onNavigate(item.view)}>
             <span><Icon name={item.icon} /></span>{item.label}
-            {item.count !== undefined && <b className="accent-count">{item.count}</b>}
+            {(item.count ?? 0) > 0 && <b className="accent-count">{item.count}</b>}
           </button>
         ))}
         {activeRole !== 'admin' && <><p className="nav-label">Account</p>
