@@ -5,7 +5,7 @@ import { formatDate } from '../lib/matching';
 import type { Load, PortalData, SupportTicket, SupportTicketStatus, Truck, ViewName } from '../types';
 
 type AdminAccountStatus = 'Active' | 'Suspended';
-type VerificationStatus = 'Verified' | 'Pending' | 'Needs information';
+type VerificationStatus = 'Verified' | 'Pending' | 'Needs information' | 'Rejected';
 type DocumentKind = 'gst' | 'identity' | 'bank';
 type DocumentReviewStatus = 'Verified' | 'Needs information' | 'Rejected';
 
@@ -33,6 +33,7 @@ const seedAccounts: AdminAccount[] = [
 ];
 
 const badgeClass = (value: string) => value.toLowerCase().replaceAll(' ', '-');
+const needsVerificationReview = (account: AdminAccount) => account.verification === 'Pending' || account.verification === 'Needs information';
 
 const documentMeta: Record<DocumentKind, { title: string; icon: 'package' | 'building' | 'inbox'; filename: string }> = {
   gst: { title: 'GST registration', icon: 'package', filename: 'gst-registration-certificate.pdf' },
@@ -79,12 +80,31 @@ function DocumentReviewModal({ account, kind, status, savedRemark, onClose, onDe
   </div>;
 }
 
+function RejectBusinessDialog({ account, onCancel, onConfirm }: { account: AdminAccount; onCancel: () => void; onConfirm: () => void }) {
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => event.key === 'Escape' && onCancel();
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [onCancel]);
+  return <div className="business-reject-backdrop" onMouseDown={event=>event.target===event.currentTarget&&onCancel()}>
+    <section className="business-reject-dialog" role="alertdialog" aria-modal="true" aria-labelledby="rejectBusinessTitle" aria-describedby="rejectBusinessDescription">
+      <button className="business-reject-close" onClick={onCancel} aria-label="Close confirmation"><Icon name="close"/></button>
+      <span className="business-reject-icon">!</span>
+      <span className="business-reject-eyebrow">Reject KYC application</span>
+      <h2 id="rejectBusinessTitle">Reject {account.business}?</h2>
+      <p id="rejectBusinessDescription">This will reject the business verification and suspend the account. The business will no longer appear in the active KYC review queue.</p>
+      <div className="business-reject-summary"><span>{account.name.split(' ').map(part=>part[0]).join('')}</span><div><strong>{account.business}</strong><small>{account.id} · {account.role} · {account.city}</small></div></div>
+      <footer><button onClick={onCancel}>Cancel</button><button className="confirm-business-reject" onClick={onConfirm}>Yes, reject business</button></footer>
+    </section>
+  </div>;
+}
+
 function AdminHeader({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: React.ReactNode }) {
   return <div className="admin-page-head"><div><span>{eyebrow}</span><h1>{title}</h1><p>{description}</p></div>{action}</div>;
 }
 
 function Overview({ accounts, data, navigate }: { accounts: AdminAccount[]; data: PortalData; navigate: (view: ViewName) => void }) {
-  const pending = accounts.filter(account => account.verification !== 'Verified');
+  const pending = accounts.filter(needsVerificationReview);
   const active = accounts.filter(account => account.status === 'Active');
   const accepted = data.loads.filter(load => load.status === 'Accepted').length;
   const activity = [42,58,48,72,64,86,78];
@@ -117,15 +137,18 @@ function Accounts({ accounts, setAccounts, query, notify }: { accounts: AdminAcc
 
 function Compliance({ accounts, setAccounts, notify }: { accounts: AdminAccount[]; setAccounts: React.Dispatch<React.SetStateAction<AdminAccount[]>>; notify:(message:string)=>void }) {
   const [selectedDocument,setSelectedDocument] = useState<{ account: AdminAccount; kind: DocumentKind } | null>(null);
+  const [rejectingAccount,setRejectingAccount] = useState<AdminAccount | null>(null);
   const [documentReviews,setDocumentReviews] = useLocalStorage<Record<string,DocumentReviewStatus>>('returnrun-admin-document-reviews-v1',{});
   const [documentRemarks,setDocumentRemarks] = useLocalStorage<Record<string,string>>('returnrun-admin-document-remarks-v1',{});
-  const queue=accounts.filter(account=>account.verification!=='Verified');
+  const queue=accounts.filter(needsVerificationReview);
   const update=(account:AdminAccount,verification:VerificationStatus)=>{setAccounts(current=>current.map(item=>item.id===account.id?{...item,verification}:item));notify(verification==='Verified'?`${account.business} verified`:`Information requested from ${account.business}`)};
   const documentKey=(account:AdminAccount,kind:DocumentKind)=>`${account.id}:${kind}`;
   const reviewDocument=(status:DocumentReviewStatus,remark?:string)=>{if(!selectedDocument)return;const {account,kind}=selectedDocument;const key=documentKey(account,kind);setDocumentReviews(current=>({...current,[key]:status}));if(status==='Rejected'&&remark)setDocumentRemarks(current=>({...current,[key]:remark}));if(status==='Verified')setDocumentRemarks(current=>{const next={...current};delete next[key];return next});if(status!=='Verified')setAccounts(current=>current.map(item=>item.id===account.id?{...item,verification:'Needs information'}:item));notify(status==='Verified'?`${documentMeta[kind].title} marked as verified`:`${documentMeta[kind].title} rejected with a remark`);setSelectedDocument(null)};
+  const rejectBusiness=()=>{if(!rejectingAccount)return;const account=rejectingAccount;setAccounts(current=>current.map(item=>item.id===account.id?{...item,verification:'Rejected',status:'Suspended'}:item));notify(`${account.business} rejected and account suspended`);setRejectingAccount(null)};
   return <section className="admin-view"><AdminHeader eyebrow="Trust & safety" title="KYC verification" description="Review business identity and tax information before granting full access." action={<span className="admin-queue-count"><b>{queue.length}</b> waiting</span>}/>
-    <div className="compliance-layout"><div className="compliance-list">{queue.length===0?<div className="admin-empty"><span>✓</span><h2>Queue cleared</h2><p>There are no businesses waiting for review.</p></div>:queue.map(account=><article key={account.id}><header><span className="admin-account-avatar">{account.name.split(' ').map(p=>p[0]).join('')}</span><div><strong>{account.business}</strong><small>{account.id} · Submitted {formatDate(account.joined)}</small></div><em className={`admin-badge ${badgeClass(account.verification)}`}>{account.verification}</em></header><div className="compliance-facts"><div><span>Applicant</span><strong>{account.name}</strong></div><div><span>Account type</span><strong>{account.role}</strong></div><div><span>Registered city</span><strong>{account.city}</strong></div><div><span>Phone</span><strong>{account.phone}</strong></div></div><div className="document-checks">{(['gst','identity','bank'] as DocumentKind[]).map(kind=>{const meta=documentMeta[kind];const reviewed=documentReviews[documentKey(account,kind)];const issue=reviewed==='Needs information'||reviewed==='Rejected'||(!reviewed&&kind==='bank'&&account.verification==='Needs information');const label=reviewed??(issue?'Unclear':'Received');return <button key={kind} onClick={()=>setSelectedDocument({account,kind})} aria-label={`Open ${meta.title} for ${account.business}`}><span><Icon name={meta.icon}/>{meta.title}</span><b className={issue?'document-issue':'document-ready'}>{label}</b><Icon name="chevron"/></button>})}</div><footer><button onClick={()=>update(account,'Needs information')}>Request information</button><button className="admin-primary" onClick={()=>update(account,'Verified')}>Approve business</button></footer></article>)}</div><aside className="compliance-guide"><span>Review checklist</span><h3>Before approving</h3><ol><li><b>1</b><p><strong>Business identity</strong><small>Name matches incorporation or GST records.</small></p></li><li><b>2</b><p><strong>Contact ownership</strong><small>Phone and email belong to the applicant.</small></p></li><li><b>3</b><p><strong>Tax registration</strong><small>GSTIN format and business state are consistent.</small></p></li><li><b>4</b><p><strong>Bank beneficiary</strong><small>Beneficiary matches the registered entity.</small></p></li></ol><p className="guide-note">Every decision is recorded in the platform audit history.</p></aside></div>
+    <div className="compliance-layout"><div className="compliance-list">{queue.length===0?<div className="admin-empty"><span>✓</span><h2>Queue cleared</h2><p>There are no businesses waiting for review.</p></div>:queue.map(account=><article key={account.id}><header><span className="admin-account-avatar">{account.name.split(' ').map(p=>p[0]).join('')}</span><div><strong>{account.business}</strong><small>{account.id} · Submitted {formatDate(account.joined)}</small></div><em className={`admin-badge ${badgeClass(account.verification)}`}>{account.verification}</em></header><div className="compliance-facts"><div><span>Applicant</span><strong>{account.name}</strong></div><div><span>Account type</span><strong>{account.role}</strong></div><div><span>Registered city</span><strong>{account.city}</strong></div><div><span>Phone</span><strong>{account.phone}</strong></div></div><div className="document-checks">{(['gst','identity','bank'] as DocumentKind[]).map(kind=>{const meta=documentMeta[kind];const reviewed=documentReviews[documentKey(account,kind)];const issue=reviewed==='Needs information'||reviewed==='Rejected'||(!reviewed&&kind==='bank'&&account.verification==='Needs information');const label=reviewed??(issue?'Unclear':'Received');return <button key={kind} onClick={()=>setSelectedDocument({account,kind})} aria-label={`Open ${meta.title} for ${account.business}`}><span><Icon name={meta.icon}/>{meta.title}</span><b className={issue?'document-issue':'document-ready'}>{label}</b><Icon name="chevron"/></button>})}</div><footer><button className="reject-business-button" onClick={()=>setRejectingAccount(account)}>Reject business</button><button onClick={()=>update(account,'Needs information')}>Request information</button><button className="admin-primary" onClick={()=>update(account,'Verified')}>Approve business</button></footer></article>)}</div><aside className="compliance-guide"><span>Review checklist</span><h3>Before approving</h3><ol><li><b>1</b><p><strong>Business identity</strong><small>Name matches incorporation or GST records.</small></p></li><li><b>2</b><p><strong>Contact ownership</strong><small>Phone and email belong to the applicant.</small></p></li><li><b>3</b><p><strong>Tax registration</strong><small>GSTIN format and business state are consistent.</small></p></li><li><b>4</b><p><strong>Bank beneficiary</strong><small>Beneficiary matches the registered entity.</small></p></li></ol><p className="guide-note">Every decision is recorded in the platform audit history.</p></aside></div>
     {selectedDocument && <DocumentReviewModal account={selectedDocument.account} kind={selectedDocument.kind} status={documentReviews[documentKey(selectedDocument.account,selectedDocument.kind)]} savedRemark={documentRemarks[documentKey(selectedDocument.account,selectedDocument.kind)]} onClose={()=>setSelectedDocument(null)} onDecision={reviewDocument}/>}
+    {rejectingAccount && <RejectBusinessDialog account={rejectingAccount} onCancel={()=>setRejectingAccount(null)} onConfirm={rejectBusiness}/>}
   </section>;
 }
 
@@ -147,7 +170,7 @@ function SupportRequests({ tickets, setTickets, notify }: { tickets: SupportTick
 
 export function AdminConsole({ view, data, globalQuery, onNavigate, notify, onPendingCountChange, supportTickets, setSupportTickets }: { view: ViewName; data: PortalData; globalQuery: string; onNavigate:(view:ViewName)=>void; notify:(message:string)=>void; onPendingCountChange:(count:number)=>void; supportTickets:SupportTicket[]; setSupportTickets:React.Dispatch<React.SetStateAction<SupportTicket[]>> }) {
   const [accounts,setAccounts]=useLocalStorage<AdminAccount[]>('returnrun-admin-accounts-v1',seedAccounts);
-  useEffect(() => { onPendingCountChange(accounts.filter(account => account.verification !== 'Verified').length); }, [accounts, onPendingCountChange]);
+  useEffect(() => { onPendingCountChange(accounts.filter(needsVerificationReview).length); }, [accounts, onPendingCountChange]);
   const content=useMemo(()=>{
     if(view==='admin-users') return <Accounts accounts={accounts} setAccounts={setAccounts} query={globalQuery} notify={notify}/>;
     if(view==='admin-compliance') return <Compliance accounts={accounts} setAccounts={setAccounts} notify={notify}/>;

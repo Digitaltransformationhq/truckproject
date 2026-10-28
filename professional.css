@@ -1451,3 +1451,26 @@ body { background: var(--paper); }
 .document-reject{min-height:42px;padding:0 18px;border:1px solid #d99898;border-radius:9px;background:#fff6f6;color:#a43d3d;font-size:12px;font-weight:800;cursor:pointer}
 .document-reject:hover{border-color:#bd4a4a;background:#ffeded}
 @media(max-width:760px){.document-remark-field textarea{min-height:105px}.document-review-modal>footer .document-reject{width:100%}}
+
+/* Business rejection confirmation */
+.compliance-list footer .reject-business-button{margin-right:auto;border-color:#e1aaaa!important;background:#fff7f7!important;color:#a43d3d!important}
+.compliance-list footer .reject-business-button:hover{border-color:#bd4a4a!important;background:#ffeded!important}
+.business-reject-backdrop{position:fixed;z-index:110;inset:0;display:grid;place-items:center;padding:22px;background:rgba(12,22,29,.68);backdrop-filter:blur(6px)}
+.business-reject-dialog{position:relative;width:min(500px,100%);padding:30px;border:1px solid #d7dde0;border-radius:18px;background:#fff;box-shadow:0 28px 90px rgba(5,16,24,.34);text-align:center}
+.business-reject-close{position:absolute;right:17px;top:17px;width:35px;height:35px;display:grid;place-items:center;border:1px solid #dde2e5;border-radius:9px;background:#f8f9f9;color:#59676f}
+.business-reject-close svg{width:16px;height:16px}
+.business-reject-icon{width:54px;height:54px;display:grid;place-items:center;margin:2px auto 17px;border-radius:50%;background:#ffebeb;color:#b33d3d;font:900 25px/1 Manrope}
+.business-reject-eyebrow{display:block;color:#a43d3d;font-size:10px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}
+.business-reject-dialog h2{margin:8px 0 10px;color:#18252d;font-size:25px;letter-spacing:-.035em}
+.business-reject-dialog>p{max-width:410px;margin:0 auto;color:#6f7b82;font-size:13px;line-height:1.6}
+.business-reject-summary{display:flex;align-items:center;gap:12px;margin:22px 0 0;padding:14px;border:1px solid #e2e6e8;border-radius:11px;background:#fafbfb;text-align:left}
+.business-reject-summary>span{width:40px;height:40px;display:grid;place-items:center;flex:none;border-radius:10px;background:#eef1f2;color:#374650;font-size:11px;font-weight:850}
+.business-reject-summary>div{display:flex;min-width:0;flex-direction:column}
+.business-reject-summary strong{color:#26343b;font-size:13px}
+.business-reject-summary small{margin-top:3px;color:#7c888e;font-size:10px}
+.business-reject-dialog>footer{display:grid;grid-template-columns:1fr 1.35fr;gap:10px;margin:24px -30px -30px;padding:17px 30px;border-top:1px solid #e5e9eb;background:#fafbfb;border-radius:0 0 18px 18px}
+.business-reject-dialog>footer button{height:44px;border-radius:9px;font-size:12px;font-weight:800}
+.business-reject-dialog>footer button:first-child{border:1px solid #d7dde0;background:#fff;color:#56646c}
+.confirm-business-reject{border:1px solid #8f2f2f;background:#b23e3e;color:#fff;box-shadow:0 2px 0 #762525}
+.confirm-business-reject:hover{background:#9d3333}
+@media(max-width:520px){.compliance-list article>footer .reject-business-button{margin-right:0}.business-reject-backdrop{align-items:end;padding:0}.business-reject-dialog{border-radius:18px 18px 0 0}.business-reject-dialog>footer{grid-template-columns:1fr;border-radius:0}}
