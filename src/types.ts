@@ -1,4 +1,4 @@
-export type ViewName = 'dashboard' | 'trucks' | 'loads' | 'matches' | 'profile' | 'admin-users' | 'admin-compliance' | 'admin-operations' | 'admin-support';
+export type ViewName = 'dashboard' | 'trucks' | 'drivers' | 'loads' | 'matches' | 'profile' | 'admin-users' | 'admin-compliance' | 'admin-operations' | 'admin-support';
 export type TruckStatus = 'Available' | 'In transit' | 'Unavailable';
 export type LoadStatus = 'Pending' | 'Accepted' | 'Rejected';
 export type LoadType = 'FTL' | 'PTL';
@@ -27,6 +27,22 @@ export interface Load {
 }
 
 export interface PortalData { trucks: Truck[]; loads: Load[]; }
+
+export type DriverStatus = 'Available' | 'Assigned' | 'On trip' | 'Inactive';
+export interface Driver {
+  id: string;
+  name: string;
+  phone: string;
+  licenceNumber: string;
+  licenceExpiry: string;
+  city: string;
+  status: DriverStatus;
+  assignedVehicle?: string;
+  photoName: string;
+  licenceFrontName: string;
+  licenceBackName: string;
+  identityProofName: string;
+}
 
 export interface ReturnMatch {
   truck: Truck;

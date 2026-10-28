@@ -6,10 +6,10 @@ import { KycModal } from './components/KycModal';
 import { Icon, type IconName } from './components/Icon';
 import { AdminConsole } from './components/AdminConsole';
 import { SupportQueryModal } from './components/SupportQueryModal';
-import { seedData } from './data/seed';
+import { seedData, seedDrivers } from './data/seed';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { formatDate } from './lib/matching';
-import type { Load, LoadStatus, LoadType, PortalData, SupportTicket, Truck, TruckStatus, ViewName } from './types';
+import type { Driver, DriverStatus, Load, LoadStatus, LoadType, PortalData, SupportTicket, Truck, TruckStatus, ViewName } from './types';
 
 const STORE_KEY = 'returnrun-phase1-v2';
 const normalise = (value: unknown) => String(value ?? '').trim().toLowerCase();
@@ -22,7 +22,7 @@ interface SidebarProps {
   view: ViewName;
   role?: AccountRole;
   profile?: RegistrationProfile | null;
-  counts: { trucks: number; requests: number; approvals: number; support: number };
+  counts: { trucks: number; drivers: number; requests: number; approvals: number; support: number };
   open: boolean;
   onClose: () => void;
   onNavigate: (view: ViewName) => void;
@@ -44,6 +44,7 @@ function Sidebar({ view, role, profile, counts, open, onClose, onNavigate, onLog
   ] : [
     { view: 'dashboard', label: 'Overview', icon: 'overview' },
     { view: 'trucks', label: 'My vehicles', icon: 'truck', count: counts.trucks },
+    { view: 'drivers', label: 'My drivers', icon: 'driver', count: counts.drivers },
     { view: 'loads', label: 'Truck requests', icon: 'inbox', count: counts.requests },
   ];
   const displayName = profile ? `${profile.firstName} ${profile.lastName}` : activeRole === 'admin' ? 'Mira Kapoor' : activeRole === 'load_owner' ? 'Ananya Mehta' : 'Rajesh Sharma';
@@ -86,6 +87,7 @@ function MobileBottomNav({ view, role, onNavigate }: { view: ViewName; role: Acc
   ] : [
     { view: 'dashboard', label: 'Home', icon: 'overview' },
     { view: 'trucks', label: 'Vehicles', icon: 'truck' },
+    { view: 'drivers', label: 'Drivers', icon: 'driver' },
     { view: 'loads', label: 'Requests', icon: 'inbox' },
     { view: 'profile', label: 'Profile', icon: 'building' },
   ];
@@ -212,6 +214,22 @@ function VehicleDetailsModal({ truck, onClose }: { truck: Truck; onClose: () => 
   return <div className="modal-backdrop vehicle-details-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div className="modal vehicle-details-modal" role="dialog" aria-modal="true" aria-labelledby="vehicleDetailsTitle"><div className="modal-head"><div><span className="eyebrow">Vehicle details</span><h2 id="vehicleDetailsTitle">{truck.registration}</h2></div><button onClick={onClose} aria-label="Close vehicle details"><Icon name="close"/></button></div><div className="vehicle-details-body"><div className="vehicle-details-summary"><span className="vehicle-card-icon"><Icon name="truck"/></span><div><strong>{truck.type}</strong><small>{truck.capacity} tonnes carrying capacity</small></div><span className={`status ${statusClass(truck.status)}`}>{truck.status}</span></div><section><h3>Identification</h3><div className="vehicle-details-grid"><div><span>Registration number</span><strong>{truck.registration}</strong></div><div><span>Engine number</span><strong>{truck.engineNumber || 'Not added'}</strong></div><div><span>Chassis number</span><strong>{truck.chassisNumber || 'Not added'}</strong></div><div><span>Vehicle type</span><strong>{truck.type}</strong></div></div></section><section><h3>Operations</h3><div className="vehicle-details-grid"><div><span>Current location</span><strong>{truck.location}</strong></div><div><span>Typical destination</span><strong>{truck.destination}</strong></div><div><span>Capacity</span><strong>{truck.capacity} tonnes</strong></div><div><span>Request availability</span><strong>{truck.status === 'Available' ? 'Receiving requests' : 'Requests paused'}</strong></div></div></section><section><div className="vehicle-documents-head"><h3>Vehicle documents</h3><span className={documentsAdded ? 'complete' : 'incomplete'}>{documentsAdded ? 'Submitted' : 'Not added'}</span></div><div className="vehicle-document-statuses">{['RC book front', 'RC book back', 'Fitness certificate', 'PUC certificate', 'Valid insurance'].map((document) => <div key={document}><span><Icon name="package"/>{document}</span><strong className={documentsAdded ? 'complete' : 'incomplete'}>{documentsAdded ? 'Submitted' : 'Missing'}</strong></div>)}</div></section></div><div className="vehicle-details-footer"><button className="primary-btn" onClick={onClose}>Done</button></div></div></div>;
 }
 
+function DriversView({ drivers, query, setQuery, status, setStatus, onAdd }: { drivers: Driver[]; query: string; setQuery: (value: string) => void; status: string; setStatus: (value: string) => void; onAdd: () => void }) {
+  const filtered = drivers.filter(driver => (status === 'all' || driver.status === status) && (!query || Object.values(driver).some(value => normalise(value).includes(normalise(query)))));
+  return <section className="view active"><PageHead section="Fleet" title="My drivers" description="Manage driver availability, assignments and compliance documents." actions={<button className="primary-btn" onClick={onAdd}>Add driver</button>}/><div className="driver-summary"><article><span><Icon name="driver"/></span><div><small>Total drivers</small><strong>{drivers.length}</strong></div></article><article><span><Icon name="overview"/></span><div><small>Available</small><strong>{drivers.filter(driver=>driver.status==='Available').length}</strong></div></article><article><span><Icon name="truck"/></span><div><small>Assigned or on trip</small><strong>{drivers.filter(driver=>driver.status==='Assigned'||driver.status==='On trip').length}</strong></div></article></div><div className="toolbar"><div className="inline-search"><span><Icon name="search"/></span><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search driver, licence or city"/></div><select value={status} onChange={event=>setStatus(event.target.value)} aria-label="Filter drivers by status"><option value="all">All statuses</option><option>Available</option><option>Assigned</option><option>On trip</option><option>Inactive</option></select></div><div className="driver-card-grid">{filtered.map(driver=><article className="driver-card" key={driver.id}><header><span className="driver-avatar">{driver.name.split(' ').map(part=>part[0]).slice(0,2).join('')}</span><div><h3>{driver.name}</h3><p>{driver.phone}</p></div><em className={`status ${statusClass(driver.status)}`}>{driver.status}</em></header><div className="driver-facts"><div><span>Licence number</span><strong>{driver.licenceNumber}</strong></div><div><span>Licence expiry</span><strong>{formatDate(driver.licenceExpiry)}</strong></div><div><span>Base city</span><strong>{driver.city}</strong></div><div><span>Assigned vehicle</span><strong>{driver.assignedVehicle || 'Not assigned'}</strong></div></div><div className="driver-documents"><span><Icon name="driver"/> Photo</span><span><Icon name="package"/> Licence</span><span><Icon name="building"/> ID proof</span></div></article>)}</div>{filtered.length===0&&<div className="empty">No drivers match this filter.</div>}</section>;
+}
+
+function DriverUploadField({ label, name, accept = '.pdf,image/*' }: { label: string; name: string; accept?: string }) {
+  const [fileName,setFileName] = useState('');
+  return <label className={`driver-upload-field ${fileName?'has-file':''}`}><span><Icon name={name==='photo'?'driver':'package'}/></span><span><strong>{label}</strong><small>{name==='photo'?'JPG or PNG · Maximum 10 MB':'PDF, JPG or PNG · Maximum 10 MB'}</small></span><input type="file" name={name} accept={accept} required onChange={event=>setFileName(event.target.files?.[0]?.name||'')}/><b title={fileName||undefined}>{fileName||'Upload'}<small>{fileName?'Selected':'Browse'}</small></b></label>;
+}
+
+function DriverEntryModal({ trucks, onClose, onAdd }: { trucks: Truck[]; onClose: () => void; onAdd: (driver: Driver) => void }) {
+  const today = new Date().toISOString().slice(0,10);
+  const submit = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const form = new FormData(event.currentTarget); const fileName = (name:string) => (form.get(name) as File)?.name || ''; onAdd({ id:`DRV-${Date.now().toString().slice(-6)}`, name:String(form.get('name')), phone:String(form.get('phone')), licenceNumber:String(form.get('licenceNumber')), licenceExpiry:String(form.get('licenceExpiry')), city:String(form.get('city')), status:form.get('status') as DriverStatus, assignedVehicle:String(form.get('assignedVehicle')||'')||undefined, photoName:fileName('photo'), licenceFrontName:fileName('licenceFront'), licenceBackName:fileName('licenceBack'), identityProofName:fileName('identityProof') }); };
+  return <div className="modal-backdrop driver-entry-backdrop" onMouseDown={event=>event.target===event.currentTarget&&onClose()}><div className="modal driver-entry-modal" role="dialog" aria-modal="true" aria-labelledby="driverModalTitle"><div className="modal-head"><div><span className="eyebrow">Driver management</span><h2 id="driverModalTitle">Add driver</h2><p>Add identity, licence and availability details.</p></div><button onClick={onClose} aria-label="Close add driver form"><Icon name="close"/></button></div><form onSubmit={submit} className="driver-entry-form"><section><h3>Driver details</h3><div className="form-grid"><label>Full name<input name="name" placeholder="Enter driver's full name" required autoFocus/></label><label>Phone number<input name="phone" placeholder="+91 98765 43210" required/></label><label>Driving licence number<input name="licenceNumber" placeholder="TN01 20210004567" required/></label><label>Licence expiry date<input name="licenceExpiry" type="date" min={today} required/></label><label>Base city<input name="city" placeholder="Chennai" required/></label><label>Driver status<select name="status"><option>Available</option><option>Assigned</option><option>On trip</option><option>Inactive</option></select></label><label className="driver-vehicle-field">Assign vehicle (optional)<select name="assignedVehicle"><option value="">Not assigned</option>{trucks.map(truck=><option key={truck.id} value={truck.registration}>{truck.registration} · {truck.type}</option>)}</select></label></div></section><section><h3>Photo and documents</h3><p className="driver-form-helper">Upload a clear driver photo and valid document copies. All four uploads are required.</p><div className="driver-upload-grid"><DriverUploadField label="Driver photo" name="photo" accept="image/*"/><DriverUploadField label="Licence front" name="licenceFront"/><DriverUploadField label="Licence back" name="licenceBack"/><DriverUploadField label="Identity proof" name="identityProof"/></div></section><footer><button type="button" className="secondary-btn" onClick={onClose}>Cancel</button><button type="submit" className="primary-btn">Add driver</button></footer></form></div></div>;
+}
+
 function RequestsView({ requests, query, setQuery, status, setStatus, role, onAdd, onOpenRequest }: { requests: Load[]; query: string; setQuery: (value: string) => void; status: string; setStatus: (value: string) => void; role: AccountRole; onAdd: () => void; onOpenRequest: (request: Load) => void }) {
   const [mobileLayout, setMobileLayout] = useState(() => window.matchMedia('(max-width: 700px)').matches);
   useEffect(() => {
@@ -273,6 +291,7 @@ export default function App() {
     return requested === 'login' || requested === 'signup' ? requested : null;
   });
   const [data, setData] = useLocalStorage<PortalData>(STORE_KEY, seedData);
+  const [drivers, setDrivers] = useLocalStorage<Driver[]>('returnrun-drivers-v1', seedDrivers);
   const [supportTickets, setSupportTickets] = useLocalStorage<SupportTicket[]>('returnrun-support-tickets-v1', []);
   const storedRole = localStorage.getItem('returnrun-role');
   const activeRole: AccountRole = storedRole === 'admin' ? 'admin' : storedRole === 'load_owner' ? 'load_owner' : 'truck_owner';
@@ -280,8 +299,11 @@ export default function App() {
   const [view, setView] = useState<ViewName>('dashboard');
   const [menuOpen, setMenuOpen] = useState(false);
   const [modal, setModal] = useState<'truck' | 'load' | null>(null);
+  const [driverModalOpen, setDriverModalOpen] = useState(false);
   const [truckQuery, setTruckQuery] = useState('');
   const [truckStatus, setTruckStatus] = useState('all');
+  const [driverQuery, setDriverQuery] = useState('');
+  const [driverStatus, setDriverStatus] = useState('all');
   const [loadQuery, setLoadQuery] = useState('');
   const [adminQuery, setAdminQuery] = useState('');
   const [requestStatus, setRequestStatus] = useState('all');
@@ -297,10 +319,10 @@ export default function App() {
   const [toast, setToast] = useState('');
   const toastTimer = useRef<number | undefined>(undefined);
   const searchRef = useRef<HTMLInputElement>(null);
-  const counts = { trucks: data.trucks.length, requests: data.loads.filter(isPendingRequest).length, approvals: adminPendingCount, support: supportTickets.filter(ticket => ticket.status !== 'Resolved').length };
+  const counts = { trucks: data.trucks.length, drivers: drivers.length, requests: data.loads.filter(isPendingRequest).length, approvals: adminPendingCount, support: supportTickets.filter(ticket => ticket.status !== 'Resolved').length };
 
   const notify = (message: string) => { setToast(message); window.clearTimeout(toastTimer.current); toastTimer.current = window.setTimeout(() => setToast(''), 2500); };
-  useEffect(() => { const handler = (event: KeyboardEvent) => { if (event.key === 'Escape') { setModal(null); setRequestModal(null); setSelectedTruck(null); } }; document.addEventListener('keydown', handler); return () => document.removeEventListener('keydown', handler); }, []);
+  useEffect(() => { const handler = (event: KeyboardEvent) => { if (event.key === 'Escape') { setModal(null); setDriverModalOpen(false); setRequestModal(null); setSelectedTruck(null); } }; document.addEventListener('keydown', handler); return () => document.removeEventListener('keydown', handler); }, []);
 
   if (!authenticated) {
     const enterWorkspace = (profile?: RegistrationProfile) => { if (profile) { localStorage.setItem('returnrun-role', profile.role); localStorage.setItem('returnrun-profile', JSON.stringify(profile)); localStorage.setItem('returnrun-kyc', 'pending'); } localStorage.setItem('returnrun-auth', '1'); setAuthModal(null); setAuthenticated(true); };
@@ -317,6 +339,7 @@ export default function App() {
     if (value.trim().length > 1) navigate('loads');
   };
   const addTruck = (truck: Truck) => { setData((current) => ({ ...current, trucks: [truck, ...current.trucks] })); setModal(null); notify('Vehicle added successfully'); };
+  const addDriver = (driver: Driver) => { setDrivers(current=>[driver,...current]); setDriverModalOpen(false); notify('Driver added with photo and documents'); };
   const addLoad = (load: Load) => { setData((current) => ({ ...current, loads: [load, ...current.loads] })); setModal(null); notify('Truck request posted'); };
   const decideRequest = (status: Extract<LoadStatus, 'Accepted' | 'Rejected'>) => { if (!requestModal) return; setData((current) => ({ ...current, loads: current.loads.map((request) => request.id === requestModal.id ? { ...request, status } : request) })); setRequestModal(null); notify(status === 'Accepted' ? 'Request accepted — the customer has been notified' : 'Request rejected'); };
 
@@ -326,12 +349,14 @@ export default function App() {
       {activeRole === 'admin' ? <AdminConsole view={view} data={data} globalQuery={adminQuery} onNavigate={navigate} notify={notify} onPendingCountChange={setAdminPendingCount} supportTickets={supportTickets} setSupportTickets={setSupportTickets}/> : <>
         {view === 'dashboard' && <Dashboard data={data} role={activeRole} profile={activeProfile} onOpenModal={setModal} onNavigate={navigate} onOpenRequest={setRequestModal}/>}
         {view === 'trucks' && <TrucksView trucks={data.trucks} query={truckQuery} setQuery={setTruckQuery} status={truckStatus} setStatus={setTruckStatus} onAdd={() => setModal('truck')} onOpen={setSelectedTruck}/>} 
+        {view === 'drivers' && activeRole === 'truck_owner' && <DriversView drivers={drivers} query={driverQuery} setQuery={setDriverQuery} status={driverStatus} setStatus={setDriverStatus} onAdd={()=>setDriverModalOpen(true)}/>}
         {view === 'loads' && <RequestsView requests={data.loads} query={loadQuery} setQuery={setLoadQuery} status={requestStatus} setStatus={setRequestStatus} role={activeRole} onAdd={() => setModal('load')} onOpenRequest={setRequestModal}/>} 
         {view === 'profile' && <ProfileView profile={activeProfile} role={activeRole} onSaved={() => notify('Business profile updated')}/>} 
       </>}
     </div></main>
     <MobileBottomNav view={view} role={activeRole} onNavigate={navigate}/>
     {modal && activeRole !== 'admin' && <EntryModal type={modal} onClose={() => setModal(null)} onAddTruck={addTruck} onAddLoad={addLoad}/>} 
+    {driverModalOpen && activeRole === 'truck_owner' && <DriverEntryModal trucks={data.trucks} onClose={()=>setDriverModalOpen(false)} onAdd={addDriver}/>}
     {requestModal && activeRole === 'truck_owner' && <RequestDecisionModal request={requestModal} onClose={() => setRequestModal(null)} onDecision={decideRequest}/>} 
     {selectedTruck && activeRole !== 'admin' && <VehicleDetailsModal truck={selectedTruck} onClose={() => setSelectedTruck(null)}/>} 
     {supportOpen && activeRole !== 'admin' && <SupportQueryModal profile={activeProfile} onClose={() => setSupportOpen(false)} onSubmit={ticket => { setSupportTickets(current => [ticket, ...current]); setSupportOpen(false); notify(`Query ${ticket.id} submitted to support`); }}/>} 
