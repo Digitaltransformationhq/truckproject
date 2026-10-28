@@ -1544,3 +1544,150 @@ body { background: var(--paper); }
 .app-shell .vehicle-assigned-driver dl>div{min-width:0}.app-shell .vehicle-assigned-driver dt{color:#919baa;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.07em}.app-shell .vehicle-assigned-driver dd{margin:5px 0 0;overflow:hidden;color:#26334c;font-size:10px;font-weight:750;text-overflow:ellipsis;white-space:nowrap}
 .app-shell .vehicle-no-driver{display:flex;align-items:center;gap:12px;padding:15px;border:1px dashed #cfd7e2;border-radius:11px;background:#fafbfc;color:#778397}.app-shell .vehicle-no-driver>svg{width:20px;height:20px}.app-shell .vehicle-no-driver>div{display:flex;flex-direction:column}.app-shell .vehicle-no-driver strong{color:#46536a;font-size:11px}.app-shell .vehicle-no-driver small{margin-top:3px;font-size:9px}
 @media(max-width:700px){.app-shell .vehicle-assigned-driver{grid-template-columns:42px minmax(0,1fr)}.app-shell .vehicle-assigned-driver dl{grid-column:1/-1;padding-top:12px;border-top:1px solid #edf0f4}}
+
+/* Platform-wide typography normalization */
+.app-shell{font-size:14px}
+.app-shell .sidebar .brand small{font-size:10px;line-height:1.35}
+.app-shell .nav-label{font-size:11px;line-height:1.35}
+.app-shell .nav-item{font-size:14px}
+.app-shell .nav-item em{font-size:10px}
+.app-shell .nav-item b{font-size:11px}
+.app-shell .sidebar-user strong{font-size:13px;line-height:1.35}
+.app-shell .sidebar-user span{font-size:11px;line-height:1.4}
+.app-shell .search-box input{font-size:13px}
+.app-shell .support-btn{font-size:13px}
+.app-shell .breadcrumb{font-size:11px!important}
+.app-shell .page-head>div>p:last-child{font-size:14px;line-height:1.55}
+.app-shell .section-kicker{font-size:10.5px}
+.app-shell .dashboard-actions h2{font-size:20px}
+.app-shell .dashboard-action-list strong{font-size:13px}
+.app-shell .dashboard-action-list small{font-size:11px;line-height:1.4}
+.app-shell .metric span{font-size:13px}
+.app-shell .metric small{font-size:11px;line-height:1.45}
+.app-shell .panel-head h2{font-size:19px}
+.app-shell .panel-head p{font-size:12px;line-height:1.45}
+.app-shell .text-link,.app-shell .map-link{font-size:12px}
+.app-shell .status{font-size:11px;font-style:normal}
+.app-shell .toolbar input,.app-shell .toolbar select{font-size:13px}
+.app-shell .truck-card h3{font-size:16px}
+.app-shell .truck-card p{font-size:11px;line-height:1.4}
+.app-shell .truck-details span{font-size:10px}
+.app-shell .truck-details strong{font-size:13px}
+.app-shell .truck-card-foot span{font-size:11px}
+.app-shell .vehicle-route small{font-size:10px}
+.app-shell .vehicle-route strong{font-size:13px}
+.app-shell .vehicle-card-facts span{font-size:10px;line-height:1.35}
+.app-shell .vehicle-card-facts strong{font-size:12px;line-height:1.4}
+.app-shell .vehicle-card-facts strong>small{font-size:10px}
+.app-shell .vehicle-request-state,.app-shell .vehicle-details-cue{font-size:10.5px}
+.app-shell .request-route strong{font-size:13px}
+.app-shell .request-route small{font-size:11px;line-height:1.45}
+.app-shell .review-request-btn,.app-shell .request-result{font-size:11px}
+.app-shell th{font-size:11px}
+.app-shell td{font-size:13px;line-height:1.45}
+.app-shell td small{font-size:11px;line-height:1.4}
+.app-shell .type-pill{font-size:11px}
+.app-shell .profile-form label,.app-shell .modal-form label{font-size:13px}
+.app-shell .profile-form input,.app-shell .modal-form input,.app-shell .modal-form select{font-size:14px}
+.app-shell .modal-head .eyebrow{font-size:11px}
+.app-shell .modal-head h2{font-size:24px}
+.app-shell .vehicle-form-heading span{font-size:14px}
+.app-shell .vehicle-form-heading p{font-size:11px;line-height:1.45}
+.app-shell .vehicle-upload-field strong{font-size:12px}
+.app-shell .vehicle-upload-field small{font-size:10px;line-height:1.4}
+.app-shell .vehicle-upload-field>b{font-size:10px}
+.app-shell .vehicle-details-summary strong{font-size:14px}
+.app-shell .vehicle-details-summary small{font-size:11px}
+.app-shell .vehicle-details-body>section>h3,.app-shell .vehicle-documents-head h3,.app-shell .vehicle-driver-head h3{font-size:14px}
+.app-shell .vehicle-details-grid span{font-size:10px}
+.app-shell .vehicle-details-grid strong{font-size:12px;line-height:1.4}
+.app-shell .vehicle-documents-head>span{font-size:10px}
+.app-shell .vehicle-document-statuses span,.app-shell .vehicle-document-statuses strong{font-size:11px}
+.app-shell .vehicle-assigned-driver>div>strong{font-size:13px}
+.app-shell .vehicle-assigned-driver>div>small{font-size:11px}
+.app-shell .vehicle-assigned-driver dt{font-size:10px}
+.app-shell .vehicle-assigned-driver dd{font-size:11px}
+.app-shell .vehicle-no-driver strong{font-size:12px}
+.app-shell .vehicle-no-driver small{font-size:10px}
+.app-shell .request-detail-grid span{font-size:10px}
+.app-shell .request-detail-grid strong{font-size:13px}
+.app-shell .request-help{font-size:11px}
+.app-shell .request-mobile-route strong{font-size:13px}
+.app-shell .request-mobile-route small{font-size:10px}
+.app-shell .request-mobile-facts span{font-size:9.5px}
+.app-shell .request-mobile-facts strong{font-size:12px}
+.app-shell .kyc-modal header small{font-size:10px}
+.app-shell .kyc-modal header h2{font-size:23px}
+.app-shell .kyc-progress>b{font-size:12px}
+.app-shell .kyc-security strong{font-size:12px}
+.app-shell .kyc-security span{font-size:10px;line-height:1.45}
+.app-shell .kyc-body .auth-form h3{font-size:17px}
+.app-shell .kyc-helper{font-size:11px;line-height:1.5}
+.app-shell .kyc-declaration strong{font-size:12px}
+.app-shell .kyc-declaration p{font-size:10px;line-height:1.45}
+.admin-page-head>div>span,.admin-panel header>div>span{font-size:11px}
+.admin-page-head p{font-size:15px;line-height:1.55}
+.admin-metric-grid small{font-size:13px}
+.admin-metric-grid em{font-size:11px;line-height:1.4}
+.admin-panel h2{font-size:20px}
+.admin-live,.admin-panel header button{font-size:11px}
+.chart-scale,.chart-bars span{font-size:10px}
+.chart-bars i b{font-size:10px}
+.admin-activity-panel footer strong{font-size:17px}
+.admin-activity-panel footer span{font-size:11px;line-height:1.4}
+.admin-queue>div>button strong{font-size:14px}
+.admin-queue>div>button small{font-size:11px;line-height:1.4}
+.admin-badge{font-size:11px}
+.admin-alert-grid strong{font-size:13px}
+.admin-alert-grid p{font-size:11.5px;line-height:1.5}
+.admin-alert-grid button{font-size:11px}
+.admin-query input,.admin-toolbar select{font-size:12px}
+.admin-toolbar>span{font-size:11px}
+.admin-table th{font-size:10.5px}
+.admin-table td{font-size:13px}
+.admin-table td>small{font-size:11px}
+.admin-business-cell strong{font-size:13px}
+.admin-business-cell small{font-size:10.5px}
+.admin-action{font-size:11px}
+.compliance-list header strong{font-size:15px}
+.compliance-list header small{font-size:11px}
+.compliance-facts span{font-size:11px}
+.compliance-facts strong{font-size:13px}
+.document-checks span{font-size:12px}
+.document-checks b{font-size:10.5px}
+.compliance-list footer>button:not(.admin-primary){font-size:12px}
+.compliance-guide>span{font-size:10.5px}
+.compliance-guide p strong{font-size:12px}
+.compliance-guide p small{font-size:11px;line-height:1.5}
+.document-review-modal>header span{font-size:11px}
+.document-review-modal>header p{font-size:13px}
+.document-review-facts span{font-size:11px}
+.document-review-facts strong{font-size:13px}
+.document-security-note strong{font-size:12px}
+.document-security-note small{font-size:11px;line-height:1.5}
+.document-current-status span,.document-current-status strong{font-size:11px}
+.document-remark-field{font-size:12px}
+.document-remark-field textarea{font-size:13px}
+.document-remark-field>small{font-size:10.5px}
+.app-shell .notifications-popover .notification-item strong{font-size:13px}
+.app-shell .notifications-popover .notification-item small{font-size:11px}
+.support-query-modal label{font-size:13px}
+.support-query-modal input,.support-query-modal select,.support-query-modal textarea{font-size:13.5px}
+.support-detail-message p{font-size:15px}
+.support-detail-body>aside span{font-size:11px}
+.support-detail-body>aside strong{font-size:13px}
+.support-detail-body>aside small{font-size:11px}
+.support-ticket-copy strong{font-size:14px}
+.support-ticket-copy small{font-size:11px}
+.support-ticket-copy p{font-size:12px}
+.support-ticket-copy time{font-size:10.5px}
+@media(max-width:700px){
+  .app-shell .page-head h1{font-size:29px}
+  .app-shell .page-head>div>p:last-child{font-size:13px}
+  .app-shell .dashboard-actions h2{font-size:17px}
+  .app-shell .dashboard-action-list strong{font-size:12px}
+  .app-shell .dashboard-action-list small{font-size:10px}
+  .app-shell .metric>div:nth-child(2)>span{font-size:11px}
+  .app-shell .metric>div:nth-child(2)>small{font-size:9.5px}
+  .mobile-bottom-nav small{font-size:9px}
+}
