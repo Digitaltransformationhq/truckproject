@@ -1187,6 +1187,13 @@ body { background: var(--paper); }
 .app-shell .request-success{width:min(100%,360px);padding:44px 30px;text-align:center;animation:request-success-enter .42s cubic-bezier(.2,.8,.2,1) both}
 .app-shell .request-success-mark{width:184px;height:174px;display:grid;place-items:center;margin:0 auto 10px;color:#07966a;animation:request-success-pop .45s cubic-bezier(.2,.9,.25,1.3) both}
 .app-shell .request-success-mark svg{width:180px;height:170px;overflow:visible}
+.app-shell .request-success-mark:has(.truck-success-3d){width:280px;height:224px;margin-top:-18px;margin-bottom:4px;overflow:hidden;border-radius:20px;background:radial-gradient(circle at 50% 22%,rgba(227,240,255,.95),rgba(246,249,251,.66) 48%,rgba(255,255,255,0) 76%);animation:request-truck-3d-enter .62s cubic-bezier(.17,.84,.31,1) both}
+.app-shell .truck-success-3d{position:relative;width:100%;height:100%;isolation:isolate}
+.app-shell .truck-success-3d canvas{display:block;width:100%!important;height:100%!important;filter:drop-shadow(0 12px 14px rgba(22,34,46,.14))}
+.app-shell .truck-3d-loading{width:42px;height:42px;border:3px solid rgba(5,150,105,.16);border-top-color:#059669;border-radius:50%;animation:truck-3d-loader .7s linear infinite}
+.app-shell .truck-3d-fallback{display:none}
+.app-shell .truck-3d-unavailable{display:grid;place-items:center;border-radius:18px;background:linear-gradient(145deg,#effcf6,#e7f3ff);color:#059669;font-size:64px;font-weight:900}
+.app-shell .truck-3d-unavailable .truck-3d-fallback{display:block}
 .app-shell .request-success-mark .success-road{fill:none;stroke:#aeb8c5;stroke-width:2.2;stroke-linecap:round;stroke-dasharray:4 5;animation:request-road-move .55s linear infinite}
 .app-shell .request-success-mark .success-rear-roof,.app-shell .request-success-mark .success-rear-body{fill:url(#successTruckBody);stroke:#68717b;stroke-width:2.2;stroke-linejoin:round}
 .app-shell .request-success-mark .success-rear-frame{fill:none;stroke:#78818a;stroke-width:2.1;stroke-linejoin:round}
@@ -1218,10 +1225,12 @@ body { background: var(--paper); }
 .app-shell .request-success p{margin:0;color:#748094;font-size:13px;line-height:1.55}
 @keyframes request-success-enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes request-success-pop{0%{opacity:0;transform:scale(.55)}75%{opacity:1;transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes request-truck-3d-enter{0%{opacity:0;transform:translateY(12px) scale(.82)}70%{opacity:1;transform:translateY(-2px) scale(1.02)}100%{transform:none}}
+@keyframes truck-3d-loader{to{transform:rotate(360deg)}}
 @keyframes request-road-move{to{stroke-dashoffset:-14}}
 @keyframes request-door-close-left{from{transform:perspective(115px) rotateY(-64deg)}to{transform:perspective(115px) rotateY(0)}}
 @keyframes request-door-close-right{from{transform:perspective(115px) rotateY(64deg)}to{transform:perspective(115px) rotateY(0)}}
-@media(prefers-reduced-motion:reduce){.app-shell .request-success,.app-shell .request-success-mark,.app-shell .request-success-mark .success-road,.app-shell .request-success-mark .success-door-left,.app-shell .request-success-mark .success-door-right{animation:none}.app-shell .request-success-mark .success-door-left{transform:none}.app-shell .request-success-mark .success-door-right{transform:none}}
+@media(prefers-reduced-motion:reduce){.app-shell .request-success,.app-shell .request-success-mark,.app-shell .request-success-mark:has(.truck-success-3d),.app-shell .request-success-mark .success-road,.app-shell .request-success-mark .success-door-left,.app-shell .request-success-mark .success-door-right{animation:none}.app-shell .request-success-mark .success-door-left{transform:none}.app-shell .request-success-mark .success-door-right{transform:none}}
 
 @media(max-width:700px){
   .app-shell .request-backdrop{place-items:center;padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));overflow:hidden}
