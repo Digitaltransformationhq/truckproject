@@ -1436,3 +1436,113 @@ body { background: var(--paper); }
 .support-detail-body>aside .admin-badge{font-size:11px}
 .support-detail-modal>footer>button:not(.admin-primary){font-size:12.5px}
 .support-detail-modal>footer .admin-primary{font-size:13px}
+
+/* Reference-matched truck owner home screen */
+.mobile-reference-dashboard{display:none}
+@media(max-width:700px){
+  body{background:#fff}
+  .role-truck_owner .topbar{
+    height:106px;
+    display:grid;
+    grid-template-columns:48px minmax(0,1fr) 48px;
+    grid-template-rows:48px;
+    align-content:center;
+    gap:12px;
+    padding:10px 36px;
+    border-bottom:0;
+    background:#fff;
+    box-shadow:none;
+  }
+  .role-truck_owner .menu-btn{
+    grid-column:1;
+    grid-row:1;
+    width:48px;
+    height:48px;
+    display:grid;
+    place-items:center;
+    margin:0;
+    padding:0;
+    border:1px solid #dcdedb;
+    border-radius:14px;
+    background:#fff;
+    color:#171717;
+  }
+  .role-truck_owner .menu-btn svg{width:19px;height:19px;transform:rotate(180deg)}
+  .role-truck_owner .mobile-app-brand{grid-column:2;grid-row:1;display:grid;place-items:center}
+  .role-truck_owner .mobile-app-brand>span,.role-truck_owner .mobile-app-brand small{display:none}
+  .role-truck_owner .mobile-app-brand>div{display:block}
+  .role-truck_owner .mobile-app-brand strong{color:#050505;font:800 18px/1 Manrope,sans-serif;letter-spacing:-.04em}
+  .role-truck_owner .top-actions{grid-column:3;grid-row:1;width:48px;height:48px;display:grid;place-items:center;margin:0}
+  .role-truck_owner .support-btn{display:none}
+  .role-truck_owner .top-actions .icon-btn{
+    width:48px;
+    height:48px;
+    min-width:48px;
+    border:1px solid #dcdedb;
+    border-radius:14px;
+    background:#fff;
+    color:#171717;
+  }
+  .role-truck_owner .top-actions .icon-btn svg{width:21px;height:21px}
+  .role-truck_owner .notification-count{top:-4px;right:-2px;min-width:17px;height:17px;border:0;background:#ffa51f;color:#171717;font-size:9px}
+  .role-truck_owner .topbar>.search-box{display:none}
+  .role-truck_owner .content{max-width:none;padding:12px 36px calc(98px + env(safe-area-inset-bottom));background:#fff}
+  .role-truck_owner .dashboard-view>.page-head,
+  .role-truck_owner .dashboard-view>.kyc-banner,
+  .role-truck_owner .dashboard-view>.dashboard-actions,
+  .role-truck_owner .dashboard-view>.metric-grid,
+  .role-truck_owner .dashboard-view>.request-panel{display:none}
+  .role-truck_owner .mobile-reference-dashboard{display:block}
+  .mobile-welcome>span{display:block;color:#a75c18;font-size:9px;font-weight:850;letter-spacing:.16em;text-transform:uppercase}
+  .mobile-welcome h1{margin:12px 0 13px;color:#030303;font:800 34px/1.08 Manrope,sans-serif;letter-spacing:-.055em}
+  .mobile-welcome p{margin:0;color:#858585;font-size:11.5px;line-height:1.45}
+  .mobile-request-search{height:60px;display:grid;grid-template-columns:minmax(0,1fr) 50px;align-items:center;gap:10px;margin-top:27px;padding:4px 4px 4px 17px;border:1px solid #dcdfda;border-radius:15px;background:#fff}
+  .mobile-request-search label{height:100%;display:flex;align-items:center;gap:14px;min-width:0;color:#9ba09e}
+  .mobile-request-search label svg{width:18px;height:18px;flex:none}
+  .mobile-request-search input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#171717;font:500 12px inherit}
+  .mobile-request-search input::placeholder{color:#989b99;opacity:1}
+  .mobile-request-search>button{width:50px;height:50px;display:grid;place-items:center;border:1.5px solid #171717;border-radius:13px;background:#ffa51f;color:#171717;box-shadow:3px 3px 0 #171717}
+  .mobile-request-search>button svg{width:18px;height:18px}
+  .mobile-new-requests-head{display:flex;align-items:flex-end;justify-content:space-between;margin:29px 1px 13px}
+  .mobile-new-requests-head>div{display:flex;flex-direction:column}
+  .mobile-new-requests-head strong{color:#090909;font-size:14px;line-height:1.2}
+  .mobile-new-requests-head small{margin-top:3px;color:#8c8c88;font-size:9px}
+  .mobile-new-requests-head button{border:0;background:transparent;color:#b15e00;font-size:9px;font-weight:750}
+  .mobile-featured-request{padding:20px;border:1px solid #d9dcd8;border-radius:22px;background:#fff;box-shadow:0 17px 30px rgba(20,25,21,.065)}
+  .mobile-featured-title{display:flex;align-items:center;justify-content:space-between}
+  .mobile-featured-title strong{font-size:11.5px}
+  .mobile-featured-title span{padding:8px 12px;border-radius:30px;background:#e6f8f0;color:#07865a;font-size:10px;font-weight:750}
+  .mobile-truck-needed{display:flex;align-items:center;gap:12px;margin-top:17px}
+  .mobile-truck-needed>span{width:48px;height:48px;display:grid;place-items:center;flex:none;border-radius:13px;background:#fff0d9;color:#171717}
+  .mobile-truck-needed svg{width:21px;height:21px}
+  .mobile-truck-needed>div{display:flex;flex-direction:column}
+  .mobile-truck-needed strong{font-size:13px}
+  .mobile-truck-needed small{margin-top:3px;color:#80837f;font-size:9.5px}
+  .mobile-route-line{display:grid;grid-template-columns:auto minmax(40px,1fr) auto;align-items:start;gap:10px;margin-top:20px}
+  .mobile-route-line>div{display:grid;grid-template-columns:auto 1fr;align-items:center;column-gap:10px}
+  .mobile-route-line>div:last-child{text-align:right}
+  .mobile-route-line i{width:10px;height:10px;display:block;grid-row:1;border:2px solid #171717;border-radius:50%;background:#ffa51f}
+  .mobile-route-line>div:last-child i{grid-column:2;margin-left:auto}
+  .mobile-route-line>div:last-child strong,.mobile-route-line>div:last-child small{grid-column:1;grid-row:1}
+  .mobile-route-line>div:last-child small{grid-row:2}
+  .mobile-route-line strong{grid-column:2;color:#090909;font-size:11px;line-height:1.2}
+  .mobile-route-line small{grid-column:1/-1;margin-top:3px;color:#969693;font-size:8px}
+  .mobile-route-line>span{display:block;margin-top:5px;border-top:1px dashed #b8b9b6}
+  .mobile-review-request{width:100%;height:50px;display:flex;align-items:center;justify-content:center;gap:13px;margin-top:20px;border:1.5px solid #171717;border-radius:13px;background:#ffa51f;color:#090909;font-size:11px;font-weight:800;box-shadow:0 3px 0 #171717}
+  .mobile-review-request svg{width:17px;height:17px}
+  .mobile-no-requests{padding:40px 20px;border:1px solid #d9dcd8;border-radius:22px;text-align:center;color:#858985}
+  .role-truck_owner .mobile-bottom-nav{height:calc(77px + env(safe-area-inset-bottom));padding:7px 36px env(safe-area-inset-bottom);border-top:1px solid #e6e7e3;background:#fff;box-shadow:0 -10px 24px rgba(20,25,21,.04)}
+  .role-truck_owner .mobile-bottom-nav button{gap:3px;border-radius:0;color:#9a9e9b}
+  .role-truck_owner .mobile-bottom-nav button>span{width:30px;height:30px;border-radius:0}
+  .role-truck_owner .mobile-bottom-nav svg{width:19px;height:19px}
+  .role-truck_owner .mobile-bottom-nav small{font-size:8px;font-weight:650}
+  .role-truck_owner .mobile-bottom-nav button.active{color:#d96500}
+  .role-truck_owner .mobile-bottom-nav button.active>span{background:transparent;color:#d96500}
+}
+
+@media(max-width:420px){
+  .role-truck_owner .topbar{padding-inline:22px}
+  .role-truck_owner .content{padding-inline:22px}
+  .role-truck_owner .mobile-bottom-nav{padding-inline:16px}
+  .mobile-welcome h1{font-size:31px}
+}
