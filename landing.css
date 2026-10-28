@@ -159,44 +159,59 @@
 .auth-close{border:0;background:transparent;box-shadow:none}
 .auth-close:hover{background:rgba(17,17,17,.055)}
 
-/* Polished in-product mobile preview */
-.platform-phone{min-height:620px;padding:22px 20px 76px;border-radius:34px 34px 0 0;box-shadow:6px 7px 0 #111}
-.platform-phone .phone-top{height:42px;display:grid;grid-template-columns:40px 1fr 40px;align-items:center}
-.platform-phone .phone-top>span{text-align:center;font:800 14px Manrope;letter-spacing:-.04em}
-.platform-phone .phone-top button{position:relative;width:38px;height:38px;border:1px solid #dfe2df;border-radius:11px;color:#171717;transition:background .18s ease,border-color .18s ease}
-.platform-phone .phone-top button:hover{border-color:#babfba;background:#fafaf7}
-.platform-phone .phone-top button:first-child svg{width:15px;transform:rotate(180deg)}
+/* Product-faithful mobile preview */
+.platform-phone{min-height:690px;padding:18px 16px 72px;border-radius:34px 34px 0 0;box-shadow:6px 7px 0 #111}
+.platform-phone .phone-top{height:42px;display:grid;grid-template-columns:38px 1fr 38px;align-items:center;gap:9px}
+.platform-phone .phone-top button{position:relative;width:36px;height:36px;display:grid;place-items:center;padding:0;border:0;border-radius:10px;background:transparent;color:#172440}
+.platform-phone .phone-top button svg{width:17px;height:17px}
 .platform-phone .phone-top .phone-bell{justify-self:end}
-.platform-phone .phone-top .phone-bell svg{width:16px}
 .platform-phone .phone-bell b{position:absolute;right:-3px;top:-4px;min-width:16px;height:16px;display:grid;place-items:center;padding:0 4px;border:2px solid #fff;border-radius:9px;background:#ffa51f;color:#171717;font:800 7px Manrope}
-.platform-phone .phone-heading{margin:30px 0 21px}
-.platform-phone .phone-heading>small{display:block;margin-bottom:8px;color:#9b7041;font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.15em}
-.platform-phone .phone-heading h3{margin:0;font:800 27px/1.12 Manrope;letter-spacing:-.045em}
-.platform-phone .phone-heading p{margin:9px 0 0;color:#7a7e7c;font-size:9px;line-height:1.5}
-.platform-phone .phone-search{height:48px;display:grid;grid-template-columns:18px minmax(0,1fr) 39px;align-items:center;gap:9px;padding:0 4px 0 13px;border:1px solid #dfe2df;border-radius:12px;background:#fbfbf9;color:#8e9593}
-.platform-phone .phone-search>svg{width:15px;height:15px}
-.platform-phone .phone-search input{min-width:0;height:100%;padding:0;border:0;outline:0;background:transparent;color:#171717;font:500 10px "DM Sans"}
-.platform-phone .phone-search input::placeholder{color:#9a9e9d;opacity:1}
-.platform-phone .phone-search button{width:39px;height:39px;display:grid;place-items:center;border:1px solid #171717;border-radius:10px;background:#ffa51f;color:#171717;box-shadow:1px 2px 0 #171717}
-.platform-phone .phone-search button svg{width:15px;height:15px}
-.platform-phone .phone-list-heading{display:flex;align-items:flex-end;justify-content:space-between;margin:21px 1px 10px}
-.platform-phone .phone-list-heading>div{display:flex;flex-direction:column}
-.platform-phone .phone-list-heading strong{font:800 11px Manrope}
-.platform-phone .phone-list-heading small{margin-top:2px;color:#8a8f8d;font-size:7px}
-.platform-phone .phone-list-heading>button{padding:0;border:0;background:transparent;color:#c26400;font-size:8px;font-weight:800}
-.platform-phone>.route-demo-card{margin-top:0;padding:16px;border:1px solid #d9ddda;border-radius:16px;box-shadow:0 10px 28px rgba(24,29,27,.08)}
-.platform-phone .demo-card-top{font-size:9px}
-.platform-phone .demo-card-top b{padding:5px 8px;background:#e3f8ef;color:#087a52}
-.platform-phone .demo-truck{margin:14px 0 16px}
-.platform-phone .demo-truck>span{width:38px;height:38px;border-radius:10px;background:#fff0d8}
-.platform-phone .demo-truck strong{font-size:10px}
-.platform-phone .demo-route strong{font-size:9px}
-.platform-phone .route-dashes{margin-top:5px;border-color:#aeb4b1}
-.platform-phone .route-demo-card>button{height:39px;margin-top:16px;border-radius:9px;box-shadow:1px 2px 0 #171717}
-.platform-phone .phone-bottom-nav{position:absolute;left:0;right:0;bottom:0;height:62px;display:grid;grid-template-columns:repeat(4,1fr);padding:6px 13px 7px;border-top:1px solid #eceeeb;background:rgba(255,255,255,.97)}
-.platform-phone .phone-bottom-nav>span{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;color:#9a9f9d}
+.platform-phone .phone-brand{display:flex;align-items:center;gap:8px;min-width:0}
+.platform-phone .phone-brand>span{width:31px;height:31px;display:grid;place-items:center;flex:none;border:1px solid #17377e;border-radius:9px;background:#ffa51f;color:#152344;font:800 8px Manrope}
+.platform-phone .phone-brand>div{display:flex;min-width:0;flex-direction:column}
+.platform-phone .phone-brand strong{color:#172440;font:800 12px/1.15 Manrope}
+.platform-phone .phone-brand small{margin-top:2px;color:#8a94a7;font-size:6px;text-transform:uppercase;letter-spacing:.09em}
+.platform-phone .phone-search{height:42px;display:grid;grid-template-columns:17px minmax(0,1fr);align-items:center;gap:9px;margin-top:7px;padding:0 12px;border:1px solid #e0e5ee;border-radius:11px;background:#f5f7fa;color:#8e98a7}
+.platform-phone .phone-search>svg{width:14px;height:14px}
+.platform-phone .phone-search input{min-width:0;height:100%;padding:0;border:0;outline:0;background:transparent;color:#172440;font:500 8px "DM Sans"}
+.platform-phone .phone-search input::placeholder{color:#8b94a2;opacity:1}
+.platform-phone .phone-heading{margin:18px 1px 12px}
+.platform-phone .phone-heading h3{margin:0;color:#172440;font:800 21px/1.13 Manrope;letter-spacing:-.045em}
+.platform-phone .phone-heading p{margin:6px 0 0;color:#7c8797;font-size:8px;line-height:1.45}
+.platform-phone .phone-kyc{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:8px;padding:10px;border:1px solid #efbd6f;border-radius:11px;background:#fff8eb}
+.platform-phone .phone-kyc>span{width:32px;height:32px;display:grid;place-items:center;border:1px solid #171717;border-radius:8px;background:#ffa51f}
+.platform-phone .phone-kyc>span svg{width:14px;height:14px}
+.platform-phone .phone-kyc>div{display:flex;min-width:0;flex-direction:column}
+.platform-phone .phone-kyc strong{font-size:8px;line-height:1.25}
+.platform-phone .phone-kyc small{margin-top:2px;color:#777b78;font-size:6px;line-height:1.35}
+.platform-phone .phone-kyc>b{padding:4px 6px;border-radius:14px;background:#fff0d5;color:#a85b00;font-size:6px;text-transform:uppercase}
+.platform-phone .phone-kyc>button{grid-column:2/-1;height:27px;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid #171717;border-radius:7px;background:#ffa51f;color:#171717;font-size:7px;font-weight:800;box-shadow:1px 1px 0 #171717}
+.platform-phone .phone-kyc>button svg{width:10px;height:10px}
+.platform-phone .phone-quick-heading{display:flex;flex-direction:column;margin:14px 1px 8px}
+.platform-phone .phone-quick-heading small{color:#8b94a2;font-size:6px;font-weight:800;text-transform:uppercase;letter-spacing:.11em}
+.platform-phone .phone-quick-heading strong{margin-top:3px;color:#172440;font:800 11px Manrope}
+.platform-phone .phone-quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.platform-phone .phone-quick-actions article{min-width:0;display:grid;grid-template-columns:29px minmax(0,1fr) 10px;align-items:center;gap:7px;padding:9px 8px;border:1px solid #e0e5ed;border-radius:10px;background:#fff}
+.platform-phone .phone-quick-actions article>span{width:29px;height:29px;display:grid;place-items:center;border-radius:8px;background:#fff0d8;color:#d46b00}
+.platform-phone .phone-quick-actions article>span svg{width:14px;height:14px}
+.platform-phone .phone-quick-actions article>div{display:flex;min-width:0;flex-direction:column}
+.platform-phone .phone-quick-actions strong{overflow:hidden;color:#27344c;font-size:7px;text-overflow:ellipsis;white-space:nowrap}
+.platform-phone .phone-quick-actions small{margin-top:2px;overflow:hidden;color:#8a94a4;font-size:5.5px;text-overflow:ellipsis;white-space:nowrap}
+.platform-phone .phone-quick-actions article>svg{width:10px;height:10px;color:#8b95a4}
+.platform-phone .phone-metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+.platform-phone .phone-metrics article{min-height:90px;display:flex;align-items:flex-start;gap:8px;padding:10px;border:1px solid #e0e5ed;border-radius:11px;background:#fff}
+.platform-phone .phone-metrics article.highlight{border-color:#f1b65b;background:#fff9f0}
+.platform-phone .phone-metrics article>span{width:29px;height:29px;display:grid;place-items:center;flex:none;border-radius:8px;background:#eef3ff;color:#2865d8}
+.platform-phone .phone-metrics article.highlight>span{background:#fff0d8;color:#c86b00}
+.platform-phone .phone-metrics article>span svg{width:14px;height:14px}
+.platform-phone .phone-metrics article>div{display:flex;min-width:0;flex-direction:column}
+.platform-phone .phone-metrics small{color:#697386;font-size:6.5px;font-weight:700;line-height:1.2}
+.platform-phone .phone-metrics strong{margin:3px 0;color:#172440;font:800 19px/1 Manrope}
+.platform-phone .phone-metrics em{color:#8b95a5;font-size:5.5px;font-style:normal;line-height:1.3}
+.platform-phone .phone-bottom-nav{position:absolute;left:0;right:0;bottom:0;height:62px;display:grid;grid-template-columns:repeat(4,1fr);padding:6px 13px 7px;border-top:1px solid #e1e6ee;background:rgba(255,255,255,.97);box-shadow:0 -6px 18px rgba(19,37,76,.06)}
+.platform-phone .phone-bottom-nav>span{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;color:#8a94a3}
 .platform-phone .phone-bottom-nav svg{width:15px;height:15px}
 .platform-phone .phone-bottom-nav small{font-size:7px;font-weight:700}
-.platform-phone .phone-bottom-nav>span.active{color:#c96600}
-.platform-phone .phone-bottom-nav>span.active svg{width:17px;height:17px}
-@media(max-width:700px){.platform-phone{min-height:610px;padding-bottom:76px;box-shadow:5px 0 0 #111}.platform-phone .phone-heading h3{font-size:26px}}
+.platform-phone .phone-bottom-nav>span.active{color:#17377e}
+.platform-phone .phone-bottom-nav>span.active svg{width:17px;height:17px;color:#e05b16}
+@media(max-width:700px){.platform-phone{min-height:690px;padding-bottom:76px;box-shadow:5px 0 0 #111}.platform-phone .phone-heading h3{font-size:20px}}

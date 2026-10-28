@@ -85,8 +85,8 @@ function MobileBottomNav({ view, role, onNavigate }: { view: ViewName; role: Acc
     { view: 'profile', label: 'Profile', icon: 'building' },
   ] : [
     { view: 'dashboard', label: 'Home', icon: 'overview' },
-    { view: 'loads', label: 'Requests', icon: 'inbox' },
     { view: 'trucks', label: 'Vehicles', icon: 'truck' },
+    { view: 'loads', label: 'Requests', icon: 'inbox' },
     { view: 'profile', label: 'Profile', icon: 'building' },
   ];
   return <nav className="mobile-bottom-nav" aria-label="Mobile navigation">{items.map((item) => <button key={item.view} className={view === item.view ? 'active' : ''} aria-current={view === item.view ? 'page' : undefined} onClick={() => onNavigate(item.view)}><span><Icon name={item.icon}/></span><small>{item.label}</small></button>)}</nav>;
@@ -130,7 +130,7 @@ function Topbar({ onMenu, onSearch, onNavigate, searchRef, role, onOpenSupport }
 
   return (
     <header className="topbar">
-      <button className="menu-btn" onClick={onMenu} aria-label="Open menu"><Icon name="chevron" /></button>
+      <button className="menu-btn" onClick={onMenu} aria-label="Open menu"><Icon name="menu" /></button>
       <div className="mobile-app-brand"><span>RR</span><div><strong>ReturnRun</strong><small>Fleet workspace</small></div></div>
       <div className="search-box"><span><Icon name="search" /></span><input ref={searchRef} onChange={(event) => onSearch(event.target.value)} placeholder={role === 'admin' ? 'Search users, businesses or account IDs' : 'Search fleet, loads or locations'} aria-label="Global search"/></div>
       <div className="top-actions" ref={actionsRef}>
@@ -167,7 +167,7 @@ function PageHead({ section, title, description, actions }: PageHeadProps) {
   return <div className="page-head"><div><p className="breadcrumb">{section} <span className="date-separator">/</span> {todayLabel}</p><h1>{title}</h1><p>{description}</p></div>{actions}</div>;
 }
 
-function Dashboard({ data, role, profile, requestQuery, onRequestQuery, onOpenModal, onNavigate, onOpenRequest }: { data: PortalData; role?: AccountRole; profile?: RegistrationProfile | null; requestQuery: string; onRequestQuery: (value: string) => void; onOpenModal: (type: 'truck' | 'load') => void; onNavigate: (view: ViewName) => void; onOpenRequest: (request: Load) => void }) {
+function Dashboard({ data, role, profile, onOpenModal, onNavigate, onOpenRequest }: { data: PortalData; role?: AccountRole; profile?: RegistrationProfile | null; onOpenModal: (type: 'truck' | 'load') => void; onNavigate: (view: ViewName) => void; onOpenRequest: (request: Load) => void }) {
   const activeRole: AccountRole = role ?? (localStorage.getItem('returnrun-role') === 'load_owner' ? 'load_owner' : 'truck_owner');
   const [kycOpen, setKycOpen] = useState(false);
   const [kycComplete, setKycComplete] = useState(() => localStorage.getItem('returnrun-kyc') === 'complete');
@@ -176,33 +176,7 @@ function Dashboard({ data, role, profile, requestQuery, onRequestQuery, onOpenMo
   const rejectedRequests = data.loads.filter(({ status }) => status === 'Rejected');
   const available = data.trucks.filter(({ status }) => status === 'Available');
   const inTransit = data.trucks.filter(({ status }) => status === 'In transit');
-  const featuredRequest = pendingRequests[0];
-  return <section className="view active dashboard-view">
-    {activeRole === 'truck_owner' && <section className="mobile-reference-dashboard" aria-label="Truck owner dashboard">
-      <header className="mobile-welcome">
-        <span>Truck owner workspace</span>
-        <h1>Hello!<br/>Review truck requests.</h1>
-        <p>Respond to new customer requests from one place.</p>
-      </header>
-      <div className="mobile-request-search">
-        <label><Icon name="search"/><input value={requestQuery} onChange={(event) => onRequestQuery(event.target.value)} placeholder="Search requests" aria-label="Search requests"/></label>
-        <button type="button" onClick={() => onNavigate('loads')} aria-label="Open request filters"><Icon name="inbox"/></button>
-      </div>
-      <div className="mobile-new-requests-head">
-        <div><strong>New requests</strong><small>{pendingRequests.length} waiting for your response</small></div>
-        <button type="button" onClick={() => onNavigate('loads')}>View all</button>
-      </div>
-      {featuredRequest ? <article className="mobile-featured-request">
-        <div className="mobile-featured-title"><strong>New truck request</strong><span>Pending</span></div>
-        <div className="mobile-truck-needed"><span><Icon name="truck"/></span><div><strong>Truck needed</strong><small>{featuredRequest.type === 'FTL' ? 'Full truck' : 'Shared truck'} · {featuredRequest.quantity} tonnes</small></div></div>
-        <div className="mobile-route-line" aria-label={`${featuredRequest.origin} to ${featuredRequest.destination}`}>
-          <div><i/><strong>{featuredRequest.origin}</strong><small>Pickup</small></div>
-          <span/>
-          <div><i/><strong>{featuredRequest.destination}</strong><small>Delivery</small></div>
-        </div>
-        <button className="mobile-review-request" type="button" onClick={() => onOpenRequest(featuredRequest)}>Review request <Icon name="arrow"/></button>
-      </article> : <div className="mobile-no-requests">You’re all caught up.</div>}
-    </section>}
+  return <section className="view active">
     <PageHead section="Dashboard" title={`${greeting}, ${profile?.firstName || (activeRole === 'load_owner' ? 'Ananya' : 'Rajesh')}`} description={activeRole === 'load_owner' ? 'Post a truck request and track the owner’s response.' : 'Review customer requests and accept the work that suits you.'}/>
     {!kycComplete && <div className="kyc-banner"><span className="kyc-banner-icon"><Icon name="building"/></span><div><strong>{activeRole === 'load_owner' ? 'Verify your customer account' : 'Complete your business KYC'}</strong><p>{activeRole === 'load_owner' ? 'Confirm your business, GST and billing details before posting truck requests.' : 'Verify identity, company details and GST registration to activate full platform access.'}</p></div><span className="kyc-banner-state">Pending</span><button onClick={() => setKycOpen(true)}>{activeRole === 'load_owner' ? 'Verify business' : 'Complete KYC'} <Icon name="arrow"/></button></div>}
     <section className="dashboard-actions" aria-labelledby="quick-actions-title">
@@ -317,7 +291,7 @@ export default function App() {
       return stored.length ? stored.filter(account => account.verification !== 'Verified').length : 3;
     } catch { return 3; }
   });
-  const [requestModal, setRequestModal] = useState<Load | null>(null);
+  const [requestModal, setRequestModal] = useState<Load | null>(() => activeRole === 'truck_owner' ? data.loads.find(isPendingRequest) ?? null : null);
   const [selectedTruck, setSelectedTruck] = useState<Truck | null>(null);
   const [supportOpen, setSupportOpen] = useState(false);
   const [toast, setToast] = useState('');
@@ -332,7 +306,7 @@ export default function App() {
     const enterWorkspace = (profile?: RegistrationProfile) => { if (profile) { localStorage.setItem('returnrun-role', profile.role); localStorage.setItem('returnrun-profile', JSON.stringify(profile)); localStorage.setItem('returnrun-kyc', 'pending'); } localStorage.setItem('returnrun-auth', '1'); setAuthModal(null); setAuthenticated(true); };
     return <><Landing onLogin={() => setAuthModal('login')} onSignup={() => setAuthModal('signup')} />{authModal && <RoleAuthModal mode={authModal} onClose={() => setAuthModal(null)} onModeChange={setAuthModal} onComplete={enterWorkspace}/>}</>;
   }
-  const navigate = (next: ViewName) => { setView(next); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const navigate = (next: ViewName) => { setView(next); setMenuOpen(false); if (next === 'dashboard' && activeRole === 'truck_owner') setRequestModal(data.loads.find(isPendingRequest) ?? null); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   const globalSearch = (value: string) => {
     if (activeRole === 'admin') {
       setAdminQuery(value);
@@ -346,11 +320,11 @@ export default function App() {
   const addLoad = (load: Load) => { setData((current) => ({ ...current, loads: [load, ...current.loads] })); setModal(null); notify('Truck request posted'); };
   const decideRequest = (status: Extract<LoadStatus, 'Accepted' | 'Rejected'>) => { if (!requestModal) return; setData((current) => ({ ...current, loads: current.loads.map((request) => request.id === requestModal.id ? { ...request, status } : request) })); setRequestModal(null); notify(status === 'Accepted' ? 'Request accepted — the customer has been notified' : 'Request rejected'); };
 
-  return <div className={`app-shell role-${activeRole} ${activeRole === 'admin' ? 'admin-shell' : ''}`}>
+  return <div className={`app-shell ${activeRole === 'admin' ? 'admin-shell' : ''}`}>
     <Sidebar view={view} role={activeRole} profile={activeProfile} counts={counts} open={menuOpen} onClose={() => setMenuOpen(false)} onNavigate={navigate} onLogout={() => { localStorage.removeItem('returnrun-auth'); setAuthenticated(false); }}/>
     <main className="main"><Topbar role={activeRole} onMenu={() => setMenuOpen(true)} onSearch={globalSearch} onNavigate={navigate} searchRef={searchRef} onOpenSupport={() => setSupportOpen(true)}/><div className="content">
       {activeRole === 'admin' ? <AdminConsole view={view} data={data} globalQuery={adminQuery} onNavigate={navigate} notify={notify} onPendingCountChange={setAdminPendingCount} supportTickets={supportTickets} setSupportTickets={setSupportTickets}/> : <>
-        {view === 'dashboard' && <Dashboard data={data} role={activeRole} profile={activeProfile} requestQuery={loadQuery} onRequestQuery={setLoadQuery} onOpenModal={setModal} onNavigate={navigate} onOpenRequest={setRequestModal}/>}
+        {view === 'dashboard' && <Dashboard data={data} role={activeRole} profile={activeProfile} onOpenModal={setModal} onNavigate={navigate} onOpenRequest={setRequestModal}/>}
         {view === 'trucks' && <TrucksView trucks={data.trucks} query={truckQuery} setQuery={setTruckQuery} status={truckStatus} setStatus={setTruckStatus} onAdd={() => setModal('truck')} onOpen={setSelectedTruck}/>} 
         {view === 'loads' && <RequestsView requests={data.loads} query={loadQuery} setQuery={setLoadQuery} status={requestStatus} setStatus={setRequestStatus} role={activeRole} onAdd={() => setModal('load')} onOpenRequest={setRequestModal}/>} 
         {view === 'profile' && <ProfileView profile={activeProfile} role={activeRole} onSaved={() => notify('Business profile updated')}/>} 
