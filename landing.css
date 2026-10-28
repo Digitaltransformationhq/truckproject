@@ -178,15 +178,6 @@
 .platform-phone .phone-heading{margin:18px 1px 12px}
 .platform-phone .phone-heading h3{margin:0;color:#172440;font:800 21px/1.13 Manrope;letter-spacing:-.045em}
 .platform-phone .phone-heading p{margin:6px 0 0;color:#7c8797;font-size:8px;line-height:1.45}
-.platform-phone .phone-kyc{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:8px;padding:10px;border:1px solid #efbd6f;border-radius:11px;background:#fff8eb}
-.platform-phone .phone-kyc>span{width:32px;height:32px;display:grid;place-items:center;border:1px solid #171717;border-radius:8px;background:#ffa51f}
-.platform-phone .phone-kyc>span svg{width:14px;height:14px}
-.platform-phone .phone-kyc>div{display:flex;min-width:0;flex-direction:column}
-.platform-phone .phone-kyc strong{font-size:8px;line-height:1.25}
-.platform-phone .phone-kyc small{margin-top:2px;color:#777b78;font-size:6px;line-height:1.35}
-.platform-phone .phone-kyc>b{padding:4px 6px;border-radius:14px;background:#fff0d5;color:#a85b00;font-size:6px;text-transform:uppercase}
-.platform-phone .phone-kyc>button{grid-column:2/-1;height:27px;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid #171717;border-radius:7px;background:#ffa51f;color:#171717;font-size:7px;font-weight:800;box-shadow:1px 1px 0 #171717}
-.platform-phone .phone-kyc>button svg{width:10px;height:10px}
 .platform-phone .phone-quick-heading{display:flex;flex-direction:column;margin:14px 1px 8px}
 .platform-phone .phone-quick-heading small{color:#8b94a2;font-size:6px;font-weight:800;text-transform:uppercase;letter-spacing:.11em}
 .platform-phone .phone-quick-heading strong{margin-top:3px;color:#172440;font:800 11px Manrope}
