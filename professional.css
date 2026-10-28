@@ -1527,3 +1527,20 @@ body { background: var(--paper); }
 .driver-documents{gap:9px;padding-top:17px}
 .driver-documents span{gap:6px;padding:7px 9px;font-size:10.5px;line-height:1.2}
 .driver-documents svg{width:13px;height:13px}
+
+/* Assigned driver details within vehicle views */
+.app-shell .vehicle-card-facts{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:15px}
+.app-shell .vehicle-card-facts>div{padding:0 13px;border-right:1px solid #e9edf2}
+.app-shell .vehicle-card-facts>div:nth-child(2n){padding-right:0;border-right:0}
+.app-shell .vehicle-card-facts>div:nth-child(2n+1){padding-left:0}
+.app-shell .vehicle-card-facts>div:nth-child(n+3){padding-top:14px;border-top:1px solid #e9edf2}
+.app-shell .vehicle-card-facts>div:last-child{grid-column:auto}
+.app-shell .vehicle-driver-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}
+.app-shell .vehicle-driver-head h3{margin:0;color:#26334c;font:800 13px Manrope,sans-serif}
+.app-shell .vehicle-assigned-driver{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(220px,.9fr);align-items:center;gap:12px;padding:14px;border:1px solid #dfe5ed;border-radius:11px;background:#fff}
+.app-shell .vehicle-assigned-driver>div{display:flex;min-width:0;flex-direction:column}
+.app-shell .vehicle-assigned-driver>div>strong{color:#25334a;font-size:12px}.app-shell .vehicle-assigned-driver>div>small{margin-top:3px;color:#7f8b9c;font-size:10px}
+.app-shell .vehicle-assigned-driver dl{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0}
+.app-shell .vehicle-assigned-driver dl>div{min-width:0}.app-shell .vehicle-assigned-driver dt{color:#919baa;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.07em}.app-shell .vehicle-assigned-driver dd{margin:5px 0 0;overflow:hidden;color:#26334c;font-size:10px;font-weight:750;text-overflow:ellipsis;white-space:nowrap}
+.app-shell .vehicle-no-driver{display:flex;align-items:center;gap:12px;padding:15px;border:1px dashed #cfd7e2;border-radius:11px;background:#fafbfc;color:#778397}.app-shell .vehicle-no-driver>svg{width:20px;height:20px}.app-shell .vehicle-no-driver>div{display:flex;flex-direction:column}.app-shell .vehicle-no-driver strong{color:#46536a;font-size:11px}.app-shell .vehicle-no-driver small{margin-top:3px;font-size:9px}
+@media(max-width:700px){.app-shell .vehicle-assigned-driver{grid-template-columns:42px minmax(0,1fr)}.app-shell .vehicle-assigned-driver dl{grid-column:1/-1;padding-top:12px;border-top:1px solid #edf0f4}}
