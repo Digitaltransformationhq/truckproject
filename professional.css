@@ -1436,3 +1436,18 @@ body { background: var(--paper); }
 .support-detail-body>aside .admin-badge{font-size:11px}
 .support-detail-modal>footer>button:not(.admin-primary){font-size:12.5px}
 .support-detail-modal>footer .admin-primary{font-size:13px}
+
+/* Document rejection remarks */
+.document-current-status.rejected{background:#ffebeb;color:#ac3d3d}
+.document-remark-field{display:flex;flex-direction:column;gap:7px;margin-top:16px;color:#36434b;font-size:11px;font-weight:750}
+.document-remark-field>span{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#4a565d}
+.document-remark-field>span b{color:#a43d3d;font-size:9px;font-weight:750}
+.document-remark-field textarea{width:100%;min-height:92px;resize:vertical;padding:11px 12px;border:1px solid #d6dde1;border-radius:9px;background:#fff;color:#26343c;font:500 12px/1.5 inherit;outline:0}
+.document-remark-field textarea::placeholder{color:#929b9f}
+.document-remark-field textarea:focus{border-color:#c45b5b;box-shadow:0 0 0 3px rgba(180,55,55,.1)}
+.document-remark-field>small{color:#7d898f;font-size:9px;font-weight:500;line-height:1.45}
+.document-remark-field.has-error textarea{border-color:#c54141;background:#fffafa}
+.document-remark-field.has-error>small{color:#b23e3e;font-weight:700}
+.document-reject{min-height:42px;padding:0 18px;border:1px solid #d99898;border-radius:9px;background:#fff6f6;color:#a43d3d;font-size:12px;font-weight:800;cursor:pointer}
+.document-reject:hover{border-color:#bd4a4a;background:#ffeded}
+@media(max-width:760px){.document-remark-field textarea{min-height:105px}.document-review-modal>footer .document-reject{width:100%}}
