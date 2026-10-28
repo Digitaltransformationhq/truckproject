@@ -114,20 +114,37 @@ export function TruckSuccess3D() {
     rightDoorPivot.position.set(1.18, 1.76, 1.74);
     truck.add(leftDoorPivot, rightDoorPivot);
 
+    const latchHandles: THREE.Group[] = [];
     const makeDoor = (side: -1 | 1) => {
       const door = new THREE.Group();
-      const panel = new THREE.Mesh(new THREE.BoxGeometry(1.13, 2.31, 0.08), white);
+      const panel = new THREE.Mesh(new THREE.BoxGeometry(1.13, 2.31, 0.1), white);
       panel.position.x = side * -0.565;
       panel.castShadow = true;
       door.add(panel);
+      const closingEdge = new THREE.Mesh(new THREE.BoxGeometry(0.045, 2.29, 0.13), silver);
+      closingEdge.position.set(side * -1.105, 0, 0.015);
+      door.add(closingEdge);
       for (let rib = 0; rib < 3; rib += 1) {
         const rail = new THREE.Mesh(new THREE.BoxGeometry(0.035, 2.08, 0.045), silver);
         rail.position.set(side * -(0.25 + rib * 0.29), 0, 0.065);
         door.add(rail);
       }
+      for (const hingeY of [-0.78, 0, 0.78]) {
+        const hinge = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.19, 12), dark);
+        hinge.position.set(0, hingeY, 0.055);
+        door.add(hinge);
+      }
       const latch = new THREE.Mesh(new THREE.BoxGeometry(0.055, 1.92, 0.07), dark);
       latch.position.set(side * -1.02, 0, 0.095);
       door.add(latch);
+      const handlePivot = new THREE.Group();
+      handlePivot.position.set(side * -1.02, -0.54, 0.155);
+      handlePivot.rotation.z = side * 1.05;
+      const handle = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.06, 0.07), dark);
+      handle.position.x = side * -0.14;
+      handlePivot.add(handle);
+      door.add(handlePivot);
+      latchHandles.push(handlePivot);
       return door;
     };
     leftDoorPivot.add(makeDoor(-1));
@@ -144,6 +161,7 @@ export function TruckSuccess3D() {
     tickB.position.set(0.2, 0.12, 0.13);
     tick.add(tickA, tickB);
     tick.position.set(0, 1.75, 1.73);
+    tick.scale.setScalar(reducedMotion ? 1 : 0.001);
     truck.add(tick);
 
     const bumper = new THREE.Mesh(new THREE.BoxGeometry(2.85, 0.2, 0.3), dark);
@@ -241,8 +259,10 @@ export function TruckSuccess3D() {
     let suspensionVelocity = 0;
     let wheelAngle = 0;
     let travelled = 0;
-    let doorAngle = reducedMotion ? 0 : 0.92;
-    let doorVelocity = 0;
+    let leftDoorAngle = reducedMotion ? 0 : 1.74;
+    let rightDoorAngle = reducedMotion ? 0 : 1.74;
+    let leftDoorVelocity = 0;
+    let rightDoorVelocity = 0;
 
     const animate = () => {
       const delta = Math.min(clock.getDelta(), 1 / 30);
@@ -259,9 +279,21 @@ export function TruckSuccess3D() {
         suspensionVelocity += suspensionForce * delta;
         suspension += suspensionVelocity * delta;
 
-        const doorForce = (0 - doorAngle) * 18 - doorVelocity * 7.5;
-        doorVelocity += doorForce * delta;
-        doorAngle += doorVelocity * delta;
+        const stepDoor = (angle: number, angularVelocity: number, startTime: number) => {
+          if (elapsed < startTime) return [angle, 0] as const;
+          const hingeTorque = -angle * 11.8;
+          const hydraulicDamping = -angularVelocity * (angle < 0.24 ? 7.8 : 5.1);
+          angularVelocity += (hingeTorque + hydraulicDamping) * delta;
+          angle += angularVelocity * delta;
+          if (angle < 0) {
+            angle = Math.min(-angle * 0.07, 0.012);
+            angularVelocity = Math.abs(angularVelocity) * 0.12;
+          }
+          if (angle < 0.0025 && Math.abs(angularVelocity) < 0.025) return [0, 0] as const;
+          return [angle, angularVelocity] as const;
+        };
+        [rightDoorAngle, rightDoorVelocity] = stepDoor(rightDoorAngle, rightDoorVelocity, 0.62);
+        [leftDoorAngle, leftDoorVelocity] = stepDoor(leftDoorAngle, leftDoorVelocity, 0.9);
 
         const speedFactor = clamp(Math.abs(velocityZ) / 4, 0, 1);
         truck.position.set(Math.sin(elapsed * 1.2) * 0.018 * speedFactor, 0.73 + suspension, positionZ);
@@ -269,8 +301,13 @@ export function TruckSuccess3D() {
         truck.rotation.x = clamp(-driveForce * 0.0045, -0.035, 0.035);
         truck.rotation.y = Math.sin(elapsed * 1.55) * 0.012 * speedFactor;
         wheels.forEach((wheel) => { wheel.rotation.x = wheelAngle; });
-        leftDoorPivot.rotation.y = doorAngle;
-        rightDoorPivot.rotation.y = -doorAngle;
+        leftDoorPivot.rotation.y = -leftDoorAngle;
+        rightDoorPivot.rotation.y = rightDoorAngle;
+        const bothDoorsSeated = leftDoorAngle < 0.018 && rightDoorAngle < 0.018;
+        const latchProgress = bothDoorsSeated ? clamp((elapsed - 2.35) / 0.42, 0, 1) : 0;
+        latchHandles.forEach((handle, index) => { handle.rotation.z = (index === 0 ? -1 : 1) * (1 - latchProgress) * 1.05; });
+        const tickScale = Math.max(0.001, latchProgress * latchProgress * (3 - 2 * latchProgress));
+        tick.scale.setScalar(tickScale);
         laneMarkers.forEach((marker, index) => { marker.position.z = -6 + ((index * 2.3 + travelled * 1.35) % 18.4); });
         const braking = clamp(1 - Math.abs(velocityZ) * 1.25, 0, 1);
         red.emissiveIntensity = 0.45 + braking * 2.1;
