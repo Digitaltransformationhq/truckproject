@@ -6,6 +6,7 @@
 import { requireSupabase } from './supabase';
 import type { AccountRole, RegistrationProfile } from '../components/RoleAuthModal';
 import type {
+  BookingInfo, BookingStatus, Contact,
   AdminAccount, AppNotification, Driver, DriverStatus, Load, LoadStatus, LoadType, PortalData, StoredDocument,
   SupportTicket, SupportTicketStatus, Truck, TruckStatus, VerificationStatus, ViewName,
 } from '../types';
@@ -33,9 +34,19 @@ interface DriverRow {
 }
 interface LoadRow {
   id: number; owner_id: string; origin: string; destination: string; material: string; quantity_tonnes: number;
-  load_type: LoadType; pickup_date: string; status: BackendLoadStatus;
+  load_type: LoadType; pickup_date: string; status: BackendLoadStatus; budget_inr: number | null;
 }
-interface BookingRow { load_id: number; truck_owner_id: string; trucks: { registration: string } | { registration: string }[] | null; }
+type ContactRow = { first_name: string; last_name: string; business_name: string; phone: string; email: string };
+type MaybeMany<T> = T | T[] | null;
+interface BookingRow {
+  id: string; load_id: number; status: BookingStatus; truck_id: string; truck_owner_id: string; load_owner_id: string;
+  cancelled_reason: string | null; created_at: string;
+  trucks: MaybeMany<{ registration: string }>;
+  drivers: MaybeMany<{ name: string; phone: string }>;
+  customer: MaybeMany<ContactRow>;
+  transporter: MaybeMany<ContactRow>;
+  booking_events: Array<{ status: BookingStatus; note: string | null; created_at: string }> | null;
+}
 interface DocumentRow {
   id: string; owner_id: string; entity_type: StoredDocument['entityType']; entity_id: string | null; kind: string; file_name: string;
   storage_path: string; mime_type: string | null; size_bytes: number | null; status: 'submitted' | 'verified' | 'rejected';
@@ -44,6 +55,7 @@ interface DocumentRow {
 interface TicketRow {
   id: number; user_id: string; category: string; subject: string; message: string; priority: SupportTicket['priority'];
   status: SupportTicketStatus; contact_email: string; contact_phone: string; created_at: string;
+  admin_reply: string | null; replied_at: string | null;
   profiles: { first_name: string; last_name: string; business_name: string; role: AccountRole } | null;
 }
 interface NotificationRow { id: string; title: string; body: string; link_view: string | null; read_at: string | null; created_at: string; }
@@ -183,6 +195,11 @@ export async function fetchDocuments(filter: { ownerId?: string; entityType?: St
   return (unwrap(await query) as DocumentRow[]).map(toDocument);
 }
 
+/** Deletes files from private storage (e.g. after removing a vehicle). Best effort. */
+export async function removeStoredFiles(paths: string[]) {
+  if (paths.length) await requireSupabase().storage.from('documents').remove(paths);
+}
+
 /** Short-lived link for viewing a private document. */
 export async function documentUrl(path: string) {
   const { data, error } = await requireSupabase().storage.from('documents').createSignedUrl(path, 300);
@@ -209,27 +226,49 @@ const toTruck = (row: TruckRow, documentCount = 0): Truck => ({
   chassisNumber: row.chassis_number ?? undefined, documentCount,
 });
 
+const toContact = (row: ContactRow | null): Contact | undefined => row ? {
+  name: `${row.first_name} ${row.last_name}`.trim(), business: row.business_name, phone: row.phone ? `+91 ${row.phone.replace(/^\+91\s*/, '')}` : '', email: row.email,
+} : undefined;
+
+function toBooking(row: BookingRow): BookingInfo {
+  return {
+    id: row.id, status: row.status, truckId: row.truck_id, truck: one(row.trucks)?.registration,
+    driver: one(row.drivers) ?? undefined, customer: toContact(one(row.customer)), transporter: toContact(one(row.transporter)),
+    cancelledReason: row.cancelled_reason ?? undefined,
+    history: (row.booking_events ?? []).map((e) => ({ status: e.status, note: e.note ?? undefined, at: e.created_at })).sort((a, b) => a.at.localeCompare(b.at)),
+  };
+}
+
 /** Backend load status → what this viewer should see. */
-function loadStatusFor(row: LoadRow, role: AccountRole, userId: string, declined: Set<number>, bookedBy: Map<number, string>): LoadStatus {
+function loadStatusFor(row: LoadRow, role: AccountRole, declined: Set<number>, mine?: BookingRow): LoadStatus {
   if (role === 'truck_owner') {
-    if (bookedBy.get(row.id) === userId) return 'Accepted';
+    if (mine && mine.status !== 'cancelled') return mine.status === 'delivered' ? 'Completed' : 'Accepted';
+    if (mine && row.status === 'cancelled') return 'Cancelled';
     return declined.has(row.id) ? 'Rejected' : 'Pending';
   }
-  if (row.status === 'booked' || row.status === 'completed') return 'Accepted';
-  if (row.status === 'cancelled') return 'Rejected';
+  if (row.status === 'booked') return 'Accepted';
+  if (row.status === 'completed') return 'Completed';
+  if (row.status === 'cancelled') return 'Cancelled';
   return 'Pending';
 }
 
+const BOOKING_SELECT = `id, load_id, status, truck_id, truck_owner_id, load_owner_id, cancelled_reason, created_at,
+  trucks(registration), drivers(name, phone),
+  customer:profiles!bookings_load_owner_id_fkey(first_name, last_name, business_name, phone, email),
+  transporter:profiles!bookings_truck_owner_id_fkey(first_name, last_name, business_name, phone, email),
+  booking_events(status, note, created_at)`;
+
 export async function fetchWorkspace(role: AccountRole, userId: string): Promise<Workspace> {
   const client = requireSupabase();
+  const none = Promise.resolve({ data: [], error: null });
   const [trucksRes, driversRes, loadsRes, bookingsRes, declinesRes, ticketsRes, docsRes] = await Promise.all([
-    role === 'load_owner' ? Promise.resolve({ data: [], error: null }) : client.from('trucks').select('*').order('created_at', { ascending: false }),
-    role === 'truck_owner' ? client.from('drivers').select('*').order('created_at', { ascending: false }) : Promise.resolve({ data: [], error: null }),
+    role === 'load_owner' ? none : client.from('trucks').select('*').order('created_at', { ascending: false }),
+    role === 'load_owner' ? none : client.from('drivers').select('*').order('created_at', { ascending: false }),
     client.from('loads').select('*').order('created_at', { ascending: false }),
-    client.from('bookings').select('load_id, truck_owner_id, trucks(registration)'),
-    role === 'truck_owner' ? client.from('load_declines').select('load_id') : Promise.resolve({ data: [], error: null }),
+    client.from('bookings').select(BOOKING_SELECT).order('created_at', { ascending: false }),
+    role === 'truck_owner' ? client.from('load_declines').select('load_id') : none,
     client.from('support_tickets').select('*, profiles(first_name, last_name, business_name, role)').order('created_at', { ascending: false }),
-    role === 'truck_owner' ? client.from('documents').select('entity_id').eq('entity_type', 'truck') : Promise.resolve({ data: [], error: null }),
+    role === 'load_owner' ? none : client.from('documents').select('entity_id').eq('entity_type', 'truck'),
   ]);
 
   const truckRows = unwrap(trucksRes) as TruckRow[];
@@ -238,18 +277,29 @@ export async function fetchWorkspace(role: AccountRole, userId: string): Promise
   const trucks = truckRows.map((row) => toTruck(row, docCounts.get(row.id)));
   const registrationById = new Map(truckRows.map((row) => [row.id, row.registration]));
 
-  const bookings = unwrap(bookingsRes) as BookingRow[];
-  const bookedBy = new Map(bookings.map((b) => [b.load_id, b.truck_owner_id]));
-  const bookedTruck = new Map(bookings.map((b) => [b.load_id, one(b.trucks)?.registration]));
+  // Newest first: prefer the active booking for each request, otherwise the latest (cancelled) one.
+  const bookingRows = unwrap(bookingsRes) as BookingRow[];
+  const bookingFor = new Map<number, BookingRow>();
+  for (const b of bookingRows) {
+    const current = bookingFor.get(b.load_id);
+    if (role === 'truck_owner' && b.truck_owner_id !== userId) continue;
+    if (!current || (current.status === 'cancelled' && b.status !== 'cancelled')) bookingFor.set(b.load_id, b);
+  }
   const declined = new Set((unwrap(declinesRes) as Array<{ load_id: number }>).map((d) => d.load_id));
 
   const loads: Load[] = (unwrap(loadsRes) as LoadRow[])
-    .filter((row) => role !== 'truck_owner' || row.status === 'open' || bookedBy.get(row.id) === userId)
-    .map((row) => ({
-      id: String(row.id), origin: row.origin, destination: row.destination, material: row.material, quantity: Number(row.quantity_tonnes),
-      type: row.load_type, date: row.pickup_date, status: loadStatusFor(row, role, userId, declined, bookedBy),
-      bookedTruck: bookedTruck.get(row.id),
-    }));
+    .filter((row) => role !== 'truck_owner' || row.status === 'open' || bookingFor.has(row.id))
+    .map((row) => {
+      const booking = bookingFor.get(row.id);
+      const status = loadStatusFor(row, role, declined, booking);
+      const showBooking = booking && (booking.status !== 'cancelled' || status === 'Cancelled');
+      return {
+        id: String(row.id), origin: row.origin, destination: row.destination, material: row.material, quantity: Number(row.quantity_tonnes),
+        type: row.load_type, date: row.pickup_date, status, budget: row.budget_inr == null ? undefined : Number(row.budget_inr),
+        bookedTruck: showBooking && booking.status !== 'cancelled' ? one(booking.trucks)?.registration : undefined,
+        booking: showBooking ? toBooking(booking) : undefined,
+      };
+    });
 
   const drivers: Driver[] = (unwrap(driversRes) as DriverRow[]).map((row) => ({
     id: row.id, name: row.name, phone: row.phone, licenceNumber: row.licence_number, licenceExpiry: row.licence_expiry, city: row.city,
@@ -263,6 +313,7 @@ export async function fetchWorkspace(role: AccountRole, userId: string): Promise
     business: row.profiles?.business_name ?? '', email: row.contact_email, phone: row.contact_phone,
     role: row.profiles?.role === 'load_owner' ? 'load_owner' : 'truck_owner', category: row.category, subject: row.subject,
     message: row.message, priority: row.priority, status: row.status, createdAt: row.created_at,
+    adminReply: row.admin_reply ?? undefined, repliedAt: row.replied_at ?? undefined,
   }));
 
   return { data: { trucks, loads }, drivers, tickets };
@@ -288,14 +339,54 @@ export async function createDriver(ownerId: string, driver: Driver, documents: U
 export async function createLoad(ownerId: string, load: Load) {
   unwrap(await requireSupabase().from('loads').insert({
     owner_id: ownerId, origin: load.origin.trim(), destination: load.destination.trim(), material: load.material.trim(),
-    quantity_tonnes: load.quantity, load_type: load.type, pickup_date: load.date,
+    quantity_tonnes: load.quantity, load_type: load.type, pickup_date: load.date, budget_inr: load.budget ?? null,
   }));
 }
 
-/** Accepts an open request; the database picks the best available truck. Returns the truck's registration. */
-export async function acceptLoad(loadId: string): Promise<string | undefined> {
+/** Customer withdraws an open request. */
+export async function cancelLoad(loadId: string) {
+  const rows = unwrap(await requireSupabase().from('loads').update({ status: 'cancelled' }).eq('id', Number(loadId)).eq('status', 'open').select('id')) as unknown[];
+  if (!rows.length) throw new Error('This request can no longer be cancelled here. If it was accepted, cancel the booking instead.');
+}
+
+export async function updateTruck(truckId: string, patch: Partial<Pick<Truck, 'registration' | 'type' | 'capacity' | 'location' | 'destination' | 'status' | 'engineNumber' | 'chassisNumber'>>) {
+  const update: Record<string, unknown> = {};
+  if (patch.registration !== undefined) update.registration = patch.registration.trim().toUpperCase();
+  if (patch.type !== undefined) update.vehicle_type = patch.type;
+  if (patch.capacity !== undefined) update.capacity_tonnes = patch.capacity;
+  if (patch.location !== undefined) update.current_city = patch.location.trim();
+  if (patch.destination !== undefined) update.preferred_destination = patch.destination.trim();
+  if (patch.status !== undefined) update.status = patch.status;
+  if (patch.engineNumber !== undefined) update.engine_number = patch.engineNumber || null;
+  if (patch.chassisNumber !== undefined) update.chassis_number = patch.chassisNumber || null;
+  unwrap(await requireSupabase().from('trucks').update(update).eq('id', truckId));
+}
+
+export async function deleteTruck(truckId: string) {
+  const { error } = await requireSupabase().from('trucks').delete().eq('id', truckId);
+  if (error) throw /foreign key|violates/i.test(error.message) ? new Error('This vehicle has trip history and cannot be deleted. Mark it Unavailable instead.') : error;
+}
+
+export async function updateDriver(driverId: string, patch: Partial<Pick<Driver, 'name' | 'phone' | 'licenceNumber' | 'licenceExpiry' | 'city' | 'status'>> & { assignedTruckId?: string | null }) {
+  const update: Record<string, unknown> = {};
+  if (patch.name !== undefined) update.name = patch.name;
+  if (patch.phone !== undefined) update.phone = patch.phone;
+  if (patch.licenceNumber !== undefined) update.licence_number = patch.licenceNumber.trim().toUpperCase();
+  if (patch.licenceExpiry !== undefined) update.licence_expiry = patch.licenceExpiry;
+  if (patch.city !== undefined) update.city = patch.city;
+  if (patch.status !== undefined) update.status = patch.status;
+  if (patch.assignedTruckId !== undefined) update.assigned_truck_id = patch.assignedTruckId;
+  unwrap(await requireSupabase().from('drivers').update(update).eq('id', driverId));
+}
+
+export async function deleteDriver(driverId: string) {
+  unwrap(await requireSupabase().from('drivers').delete().eq('id', driverId));
+}
+
+/** Accepts an open request with the chosen truck (and optional driver). Returns the truck's registration. */
+export async function acceptLoad(loadId: string, truckId?: string, driverId?: string): Promise<string | undefined> {
   const client = requireSupabase();
-  const booking = unwrap(await client.rpc('accept_load', { p_load_id: Number(loadId) })) as { truck_id: string };
+  const booking = unwrap(await client.rpc('accept_load', { p_load_id: Number(loadId), p_truck_id: truckId ?? null, p_driver_id: driverId ?? null })) as { truck_id: string };
   const truck = await client.from('trucks').select('registration').eq('id', booking.truck_id).maybeSingle();
   return (truck.data as { registration: string } | null)?.registration;
 }
@@ -315,6 +406,42 @@ export async function createTicket(userId: string, ticket: SupportTicket) {
     contact_email: ticket.email, contact_phone: ticket.phone,
   }).select('id').single()) as { id: number };
   return `SUP-${row.id}`;
+}
+
+/** Trip progress by the transporter: picked_up → in_transit → delivered. */
+export async function updateBookingStatus(bookingId: string, status: Exclude<BookingStatus, 'confirmed' | 'cancelled'>, note?: string) {
+  unwrap(await requireSupabase().rpc('update_booking_status', { p_booking_id: bookingId, p_status: status, p_note: note ?? null }));
+}
+
+/** Either party cancels before pickup. A transporter cancel re-opens the request for others. */
+export async function cancelBooking(bookingId: string, reason?: string) {
+  unwrap(await requireSupabase().rpc('cancel_booking', { p_booking_id: bookingId, p_reason: reason ?? null }));
+}
+
+/** Admin answers a support ticket (the user is notified by the database). */
+export async function replyToTicket(ticketId: string, reply: string, status: SupportTicketStatus) {
+  unwrap(await requireSupabase().from('support_tickets').update({ admin_reply: reply.trim(), status }).eq('id', Number(ticketId.replace(/^SUP-/, ''))));
+}
+
+export async function updatePassword(password: string) {
+  const { error } = await requireSupabase().auth.updateUser({ password });
+  if (error) throw error;
+}
+
+export interface AdminAlerts { pendingKyc: number; vehicleDocsToReview: number; licencesExpiring: number; urgentTickets: number }
+
+/** Real numbers for the admin control centre's "Needs attention" panel. */
+export async function fetchAdminAlerts(): Promise<AdminAlerts> {
+  const client = requireSupabase();
+  const soon = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
+  const count = async (query: PromiseLike<{ count: number | null; error: unknown }>) => { const { count: n, error } = await query; if (error) throw error; return n ?? 0; };
+  const [pendingKyc, vehicleDocsToReview, licencesExpiring, urgentTickets] = await Promise.all([
+    count(client.from('profiles').select('id', { count: 'exact', head: true }).in('kyc_status', ['pending', 'needs_information'])),
+    count(client.from('documents').select('id', { count: 'exact', head: true }).eq('entity_type', 'truck').eq('status', 'submitted')),
+    count(client.from('drivers').select('id', { count: 'exact', head: true }).lte('licence_expiry', soon).neq('status', 'Inactive')),
+    count(client.from('support_tickets').select('id', { count: 'exact', head: true }).eq('priority', 'Urgent').neq('status', 'Resolved')),
+  ]);
+  return { pendingKyc, vehicleDocsToReview, licencesExpiring, urgentTickets };
 }
 
 export async function updateTicketStatus(ticketId: string, status: SupportTicketStatus) {

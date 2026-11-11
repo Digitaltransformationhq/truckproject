@@ -9,6 +9,8 @@ export function useSession() {
   const [ready, setReady] = useState(!supabase);
   const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<ProfileRow | null>(null);
+  /** True after opening a password-reset link: the user must choose a new password. */
+  const [recovering, setRecovering] = useState(false);
 
   const loadProfile = useCallback(async (id: string | null) => {
     setUserId(id);
@@ -32,6 +34,7 @@ export function useSession() {
     if (!supabase) return;
     void supabase.auth.getSession().then(({ data }) => loadProfile(data.session?.user.id ?? null));
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') setRecovering(true);
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
         // Defer: Supabase recommends not awaiting other client calls inside this callback.
         setTimeout(() => void loadProfile(session?.user.id ?? null), 0);
@@ -41,7 +44,7 @@ export function useSession() {
   }, [loadProfile]);
 
   const refreshProfile = useCallback(() => loadProfile(userId), [loadProfile, userId]);
-  return { ready, userId, profile, refreshProfile };
+  return { ready, userId, profile, refreshProfile, recovering, finishRecovery: () => setRecovering(false) };
 }
 
 const emptyWorkspace: Workspace = { data: { trucks: [], loads: [] }, drivers: [], tickets: [] };
@@ -76,6 +79,7 @@ export function useWorkspace(role: AccountRole | null, userId: string | null) {
     const channel = supabase.channel(`workspace-${userId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'loads' }, scheduleReload)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, scheduleReload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, scheduleReload)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, scheduleReload)
       .subscribe();
     return () => { window.clearTimeout(reloadTimer.current); void supabase?.removeChannel(channel); };

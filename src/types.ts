@@ -1,6 +1,22 @@
-export type ViewName = 'dashboard' | 'trucks' | 'drivers' | 'loads' | 'matches' | 'profile' | 'admin-users' | 'admin-compliance' | 'admin-operations' | 'admin-support';
+export type ViewName = 'dashboard' | 'trucks' | 'drivers' | 'loads' | 'profile' | 'support' | 'admin-users' | 'admin-compliance' | 'admin-operations' | 'admin-support';
 export type TruckStatus = 'Available' | 'In transit' | 'Unavailable';
-export type LoadStatus = 'Pending' | 'Accepted' | 'Rejected';
+export type LoadStatus = 'Pending' | 'Accepted' | 'Rejected' | 'Completed' | 'Cancelled';
+export type BookingStatus = 'confirmed' | 'picked_up' | 'in_transit' | 'delivered' | 'cancelled';
+
+export interface Contact { name: string; business: string; phone: string; email: string; }
+
+/** The active (or last) booking behind a request: who carries it, and the trip's progress. */
+export interface BookingInfo {
+  id: string;
+  status: BookingStatus;
+  truck?: string;
+  truckId?: string;
+  driver?: { name: string; phone: string };
+  customer?: Contact;
+  transporter?: Contact;
+  cancelledReason?: string;
+  history: Array<{ status: BookingStatus; note?: string; at: string }>;
+}
 export type LoadType = 'FTL' | 'PTL';
 
 export interface Truck {
@@ -28,6 +44,9 @@ export interface Load {
   status: LoadStatus;
   /** Registration of the truck that accepted the request, when booked. */
   bookedTruck?: string;
+  /** Customer's expected freight in rupees (optional). */
+  budget?: number;
+  booking?: BookingInfo;
 }
 
 export interface PortalData { trucks: Truck[]; loads: Load[]; }
@@ -71,6 +90,8 @@ export interface SupportTicket {
   priority: 'Normal' | 'Urgent';
   status: SupportTicketStatus;
   createdAt: string;
+  adminReply?: string;
+  repliedAt?: string;
 }
 
 export interface AppNotification {
