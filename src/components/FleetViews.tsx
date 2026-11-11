@@ -102,7 +102,7 @@ export function VehicleDetailsModal({ truck, driver, actions, onEdit, onClose }:
       </section>
     </div>
     <div className="vehicle-details-footer vehicle-details-actions"><button className="danger-link" onClick={() => setConfirmDelete(true)}>Delete vehicle</button><span/><button className="secondary-btn" onClick={onEdit}>Edit details</button><button className="primary-btn" onClick={onClose}>Done</button></div>
-    {confirmDelete && <ConfirmDialog title={`Delete ${truck.registration}?`} message="The vehicle and its uploaded documents will be removed. Vehicles with trip history cannot be deleted — mark them Unavailable instead." confirmLabel="Delete vehicle" danger onCancel={() => setConfirmDelete(false)} onConfirm={async () => { if (await actions.deleteTruck(truck)) onClose(); else setConfirmDelete(false); }}/>}
+    {confirmDelete && <ConfirmDialog title={`Delete ${truck.registration}?`} message="The vehicle and all its uploaded documents will be permanently deleted. Past trips stay in your history. A vehicle on an unfinished trip cannot be deleted." confirmLabel="Delete vehicle" danger onCancel={() => setConfirmDelete(false)} onConfirm={async () => { if (await actions.deleteTruck(truck)) onClose(); else setConfirmDelete(false); }}/>}
   </div></div>;
 }
 

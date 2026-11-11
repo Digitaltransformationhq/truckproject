@@ -3,7 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import * as api from '../lib/backend';
 import { requestLabel } from './RequestViews';
 import { VEHICLE_DOCUMENTS } from './FleetViews';
-import { bookingLabel, formatDateTime, formatInr, statusClass } from './ui';
+import { ConfirmDialog, bookingLabel, formatDateTime, formatInr, statusClass } from './ui';
 import { Icon } from './Icon';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { formatDate } from '../lib/matching';
@@ -173,14 +173,17 @@ function Overview({ accounts, data, navigate, alerts }: { accounts: AdminAccount
   </section>;
 }
 
-function Accounts({ accounts, setAccounts, query, notify }: { accounts: AdminAccount[]; setAccounts: React.Dispatch<React.SetStateAction<AdminAccount[]>>; query: string; notify: (message:string)=>void }) {
+function Accounts({ accounts, setAccounts, query, notify, onDelete }: { onDelete: (account: AdminAccount) => Promise<boolean>; accounts: AdminAccount[]; setAccounts: React.Dispatch<React.SetStateAction<AdminAccount[]>>; query: string; notify: (message:string)=>void }) {
   const [status,setStatus] = useState('All');
   const [role,setRole] = useState('All');
   const filtered = accounts.filter(account => (status==='All'||account.status===status) && (role==='All'||account.role===role) && (!query||Object.values(account).some(value=>String(value).toLowerCase().includes(query.toLowerCase()))));
+  const [deleting,setDeleting] = useState<AdminAccount|null>(null);
+  const reopenKyc = (account: AdminAccount) => { setAccounts(current=>current.map(item=>item.id===account.id?{...item,verification:'Needs information',status:'Active'}:item)); notify(`${account.business} can resubmit KYC — they have been notified`); };
   const toggle = (account: AdminAccount) => { const next=account.status==='Active'?'Suspended':'Active'; setAccounts(current=>current.map(item=>item.id===account.id?{...item,status:next}:item)); notify(`${account.business} ${next==='Active'?'activated':'suspended'}`); };
   return <section className="admin-view"><AdminHeader eyebrow="Platform / Accounts" title="User accounts" description="Search, inspect and control access for every business on Fares24x7."/>
     <div className="admin-toolbar"><div className="admin-query"><Icon name="search"/><input value={query} readOnly placeholder="Use global search to find an account"/></div><select value={role} onChange={event=>setRole(event.target.value)}><option>All</option><option>Truck owner</option><option>Load owner</option></select><select value={status} onChange={event=>setStatus(event.target.value)}><option>All</option><option>Active</option><option>Suspended</option></select><span>{filtered.length} accounts</span></div>
-    <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Business</th><th>Account type</th><th>Location</th><th>KYC</th><th>Platform status</th><th>Activity</th><th>Action</th></tr></thead><tbody>{filtered.map(account=><tr key={account.id}><td><div className="admin-business-cell"><span>{account.name.split(' ').map(p=>p[0]).join('')}</span><div><strong>{account.business}</strong><small>{account.name} · {shortId(account.id)}</small></div></div></td><td>{account.role}</td><td>{account.city}</td><td><em className={`admin-badge ${badgeClass(account.verification)}`}>{account.verification}</em></td><td><em className={`admin-badge ${badgeClass(account.status)}`}>{account.status}</em></td><td><strong>{account.assets}</strong><small>{account.role==='Truck owner'?' vehicles':' requests'}</small></td><td><button className={account.status==='Active'?'admin-action danger':'admin-action'} onClick={()=>toggle(account)}>{account.status==='Active'?'Suspend':'Activate'}</button></td></tr>)}</tbody></table></div>
+    <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Business</th><th>Account type</th><th>Location</th><th>KYC</th><th>Platform status</th><th>Activity</th><th>Action</th></tr></thead><tbody>{filtered.map(account=><tr key={account.id}><td><div className="admin-business-cell"><span>{account.name.split(' ').map(p=>p[0]).join('')}</span><div><strong>{account.business}</strong><small>{account.name} · {shortId(account.id)}</small></div></div></td><td>{account.role}</td><td>{account.city}</td><td><em className={`admin-badge ${badgeClass(account.verification)}`}>{account.verification}</em></td><td><em className={`admin-badge ${badgeClass(account.status)}`}>{account.status}</em></td><td><strong>{account.assets}</strong><small>{account.role==='Truck owner'?' vehicles':' requests'}</small></td><td><div className="admin-row-actions">{account.verification==='Rejected'?<button className="admin-action" onClick={()=>reopenKyc(account)} title="Re-activate the account and ask the business to resubmit KYC">Re-open KYC</button>:<button className={account.status==='Active'?'admin-action danger':'admin-action'} onClick={()=>toggle(account)}>{account.status==='Active'?'Suspend':'Activate'}</button>}<button className="admin-action danger-outline" onClick={()=>setDeleting(account)}>Delete</button></div></td></tr>)}</tbody></table></div>
+    {deleting && <ConfirmDialog title={`Delete ${deleting.business}?`} message={`This permanently erases ${deleting.name}'s account: login, profile, vehicles, drivers, requests, KYC details, support queries and all uploaded documents. It cannot be undone. Accounts with a trip in progress cannot be deleted.`} confirmLabel="Delete permanently" danger onCancel={()=>setDeleting(null)} onConfirm={async()=>{ if(await onDelete(deleting)) setDeleting(null); }}/>}
   </section>;
 }
 
@@ -302,16 +305,21 @@ export function AdminConsole({ view, data, drivers, globalQuery, onNavigate, not
     try{ await api.replyToTicket(ticket.id,reply,status); await backendRef.current.reload(); notify(status==='Resolved'?'Reply sent and query resolved':'Reply sent to the user'); return true; }
     catch(problem){ backendRef.current.fail(problem); return false; }
   },[notify,setSupportTickets]);
+  const deleteAccount=useCallback(async(account:AdminAccount)=>{
+    if(!backendRef.current){ setLocalAccounts(current=>current.filter(item=>item.id!==account.id)); notify(`${account.business} deleted`); return true; }
+    try{ await api.adminDeleteAccount(account.id); await loadAccounts(); await backendRef.current.reload(); notify(`${account.business} and all its data were permanently deleted`); return true; }
+    catch(problem){ backendRef.current.fail(problem); return false; }
+  },[loadAccounts,notify,setLocalAccounts]);
   const accounts=backend?remoteAccounts:localAccounts;
   const setAccounts=backend?remoteSetAccounts:setLocalAccounts;
   const setTickets=backend?remoteSetTickets:setSupportTickets;
   useEffect(() => { onPendingCountChange(accounts.filter(needsVerificationReview).length); }, [accounts, onPendingCountChange]);
   const content=useMemo(()=>{
-    if(view==='admin-users') return <Accounts accounts={accounts} setAccounts={setAccounts} query={globalQuery} notify={notify}/>;
+    if(view==='admin-users') return <Accounts accounts={accounts} setAccounts={setAccounts} query={globalQuery} notify={notify} onDelete={deleteAccount}/>;
     if(view==='admin-compliance') return <Compliance accounts={accounts} setAccounts={setAccounts} notify={notify} backend={backend}/>;
     if(view==='admin-operations') return <Operations data={data} drivers={drivers} backendEnabled={Boolean(backend)} notify={notify}/>;
     if(view==='admin-support') return <SupportRequests tickets={supportTickets} setTickets={setTickets} notify={notify} onReply={replyToTicket}/>;
     return <Overview accounts={accounts} data={data} navigate={onNavigate} alerts={alerts}/>;
-  },[accounts,alerts,backend,data,drivers,globalQuery,notify,onNavigate,replyToTicket,setAccounts,setTickets,supportTickets,view]);
+  },[accounts,alerts,backend,data,deleteAccount,drivers,globalQuery,notify,onNavigate,replyToTicket,setAccounts,setTickets,supportTickets,view]);
   return content;
 }

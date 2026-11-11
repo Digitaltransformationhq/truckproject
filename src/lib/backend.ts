@@ -39,7 +39,7 @@ interface LoadRow {
 type ContactRow = { first_name: string; last_name: string; business_name: string; phone: string; email: string };
 type MaybeMany<T> = T | T[] | null;
 interface BookingRow {
-  id: string; load_id: number; status: BookingStatus; truck_id: string; truck_owner_id: string; load_owner_id: string;
+  id: string; load_id: number; status: BookingStatus; truck_id: string | null; truck_owner_id: string | null; load_owner_id: string;
   cancelled_reason: string | null; created_at: string;
   trucks: MaybeMany<{ registration: string }>;
   drivers: MaybeMany<{ name: string; phone: string }>;
@@ -197,7 +197,9 @@ export async function fetchDocuments(filter: { ownerId?: string; entityType?: St
 
 /** Deletes files from private storage (e.g. after removing a vehicle). Best effort. */
 export async function removeStoredFiles(paths: string[]) {
-  if (paths.length) await requireSupabase().storage.from('documents').remove(paths);
+  for (let index = 0; index < paths.length; index += 100) {
+    await requireSupabase().storage.from('documents').remove(paths.slice(index, index + 100));
+  }
 }
 
 /** Short-lived link for viewing a private document. */
@@ -232,7 +234,7 @@ const toContact = (row: ContactRow | null): Contact | undefined => row ? {
 
 function toBooking(row: BookingRow): BookingInfo {
   return {
-    id: row.id, status: row.status, truckId: row.truck_id, truck: one(row.trucks)?.registration,
+    id: row.id, status: row.status, truckId: row.truck_id ?? undefined, truck: one(row.trucks)?.registration,
     driver: one(row.drivers) ?? undefined, customer: toContact(one(row.customer)), transporter: toContact(one(row.transporter)),
     cancelledReason: row.cancelled_reason ?? undefined,
     history: (row.booking_events ?? []).map((e) => ({ status: e.status, note: e.note ?? undefined, at: e.created_at })).sort((a, b) => a.at.localeCompare(b.at)),
@@ -362,9 +364,11 @@ export async function updateTruck(truckId: string, patch: Partial<Pick<Truck, 'r
   unwrap(await requireSupabase().from('trucks').update(update).eq('id', truckId));
 }
 
+/** Deletes a vehicle and its uploaded documents (DPDP: erase data that is no longer needed). */
 export async function deleteTruck(truckId: string) {
-  const { error } = await requireSupabase().from('trucks').delete().eq('id', truckId);
-  if (error) throw /foreign key|violates/i.test(error.message) ? new Error('This vehicle has trip history and cannot be deleted. Mark it Unavailable instead.') : error;
+  const paths = (await fetchDocuments({ entityType: 'truck', entityId: truckId })).map((document) => document.path);
+  unwrap(await requireSupabase().from('trucks').delete().eq('id', truckId));
+  await removeStoredFiles(paths);
 }
 
 export async function updateDriver(driverId: string, patch: Partial<Pick<Driver, 'name' | 'phone' | 'licenceNumber' | 'licenceExpiry' | 'city' | 'status'>> & { assignedTruckId?: string | null }) {
@@ -379,8 +383,27 @@ export async function updateDriver(driverId: string, patch: Partial<Pick<Driver,
   unwrap(await requireSupabase().from('drivers').update(update).eq('id', driverId));
 }
 
+/** Removes a driver and their photo, licence and ID documents. */
 export async function deleteDriver(driverId: string) {
+  const paths = (await fetchDocuments({ entityType: 'driver', entityId: driverId })).map((document) => document.path);
   unwrap(await requireSupabase().from('drivers').delete().eq('id', driverId));
+  await removeStoredFiles(paths);
+}
+
+/** Every file stored under a user's folder (recursively), including any without a document record. */
+async function listUserFiles(prefix: string, depth = 0): Promise<string[]> {
+  const { data, error } = await requireSupabase().storage.from('documents').list(prefix, { limit: 1000 });
+  if (error || !data) return [];
+  const nested = await Promise.all(data.map((item) => item.id ? Promise.resolve([`${prefix}/${item.name}`]) : depth < 4 ? listUserFiles(`${prefix}/${item.name}`, depth + 1) : Promise.resolve([])));
+  return nested.flat();
+}
+
+/** Admin: permanently erase an account, its records and all its uploaded files. */
+export async function adminDeleteAccount(userId: string) {
+  const recorded = (await fetchDocuments({ ownerId: userId })).map((document) => document.path);
+  const listed = await listUserFiles(userId);
+  unwrap(await requireSupabase().rpc('admin_delete_account', { p_user_id: userId }));
+  await removeStoredFiles([...new Set([...recorded, ...listed])]);
 }
 
 /** Accepts an open request with the chosen truck (and optional driver). Returns the truck's registration. */

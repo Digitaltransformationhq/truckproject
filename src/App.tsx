@@ -364,11 +364,7 @@ export default function App() {
       else { setData((current) => ({ ...current, trucks: current.trucks.map((item) => item.id === truck.id ? { ...item, status } : item) })); notify(`${truck.registration} is now ${status}`); }
     },
     deleteTruck: async (truck) => {
-      if (backend) return attempt(async () => {
-        const documents = await api.fetchDocuments({ entityType: 'truck', entityId: truck.id });
-        await api.deleteTruck(truck.id);
-        await api.removeStoredFiles(documents.map((document) => document.path));
-      }, 'Vehicle deleted');
+      if (backend) return attempt(() => api.deleteTruck(truck.id), 'Vehicle and its documents deleted');
       setData((current) => ({ ...current, trucks: current.trucks.filter((item) => item.id !== truck.id) })); notify('Vehicle deleted'); return true;
     },
     loadTruckDocuments: async (truck) => { try { return await api.fetchDocuments({ entityType: 'truck', entityId: truck.id }); } catch (problem) { fail(problem); return []; } },
@@ -390,7 +386,7 @@ export default function App() {
       return ok;
     },
     deleteDriver: async (driver) => {
-      if (backend) return attempt(() => api.deleteDriver(driver.id), `${driver.name} removed`);
+      if (backend) return attempt(() => api.deleteDriver(driver.id), `${driver.name} and their documents removed`);
       setDrivers((current) => current.filter((item) => item.id !== driver.id)); notify(`${driver.name} removed`); return true;
     },
   };
@@ -473,7 +469,7 @@ export default function App() {
     {vehicleForm && activeRole === 'truck_owner' && <VehicleFormModal initial={vehicleForm.initial} onClose={() => setVehicleForm(null)} onSave={(truck, documents) => fleet.saveTruck(truck, documents, vehicleForm.initial)}/>}
     {loadFormOpen && activeRole === 'load_owner' && <LoadFormModal onClose={() => setLoadFormOpen(false)} onSave={addLoad}/>}
     {driverForm && activeRole === 'truck_owner' && <DriverFormModal trucks={data.trucks} initial={driverForm.initial} onClose={() => setDriverForm(null)} onSave={(driver, documents) => fleet.saveDriver(driver, documents, driverForm.initial)}/>}
-    {driverToDelete && <ConfirmDialog title={`Remove ${driverToDelete.name}?`} message="The driver will be removed from your fleet. Past trips keep their history." confirmLabel="Remove driver" danger onCancel={() => setDriverToDelete(null)} onConfirm={async () => { await fleet.deleteDriver(driverToDelete); setDriverToDelete(null); }}/>}
+    {driverToDelete && <ConfirmDialog title={`Remove ${driverToDelete.name}?`} message="The driver and their photo, licence and ID documents will be permanently deleted. Past trips keep their history." confirmLabel="Remove driver" danger onCancel={() => setDriverToDelete(null)} onConfirm={async () => { await fleet.deleteDriver(driverToDelete); setDriverToDelete(null); }}/>}
     {requestModal && activeRole === 'truck_owner' && <RequestDecisionModal request={currentRequest(requestModal)} trucks={data.trucks} drivers={drivers} actions={requests} onClose={() => setRequestModal(null)} onAddTruck={() => { setRequestModal(null); setVehicleForm({}); }}/>}
     {selectedTruck && activeRole === 'truck_owner' && <VehicleDetailsModal key={selectedTruck.id} truck={selectedTruck} driver={drivers.find((driver) => driver.assignedTruckId ? driver.assignedTruckId === selectedTruck.id : driver.assignedVehicle === selectedTruck.registration)} actions={fleet} onEdit={() => { setVehicleForm({ initial: selectedTruck }); setSelectedTruckId(null); }} onClose={() => setSelectedTruckId(null)}/>}
     {supportOpen && activeRole !== 'admin' && <SupportQueryModal profile={activeProfile} onClose={() => setSupportOpen(false)} onSubmit={ticket => void submitSupport(ticket)}/>}

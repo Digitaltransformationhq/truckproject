@@ -1895,3 +1895,8 @@ td>small{display:block;margin-top:4px;color:#777;font-size:11px}
 }
 .status{white-space:nowrap}
 .driver-choice .optional{margin-left:6px;font-weight:500;color:#999}
+
+/* Admin account actions */
+.admin-row-actions{display:flex;gap:6px;flex-wrap:wrap}
+.admin-action.danger-outline{color:#b42318;border-color:#f3c7c3;background:#fff}
+.admin-action.danger-outline:hover{background:#fef3f2}
