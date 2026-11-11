@@ -1,4 +1,4 @@
-/* ReturnRun professional interface layer
+/* Fares24x7 professional interface layer
    A restrained operations-console system: fewer decorative cards, consistent icons,
    tabular data, neutral surfaces and a single action colour. */
 :root {
@@ -242,7 +242,7 @@ tbody tr:hover { background: #fafbfb; }
   .match-row,.expanded .match-row { gap: 12px; }
 }
 
-/* ReturnRun office workspace — minimal, readable, and aligned with the public brand. */
+/* Fares24x7 office workspace — minimal, readable, and aligned with the public brand. */
 .app-shell{
   --navy:#171717;--navy-2:#272727;--ink:#171717;--muted:#697078;--line:#dedfdb;
   --paper:#f5f6f4;--orange:#ffa51f;--orange-dark:#e48700;--green:#159b70;--blue:#3475df;
@@ -1713,3 +1713,61 @@ body { background: var(--paper); }
   .app-shell .vehicle-document-upload{min-width:58px;padding:6px 8px}
   .app-shell .vehicle-document-name small{max-width:125px}
 }
+
+/* Auth feedback messages (Supabase login/signup) */
+.auth-message{margin:12px 0 4px;padding:10px 12px;border-radius:10px;font-size:13px;line-height:1.45}
+.auth-message.error{background:#fdecec;color:#9b1c1c;border:1px solid #f5c2c2}
+.auth-message.info{background:#eef6ee;color:#1f5f2a;border:1px solid #c5e1c8}
+.auth-submit:disabled,.google-button:disabled{opacity:.6;cursor:not-allowed}
+
+/* Backend states: loading / suspended screen, workspace errors, live notifications, stored documents */
+.app-loading{min-height:100vh;display:grid;place-content:center;justify-items:center;gap:14px;padding:24px;text-align:center;background:#f7f7f5;color:#171717}
+.app-loading .brand-mark{display:grid;place-items:center;width:52px;height:52px;border:1.5px solid #171717;border-radius:12px;background:var(--orange);font-weight:800;font-size:14px;box-shadow:2px 2px 0 #171717}
+.app-loading h1{margin:0;font-size:24px}
+.app-loading p{margin:0;max-width:420px;color:#555}
+.workspace-error{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px;padding:12px 14px;border:1px solid #f5c2c2;border-radius:10px;background:#fdecec;color:#9b1c1c;font-size:14px}
+.workspace-error button{margin-left:auto;border:1px solid currentColor;border-radius:8px;background:transparent;color:inherit;padding:4px 12px;cursor:pointer}
+.notification-empty{margin:0;padding:18px 16px;color:#666;font-size:14px;text-align:center}
+.document-frame{display:block;width:100%;height:min(70vh,620px);border:1px solid #d2d7da;border-radius:6px;background:#fff;object-fit:contain}
+.document-load-error,.document-none{margin:0;padding:24px;color:#666;font-size:14px;text-align:center}
+.document-preview-toolbar a{font-size:13px;font-weight:600;color:inherit}
+button:disabled{cursor:not-allowed}
+
+/* --- Feedback round (Nov 2026) --- */
+/* Calmer motion: route arrow is drawn once instead of looping */
+.app-shell .request-route-hero>i.route-journey path{clip-path:none;animation:none}
+
+/* Request details */
+.view-request-btn{min-width:96px;height:34px;padding:0 12px;border:1px solid #dcdcd8;border-radius:8px;background:#fff;color:#171717;font-size:11px;font-weight:700;cursor:pointer}
+.view-request-btn:hover,.review-request-btn:hover{border-color:#171717}
+.request-route-link{display:block;padding:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.request-route-link:hover strong{text-decoration:underline}
+.request-route-link small{display:block}
+.request-mobile-review.secondary{background:#fff;color:#171717;border:1px solid #dcdcd8}
+.request-status-banner{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:12px 14px;border:1px solid #e7e7e3;border-radius:12px;background:#fafaf8}
+.request-status-banner p{margin:0;color:#444;font-size:13px;line-height:1.5}
+.request-status-banner.accepted{background:#eef7ef;border-color:#cfe6d2}
+.request-status-banner.rejected{background:#fdf0f0;border-color:#f3d2d2}
+.request-status-banner.pending{background:#fff8ec;border-color:#f6e1bd}
+.request-details-modal .request-detail-grid{grid-template-columns:repeat(2,1fr)}
+
+/* Short, static acceptance confirmation */
+.request-success-simple{display:grid;justify-items:center;gap:10px;padding:36px 28px 30px;text-align:center}
+.request-success-simple h2{margin:0}
+.request-success-simple p{margin:0 0 8px;color:#555;max-width:360px}
+.request-success-check{display:grid;place-items:center;width:64px;height:64px;border:1.5px solid #171717;border-radius:50%;background:#ffa51f;box-shadow:3px 3px 0 #171717}
+.request-success-check svg{width:30px;height:30px;fill:none;stroke:#171717;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* Required fields */
+.required-mark{margin-left:2px;color:#c2410c;font-weight:800}
+.profile-form .optional{margin-left:6px;color:#999;font-size:11px;font-weight:500}
+.profile-form input:user-invalid{border-color:#d93c3c;background:#fff8f8}
+
+/* Confirmation dialog */
+.confirm-dialog{width:min(420px,calc(100vw - 32px));padding:26px 26px 22px}
+.confirm-dialog h2{margin:0 0 8px;font-size:20px}
+.confirm-dialog p{margin:0 0 22px;color:#555;line-height:1.55}
+.confirm-actions{display:flex;justify-content:flex-end;gap:10px}
+.profile-form .field-label{display:inline-flex;align-items:baseline;gap:2px}
+.profile-form .form-hint{font-style:normal;color:#777}
+.request-details-modal .request-details-close{grid-column:1/-1}

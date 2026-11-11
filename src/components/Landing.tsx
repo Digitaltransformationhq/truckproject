@@ -1,33 +1,44 @@
 import { Icon } from './Icon';
-import heroArtwork from '../assets/returnrun-logistics-hero-v2.png';
+import heroArtwork from '../assets/fares24x7-logistics-hero-v2.png';
+import postLoadArt from '../assets/process/post-load.webp';
+import matchTruckArt from '../assets/process/match-truck.webp';
+import returnTripArt from '../assets/process/productive-return.webp';
 
 interface LandingProps {
   onLogin: () => void;
   onSignup: () => void;
 }
 
-function RouteCard() {
-  return (
-    <div className="route-demo-card">
-      <div className="demo-card-top"><span>New truck request</span><b>Pending</b></div>
-      <div className="demo-truck"><span><Icon name="truck"/></span><div><strong>Truck needed</strong><small>Full truck · 14 tonnes</small></div></div>
-      <div className="demo-route"><div><i/><strong>Ahmedabad</strong><small>Pickup</small></div><span className="route-dashes"/><div><i/><strong>Chennai</strong><small>Delivery</small></div></div>
-      <button type="button">Review request <Icon name="arrow"/></button>
-    </div>
-  );
-}
-
 const features = [
-  { number: '01', title: 'Request a truck', copy: 'Share the pickup, destination, goods, weight and date.' },
-  { number: '02', title: 'Owner reviews it', copy: 'Truck owners see the request clearly on their dashboard.' },
-  { number: '03', title: 'Accept or reject', copy: 'The truck owner gives a simple answer and the customer is notified.' },
+  {
+    number: '01', title: 'Post your load', image: postLoadArt, alt: 'A parcel next to a phone showing a pickup location form',
+    copy: 'Tell us the pickup city, delivery city, type of goods, weight and the date you need the truck.',
+    points: ['Full truck or shared (part) load', 'Takes under a minute', 'No phone calls needed'],
+  },
+  {
+    number: '02', title: 'Matched with a truck', image: matchTruckArt, alt: 'A truck travelling between two location pins',
+    copy: 'Truck owners with an available vehicle on your route are alerted and review your request.',
+    points: ['Transporters submit KYC documents', 'Trucks already heading your way', 'Capacity checked automatically'],
+  },
+  {
+    number: '03', title: 'Confirmed and on the move', image: returnTripArt, alt: 'A loaded truck with a circular return arrow',
+    copy: 'The first owner to accept gets the trip. You are notified instantly and can see the assigned truck and contact.',
+    points: ['Instant confirmation', 'Truck and owner details shared', 'Empty return trips become paid trips'],
+  },
+];
+
+const audiences = [
+  { icon: 'truck' as const, title: 'Truck owners & fleet operators', copy: 'Find loads for return journeys so your trucks earn on both legs of the trip.' },
+  { icon: 'package' as const, title: 'Manufacturers & traders', copy: 'Book reliable transport for raw material and finished goods without chasing brokers.' },
+  { icon: 'building' as const, title: 'Wholesalers & distributors', copy: 'Move FMCG, building material, food and agricultural goods between cities on time.' },
+  { icon: 'route' as const, title: 'Transport & logistics companies', copy: 'Fill spare capacity and source loads efficiently across your operating routes.' },
 ];
 
 export function Landing({ onLogin, onSignup }: LandingProps) {
   return (
     <div className="landing-page">
       <header className="landing-nav">
-        <a className="landing-brand" href="#top" aria-label="ReturnRun home"><span>RR</span><strong>ReturnRun.</strong></a>
+        <a className="landing-brand" href="#top" aria-label="Fares24x7 home"><span>F24</span><strong>Fares24x7.</strong></a>
         <nav aria-label="Main navigation"><a href="#how">How it works</a><a href="#platform">Platform</a><a href="#about">About</a></nav>
         <div className="landing-auth"><button className="login-link" onClick={onLogin}>Log in</button><button className="signup-button" onClick={onSignup}>Sign up <Icon name="arrow"/></button></div>
       </header>
@@ -44,7 +55,6 @@ export function Landing({ onLogin, onSignup }: LandingProps) {
           <div className="hero-visual">
             <div className="visual-label">Live network <span><i/> Updated now</span></div>
             <img className="hero-illustration generated" src={heroArtwork} alt="Logistics worker beside a cargo truck and shipping containers"/>
-            <RouteCard/>
             <div className="floating-note"><span>₹</span><div><strong>Save every trip</strong><small>Better fleet utilisation</small></div></div>
           </div>
         </section>
@@ -53,12 +63,13 @@ export function Landing({ onLogin, onSignup }: LandingProps) {
 
         <section className="how-section" id="how">
           <div className="section-heading"><h2>One request.<br/>One clear answer.</h2></div>
-          <div className="steps-grid">{features.map((feature) => <article key={feature.number}><span>{feature.number}</span><div className="step-icon">{feature.number === '01' ? <Icon name="package"/> : feature.number === '02' ? <Icon name="route"/> : <Icon name="trend"/>}</div><h3>{feature.title}</h3><p>{feature.copy}</p></article>)}</div>
+          <p className="section-intro">From posting a load to a confirmed truck in three simple steps, for both customers and truck owners.</p>
+          <div className="steps-grid">{features.map((feature) => <article key={feature.number}><figure className="step-media"><img src={feature.image} alt={feature.alt} loading="lazy" width={720} height={480}/></figure><span>{feature.number}</span><h3>{feature.title}</h3><p>{feature.copy}</p><ul className="step-points">{feature.points.map((point) => <li key={point}><b aria-hidden="true">✓</b>{point}</li>)}</ul></article>)}</div>
         </section>
 
         <section className="platform-section" id="platform">
           <div className="platform-phone">
-            <div className="phone-top product-phone-top"><button aria-label="Open menu"><Icon name="menu"/></button><div className="phone-brand"><span>RR</span><div><strong>ReturnRun</strong><small>Fleet workspace</small></div></div><button className="phone-bell" aria-label="Notifications"><Icon name="bell"/><b>2</b></button></div>
+            <div className="phone-top product-phone-top"><button aria-label="Open menu"><Icon name="menu"/></button><div className="phone-brand"><span>F24</span><div><strong>Fares24x7</strong><small>Fleet workspace</small></div></div><button className="phone-bell" aria-label="Notifications"><Icon name="bell"/><b>2</b></button></div>
             <label className="phone-search product-phone-search"><Icon name="search"/><input aria-label="Search workspace" placeholder="Search fleet, loads or locations"/></label>
             <div className="phone-heading product-phone-heading"><h3>Good afternoon, Rajesh</h3><p>Review customer requests and accept the work that suits you.</p></div>
             <div className="phone-quick-heading"><small>Quick actions</small><strong>What would you like to do?</strong></div>
@@ -66,15 +77,29 @@ export function Landing({ onLogin, onSignup }: LandingProps) {
             <div className="phone-metrics"><article className="highlight"><span><Icon name="inbox"/></span><div><small>Pending requests</small><strong>3</strong><em>Need a response</em></div></article><article><span><Icon name="package"/></span><div><small>Accepted requests</small><strong>1</strong><em>Confirmed by owners</em></div></article><article><span><Icon name="truck"/></span><div><small>My vehicles</small><strong>4</strong><em>3 available</em></div></article><article><span><Icon name="route"/></span><div><small>On the road</small><strong>1</strong><em>Currently moving</em></div></article></div>
             <nav className="phone-bottom-nav" aria-label="Preview app navigation"><span className="active"><Icon name="overview"/><small>Home</small></span><span><Icon name="truck"/><small>Vehicles</small></span><span><Icon name="inbox"/><small>Requests</small></span><span><Icon name="building"/><small>Profile</small></span></nav>
           </div>
-          <div className="platform-copy"><span className="landing-eyebrow"><i/> One clear workspace</span><h2>Post, review and respond.</h2><p>ReturnRun keeps truck requests in one simple view so customers and truck owners always know what happens next.</p><ul><li><span>✓</span> Simple truck request form</li><li><span>✓</span> Instant owner notification</li><li><span>✓</span> Clear accept or reject response</li></ul><button className="hero-primary" onClick={onLogin}>Explore the platform <Icon name="arrow"/></button></div>
+          <div className="platform-copy"><span className="landing-eyebrow"><i/> One clear workspace</span><h2>Post, review and respond.</h2><p>Fares24x7 keeps truck requests in one simple view so customers and truck owners always know what happens next.</p><ul><li><span>✓</span> Simple truck request form</li><li><span>✓</span> Instant owner notification</li><li><span>✓</span> Clear accept or reject response</li></ul><button className="hero-primary" onClick={onLogin}>Explore the platform <Icon name="arrow"/></button></div>
         </section>
 
-        <section className="about-section" id="about"><div><span className="landing-eyebrow"><i/> Built for clarity</span><h2>Truck requests<br/>without the confusion.</h2></div><p>ReturnRun gives customers a simple way to ask for a truck and gives truck owners a simple way to respond.</p></section>
+        <section className="about-section" id="about">
+          <div className="about-intro">
+            <div><span className="landing-eyebrow"><i/> About Fares24x7</span><h2>No truck should<br/>return empty.</h2></div>
+            <div className="about-copy">
+              <p>Across India, thousands of trucks finish a delivery and drive back empty, burning fuel and earning nothing. At the same time, businesses on that very route struggle to find a reliable truck at a fair price.</p>
+              <p>Fares24x7 connects the two. Businesses post their loads, truck owners already going that way accept them, and an empty return becomes a paid trip. Businesses submit GST, PAN and vehicle documents for review, so both sides know who they are dealing with.</p>
+            </div>
+          </div>
+          <div className="about-pillars">
+            <article><strong>Verified network</strong><p>KYC review for businesses, plus RC, insurance, fitness and PUC documents for every vehicle.</p></article>
+            <article><strong>Built for return loads</strong><p>Requests reach owners whose trucks are already near the pickup or heading to the destination.</p></article>
+            <article><strong>Simple by design</strong><p>One request, one clear answer. No middlemen, no endless phone calls.</p></article>
+          </div>
+          <div className="about-audience"><h3>Who Fares24x7 is for</h3><div>{audiences.map((item) => <article key={item.title}><span><Icon name={item.icon}/></span><div><strong>{item.title}</strong><p>{item.copy}</p></div></article>)}</div></div>
+        </section>
 
         <section className="landing-cta"><div><span>Ready to move your goods?</span><h2>Post your first truck request.</h2></div><div><button className="cta-light" onClick={onSignup}>Create account <Icon name="arrow"/></button><button className="cta-dark" onClick={onLogin}>Log in</button></div></section>
       </main>
 
-      <footer className="landing-footer"><a className="landing-brand" href="#top"><span>RR</span><strong>ReturnRun.</strong></a><p>Simple truck requests for modern transport businesses.</p><span>© 2026 ReturnRun</span></footer>
+      <footer className="landing-footer"><a className="landing-brand" href="#top"><span>F24</span><strong>Fares24x7.</strong></a><p>Simple truck requests for modern transport businesses.</p><nav className="landing-legal-links"><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="mailto:support@fares24x7.com">Contact</a></nav><span>© 2026 Fares24x7</span></footer>
     </div>
   );
 }

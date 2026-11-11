@@ -206,3 +206,74 @@
 .platform-phone .phone-bottom-nav>span.active{color:#17377e}
 .platform-phone .phone-bottom-nav>span.active svg{width:17px;height:17px;color:#e05b16}
 @media(max-width:700px){.platform-phone{min-height:690px;padding-bottom:76px;box-shadow:5px 0 0 #111}.platform-phone .phone-heading h3{font-size:20px}}
+
+/* --- Feedback round (Nov 2026): hero alignment, richer How it works, About content --- */
+/* Hero: text column spans the same height as the banner so the top line and the stats line up with it */
+.landing-hero{align-items:stretch}
+.hero-copy{display:flex;flex-direction:column;justify-content:space-between;gap:28px;padding-top:6px;padding-bottom:6px}
+.hero-copy .hero-proof{margin-top:0}
+
+/* How it works */
+.section-intro{max-width:620px;margin:18px 0 0;color:#5f5f5f;font-size:16px;line-height:1.7}
+.steps-grid article{min-height:0;padding:14px 14px 22px}
+.steps-grid .step-media{margin:0 0 18px;overflow:hidden;border:1px solid rgba(17,17,17,.14);border-radius:16px;background:#0b0b0b;aspect-ratio:3/2}
+.steps-grid .step-media img{display:block;width:100%;height:100%;object-fit:cover}
+.steps-grid article>span{position:static;margin:0 10px 12px;font-size:15px;letter-spacing:.02em;color:#b46d00}
+.steps-grid article>span:after{display:none}
+.steps-grid h3,.steps-grid p,.step-points{margin-left:10px;margin-right:10px}
+.steps-grid p{max-width:none;margin-top:0;margin-bottom:14px;color:#555;font-size:14px;line-height:1.65}
+.step-points{display:grid;gap:8px;margin-top:auto;margin-bottom:0;padding:14px 0 0;border-top:1px solid rgba(17,17,17,.1);list-style:none}
+.step-points li{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;color:#2b2b2b}
+.step-points b{display:grid;place-items:center;flex:none;width:20px;height:20px;border-radius:50%;background:#ffa51f;color:#111;font-size:11px}
+
+/* About */
+.about-section{display:block}
+.about-intro{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:end}
+.about-copy p{margin:0 0 14px;color:#555;font-size:16px;line-height:1.75}
+.about-copy p:last-child{margin-bottom:6px}
+.about-pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px}
+.about-pillars article{padding:24px;border:1px solid rgba(17,17,17,.16);border-radius:20px;background:#fff8ec}
+.about-pillars strong{display:block;margin-bottom:8px;font:800 19px/1.25 Manrope;letter-spacing:-.03em}
+.about-pillars p{margin:0;color:#555;font-size:14px;line-height:1.6}
+.about-audience{margin-top:56px}
+.about-audience h3{margin:0 0 18px;font:800 24px/1.2 Manrope;letter-spacing:-.04em}
+.about-audience>div{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.about-audience article{display:flex;gap:14px;align-items:flex-start;padding:18px;border:1px solid rgba(17,17,17,.12);border-radius:16px;background:#fff}
+.about-audience article>span{display:grid;place-items:center;flex:none;width:42px;height:42px;border:1.25px solid #111;border-radius:12px;background:#ffa51f}
+.about-audience article svg{width:20px;height:20px}
+.about-audience strong{display:block;margin-bottom:4px;font-size:15px}
+.about-audience p{margin:0;color:#5f5f5f;font-size:13.5px;line-height:1.55}
+
+@media(max-width:1000px){
+  .hero-copy{justify-content:flex-start}
+  .about-intro{grid-template-columns:1fr;gap:24px}
+  .about-pillars{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+  .about-audience>div{grid-template-columns:1fr}
+  .about-copy p{font-size:14px}
+}
+
+/* Calmer motion: no lifting cards, and respect the OS "reduce motion" setting everywhere */
+.steps-grid article:hover{transform:none}
+.steps-grid article:hover .step-icon,.steps-grid article:hover>span{transform:none}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* Google sign-in onboarding (one-time "complete your profile" page) */
+.onboarding-page{min-height:100vh;display:grid;place-items:start center;padding:48px 16px;background:linear-gradient(160deg,#fff8ec,#eefbfd);font-family:"DM Sans",sans-serif;color:#151515}
+.onboarding-card{width:min(620px,100%);padding:32px;border:1.5px solid #111;border-radius:24px;background:#fff;box-shadow:6px 8px 0 #111}
+.onboarding-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:26px}
+.onboarding-head .brand-mark{display:grid;place-items:center;width:42px;height:42px;border:1.5px solid #111;border-radius:11px;background:#ffa51f;font-weight:800;font-size:12px}
+.onboarding-account{display:flex;align-items:center;gap:10px;min-width:0}
+.onboarding-account img,.onboarding-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid #ddd;display:grid;place-items:center;background:#f4f4f2}
+.onboarding-account strong{display:block;font-size:14px}
+.onboarding-account small{display:block;color:#666;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}
+.onboarding-card h1{margin:6px 0 6px;font:800 clamp(24px,4vw,30px)/1.15 Manrope,sans-serif;letter-spacing:-.04em}
+.onboarding-lead{margin:0 0 20px;color:#555}
+.onboarding-roles{margin-bottom:18px}
+.onboarding-form{display:grid;gap:14px}
+.onboarding-card .auth-switch{margin-top:18px;text-align:center}
+@media(max-width:560px){.onboarding-card{padding:22px;box-shadow:4px 5px 0 #111}.onboarding-head{flex-direction:column;align-items:flex-start}.onboarding-card .auth-field-row{grid-template-columns:1fr}}
+.landing-legal-links{display:flex;flex-wrap:wrap;gap:16px;font-size:13px}
+.landing-legal-links a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.auth-check.terms a{color:inherit;font-weight:700;text-decoration:underline}

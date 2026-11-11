@@ -13,6 +13,8 @@ export interface Truck {
   status: TruckStatus;
   engineNumber?: string;
   chassisNumber?: string;
+  /** Number of verification documents uploaded (backend mode). */
+  documentCount?: number;
 }
 
 export interface Load {
@@ -24,6 +26,8 @@ export interface Load {
   type: LoadType;
   date: string;
   status: LoadStatus;
+  /** Registration of the truck that accepted the request, when booked. */
+  bookedTruck?: string;
 }
 
 export interface PortalData { trucks: Truck[]; loads: Load[]; }
@@ -38,6 +42,7 @@ export interface Driver {
   city: string;
   status: DriverStatus;
   assignedVehicle?: string;
+  assignedTruckId?: string;
   photoName: string;
   licenceFrontName: string;
   licenceBackName: string;
@@ -54,6 +59,7 @@ export interface ReturnMatch {
 export type SupportTicketStatus = 'Open' | 'In review' | 'Resolved';
 export interface SupportTicket {
   id: string;
+  userId?: string;
   userName: string;
   business: string;
   email: string;
@@ -64,5 +70,46 @@ export interface SupportTicket {
   message: string;
   priority: 'Normal' | 'Urgent';
   status: SupportTicketStatus;
+  createdAt: string;
+}
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  body: string;
+  view?: ViewName;
+  read: boolean;
+  createdAt: string;
+}
+
+export type AdminAccountStatus = 'Active' | 'Suspended';
+export type VerificationStatus = 'Verified' | 'Pending' | 'Needs information' | 'Rejected' | 'Not submitted';
+export interface AdminAccount {
+  id: string;
+  name: string;
+  business: string;
+  role: 'Truck owner' | 'Load owner';
+  city: string;
+  phone: string;
+  email: string;
+  joined: string;
+  status: AdminAccountStatus;
+  verification: VerificationStatus;
+  assets: number;
+}
+
+export type DocumentReviewState = 'Submitted' | 'Verified' | 'Rejected';
+export interface StoredDocument {
+  id: string;
+  ownerId: string;
+  entityType: 'kyc' | 'truck' | 'driver';
+  entityId?: string;
+  kind: string;
+  fileName: string;
+  path: string;
+  mimeType?: string;
+  sizeBytes?: number;
+  status: DocumentReviewState;
+  remark?: string;
   createdAt: string;
 }

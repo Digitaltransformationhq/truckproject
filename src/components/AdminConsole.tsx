@@ -1,27 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
+import * as api from '../lib/backend';
 import { Icon } from './Icon';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { formatDate } from '../lib/matching';
-import type { Load, PortalData, SupportTicket, SupportTicketStatus, Truck, ViewName } from '../types';
+import type { AdminAccount, Load, PortalData, StoredDocument, SupportTicket, SupportTicketStatus, Truck, VerificationStatus, ViewName } from '../types';
 
-type AdminAccountStatus = 'Active' | 'Suspended';
-type VerificationStatus = 'Verified' | 'Pending' | 'Needs information' | 'Rejected';
 type DocumentKind = 'gst' | 'identity' | 'bank';
 type DocumentReviewStatus = 'Verified' | 'Needs information' | 'Rejected';
-
-interface AdminAccount {
-  id: string;
-  name: string;
-  business: string;
-  role: 'Truck owner' | 'Load owner';
-  city: string;
-  phone: string;
-  email: string;
-  joined: string;
-  status: AdminAccountStatus;
-  verification: VerificationStatus;
-  assets: number;
-}
 
 const seedAccounts: AdminAccount[] = [
   { id:'USR-1048', name:'Rajesh Sharma', business:'Sharma Roadways', role:'Truck owner', city:'Chennai', phone:'+91 98765 43210', email:'rajesh@sharmaroadways.in', joined:'2026-10-18', status:'Active', verification:'Pending', assets:4 },
@@ -65,7 +51,7 @@ function DocumentReviewModal({ account, kind, status, savedRemark, onClose, onDe
         <div className="document-preview-stage">
           <div className="document-preview-toolbar"><span><b>PDF</b>{docMeta.filename}</span><em>1 of 1</em></div>
           <div className="document-paper">
-            <div className="document-emblem">RR</div>
+            <div className="document-emblem">F24</div>
             <small>{kind === 'bank' ? 'ACCOUNT VERIFICATION DOCUMENT' : 'GOVERNMENT OF INDIA'}</small>
             <h3>{kind === 'gst' ? 'Goods and Services Tax Registration Certificate' : kind === 'identity' ? 'Certificate of Incorporation' : 'Bank Account Confirmation'}</h3>
             <i/>
@@ -76,6 +62,45 @@ function DocumentReviewModal({ account, kind, status, savedRemark, onClose, onDe
         <aside className="document-review-sidebar"><span>Uploaded file</span><h3>{docMeta.filename}</h3><div className="document-review-facts"><div><span>Applicant</span><strong>{account.name}</strong></div><div><span>Business</span><strong>{account.business}</strong></div><div><span>Uploaded</span><strong>{formatDate(account.joined)}</strong></div><div><span>File type</span><strong>PDF · 842 KB</strong></div></div><div className="document-security-note"><Icon name="building"/><p><strong>Review the original details</strong><small>Confirm the business name, reference number, address and validity before making a decision.</small></p></div>{status && <div className={`document-current-status ${badgeClass(status)}`}><span>Current review</span><strong>{status}</strong></div>}<label className={`document-remark-field ${remarkError ? 'has-error' : ''}`}><span>Review remark <b>Required to reject</b></span><textarea value={remark} onChange={event=>{setRemark(event.target.value);if(remarkError)setRemarkError('')}} placeholder="Describe what is unclear, missing or incorrect…" rows={4}/><small>{remarkError || 'This remark will be recorded for the applicant and review history.'}</small></label></aside>
       </div>
       <footer><button className="document-reject" onClick={rejectDocument}>Reject document</button><button className="admin-primary" onClick={() => onDecision('Verified')}>Mark document verified</button></footer>
+    </section>
+  </div>;
+}
+
+const documentLabels: Record<string, string> = {
+  gstCertificate: 'GST registration certificate', companyPanFile: 'Company PAN card', ownerPanFile: 'Personal PAN card',
+  aadhaar: 'Aadhaar card', contactId: 'Authorised contact ID', addressProof: 'Billing address proof',
+};
+const documentLabel = (kind: string) => documentLabels[kind] ?? kind.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
+
+function StoredDocumentModal({ account, document, onClose, onDecision }: { account: AdminAccount; document: StoredDocument; onClose: () => void; onDecision: (status: 'Verified' | 'Rejected', remark?: string) => Promise<void> }) {
+  const [url,setUrl] = useState('');
+  const [loadError,setLoadError] = useState('');
+  const [remark,setRemark] = useState(document.remark ?? '');
+  const [remarkError,setRemarkError] = useState('');
+  const [busy,setBusy] = useState(false);
+  useEffect(() => { api.documentUrl(document.path).then(setUrl).catch(() => setLoadError('This file could not be opened.')); }, [document.path]);
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => event.key === 'Escape' && onClose();
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [onClose]);
+  const decide = async (status: 'Verified' | 'Rejected') => {
+    if (status === 'Rejected' && !remark.trim()) { setRemarkError('Add a remark explaining what is unclear or incorrect.'); return; }
+    setBusy(true);
+    try { await onDecision(status, remark.trim()); } finally { setBusy(false); }
+  };
+  const isImage = document.mimeType?.startsWith('image/');
+  return <div className="document-modal-backdrop" onMouseDown={event => event.target === event.currentTarget && onClose()}>
+    <section className="document-review-modal" role="dialog" aria-modal="true" aria-labelledby="storedDocumentTitle">
+      <header><div><span>Document review</span><h2 id="storedDocumentTitle">{documentLabel(document.kind)}</h2><p>{account.business} · {account.name}</p></div><button onClick={onClose} aria-label="Close document preview"><Icon name="close"/></button></header>
+      <div className="document-review-layout">
+        <div className="document-preview-stage">
+          <div className="document-preview-toolbar"><span><b>{isImage ? 'IMG' : 'PDF'}</b>{document.fileName}</span>{url && <a href={url} target="_blank" rel="noreferrer">Open in new tab</a>}</div>
+          {loadError ? <p className="document-load-error">{loadError}</p> : !url ? <p className="document-load-error">Loading file…</p> : isImage ? <img className="document-frame" src={url} alt={documentLabel(document.kind)}/> : <iframe className="document-frame" src={url} title={document.fileName}/>}
+        </div>
+        <aside className="document-review-sidebar"><span>Uploaded file</span><h3>{document.fileName}</h3><div className="document-review-facts"><div><span>Applicant</span><strong>{account.name}</strong></div><div><span>Business</span><strong>{account.business}</strong></div><div><span>Uploaded</span><strong>{formatDate(document.createdAt.slice(0, 10))}</strong></div><div><span>File size</span><strong>{document.sizeBytes ? `${Math.max(1, Math.round(document.sizeBytes / 1024))} KB` : '—'}</strong></div></div><div className={`document-current-status ${badgeClass(document.status)}`}><span>Current review</span><strong>{document.status}</strong></div><label className={`document-remark-field ${remarkError ? 'has-error' : ''}`}><span>Review remark <b>Required to reject</b></span><textarea value={remark} onChange={event=>{setRemark(event.target.value);if(remarkError)setRemarkError('')}} placeholder="Describe what is unclear, missing or incorrect…" rows={4}/><small>{remarkError || 'This remark is saved with the document review.'}</small></label></aside>
+      </div>
+      <footer><button className="document-reject" disabled={busy} onClick={() => void decide('Rejected')}>Reject document</button><button className="admin-primary" disabled={busy} onClick={() => void decide('Verified')}>Mark document verified</button></footer>
     </section>
   </div>;
 }
@@ -139,33 +164,57 @@ function Accounts({ accounts, setAccounts, query, notify }: { accounts: AdminAcc
   const [role,setRole] = useState('All');
   const filtered = accounts.filter(account => (status==='All'||account.status===status) && (role==='All'||account.role===role) && (!query||Object.values(account).some(value=>String(value).toLowerCase().includes(query.toLowerCase()))));
   const toggle = (account: AdminAccount) => { const next=account.status==='Active'?'Suspended':'Active'; setAccounts(current=>current.map(item=>item.id===account.id?{...item,status:next}:item)); notify(`${account.business} ${next==='Active'?'activated':'suspended'}`); };
-  return <section className="admin-view"><AdminHeader eyebrow="Platform / Accounts" title="User accounts" description="Search, inspect and control access for every business on ReturnRun."/>
+  return <section className="admin-view"><AdminHeader eyebrow="Platform / Accounts" title="User accounts" description="Search, inspect and control access for every business on Fares24x7."/>
     <div className="admin-toolbar"><div className="admin-query"><Icon name="search"/><input value={query} readOnly placeholder="Use global search to find an account"/></div><select value={role} onChange={event=>setRole(event.target.value)}><option>All</option><option>Truck owner</option><option>Load owner</option></select><select value={status} onChange={event=>setStatus(event.target.value)}><option>All</option><option>Active</option><option>Suspended</option></select><span>{filtered.length} accounts</span></div>
     <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Business</th><th>Account type</th><th>Location</th><th>KYC</th><th>Platform status</th><th>Activity</th><th>Action</th></tr></thead><tbody>{filtered.map(account=><tr key={account.id}><td><div className="admin-business-cell"><span>{account.name.split(' ').map(p=>p[0]).join('')}</span><div><strong>{account.business}</strong><small>{account.name} · {account.id}</small></div></div></td><td>{account.role}</td><td>{account.city}</td><td><em className={`admin-badge ${badgeClass(account.verification)}`}>{account.verification}</em></td><td><em className={`admin-badge ${badgeClass(account.status)}`}>{account.status}</em></td><td><strong>{account.assets}</strong><small>{account.role==='Truck owner'?' vehicles':' requests'}</small></td><td><button className={account.status==='Active'?'admin-action danger':'admin-action'} onClick={()=>toggle(account)}>{account.status==='Active'?'Suspend':'Activate'}</button></td></tr>)}</tbody></table></div>
   </section>;
 }
 
-function Compliance({ accounts, setAccounts, notify }: { accounts: AdminAccount[]; setAccounts: React.Dispatch<React.SetStateAction<AdminAccount[]>>; notify:(message:string)=>void }) {
+function Compliance({ accounts, setAccounts, notify, backend }: { accounts: AdminAccount[]; setAccounts: React.Dispatch<React.SetStateAction<AdminAccount[]>>; notify:(message:string)=>void; backend?: AdminBackend }) {
+  const [storedDocs,setStoredDocs] = useState<Record<string, StoredDocument[]>>({});
+  const [openStored,setOpenStored] = useState<{ account: AdminAccount; document: StoredDocument } | null>(null);
+  const queueIds = accounts.filter(needsVerificationReview).map(account => account.id).join(',');
+  const backendEnabled = Boolean(backend);
+  useEffect(() => {
+    if (!backendEnabled || !queueIds) return;
+    let cancelled = false;
+    Promise.all(queueIds.split(',').map(async id => [id, await api.fetchDocuments({ ownerId: id, entityType: 'kyc' })] as const))
+      .then(entries => { if (!cancelled) setStoredDocs(Object.fromEntries(entries)); })
+      .catch(() => { if (!cancelled) notify('Could not load KYC documents'); });
+    return () => { cancelled = true; };
+  }, [backendEnabled, queueIds, notify]);
+  const reviewStored = async (status: 'Verified' | 'Rejected', remark?: string) => {
+    if (!openStored) return;
+    const { account, document } = openStored;
+    try {
+      await api.reviewDocument(document.id, status, remark);
+      setStoredDocs(current => ({ ...current, [account.id]: (current[account.id] ?? []).map(item => item.id === document.id ? { ...item, status, remark: status === 'Rejected' ? remark : undefined } : item) }));
+      if (status === 'Rejected') setAccounts(current => current.map(item => item.id === account.id ? { ...item, verification: 'Needs information' } : item));
+      notify(status === 'Verified' ? `${documentLabel(document.kind)} marked as verified` : `${documentLabel(document.kind)} rejected with a remark`);
+      setOpenStored(null);
+    } catch (problem) { backend?.fail(problem); }
+  };
   const [selectedDocument,setSelectedDocument] = useState<{ account: AdminAccount; kind: DocumentKind } | null>(null);
   const [rejectingAccount,setRejectingAccount] = useState<AdminAccount | null>(null);
-  const [documentReviews,setDocumentReviews] = useLocalStorage<Record<string,DocumentReviewStatus>>('returnrun-admin-document-reviews-v1',{});
-  const [documentRemarks,setDocumentRemarks] = useLocalStorage<Record<string,string>>('returnrun-admin-document-remarks-v1',{});
+  const [documentReviews,setDocumentReviews] = useLocalStorage<Record<string,DocumentReviewStatus>>('fares24x7-admin-document-reviews-v1',{});
+  const [documentRemarks,setDocumentRemarks] = useLocalStorage<Record<string,string>>('fares24x7-admin-document-remarks-v1',{});
   const queue=accounts.filter(needsVerificationReview);
   const update=(account:AdminAccount,verification:VerificationStatus)=>{setAccounts(current=>current.map(item=>item.id===account.id?{...item,verification}:item));notify(verification==='Verified'?`${account.business} verified`:`Information requested from ${account.business}`)};
   const documentKey=(account:AdminAccount,kind:DocumentKind)=>`${account.id}:${kind}`;
   const reviewDocument=(status:DocumentReviewStatus,remark?:string)=>{if(!selectedDocument)return;const {account,kind}=selectedDocument;const key=documentKey(account,kind);setDocumentReviews(current=>({...current,[key]:status}));if(status==='Rejected'&&remark)setDocumentRemarks(current=>({...current,[key]:remark}));if(status==='Verified')setDocumentRemarks(current=>{const next={...current};delete next[key];return next});if(status!=='Verified')setAccounts(current=>current.map(item=>item.id===account.id?{...item,verification:'Needs information'}:item));notify(status==='Verified'?`${documentMeta[kind].title} marked as verified`:`${documentMeta[kind].title} rejected with a remark`);setSelectedDocument(null)};
   const rejectBusiness=()=>{if(!rejectingAccount)return;const account=rejectingAccount;setAccounts(current=>current.map(item=>item.id===account.id?{...item,verification:'Rejected',status:'Suspended'}:item));notify(`${account.business} rejected and account suspended`);setRejectingAccount(null)};
   return <section className="admin-view"><AdminHeader eyebrow="Trust & safety" title="KYC verification" description="Review business identity and tax information before granting full access." action={<span className="admin-queue-count"><b>{queue.length}</b> waiting</span>}/>
-    <div className="compliance-layout"><div className="compliance-list">{queue.length===0?<div className="admin-empty"><span>✓</span><h2>Queue cleared</h2><p>There are no businesses waiting for review.</p></div>:queue.map(account=><article key={account.id}><header><span className="admin-account-avatar">{account.name.split(' ').map(p=>p[0]).join('')}</span><div><strong>{account.business}</strong><small>{account.id} · Submitted {formatDate(account.joined)}</small></div><em className={`admin-badge ${badgeClass(account.verification)}`}>{account.verification}</em></header><div className="compliance-facts"><div><span>Applicant</span><strong>{account.name}</strong></div><div><span>Account type</span><strong>{account.role}</strong></div><div><span>Registered city</span><strong>{account.city}</strong></div><div><span>Phone</span><strong>{account.phone}</strong></div></div><div className="document-checks">{(['gst','identity','bank'] as DocumentKind[]).map(kind=>{const meta=documentMeta[kind];const reviewed=documentReviews[documentKey(account,kind)];const issue=reviewed==='Needs information'||reviewed==='Rejected'||(!reviewed&&kind==='bank'&&account.verification==='Needs information');const label=reviewed??(issue?'Unclear':'Received');return <button key={kind} onClick={()=>setSelectedDocument({account,kind})} aria-label={`Open ${meta.title} for ${account.business}`}><span><Icon name={meta.icon}/>{meta.title}</span><b className={issue?'document-issue':'document-ready'}>{label}</b><Icon name="chevron"/></button>})}</div><footer><button className="reject-business-button" onClick={()=>setRejectingAccount(account)}>Reject business</button><button onClick={()=>update(account,'Needs information')}>Request information</button><button className="admin-primary" onClick={()=>update(account,'Verified')}>Approve business</button></footer></article>)}</div><aside className="compliance-guide"><span>Review checklist</span><h3>Before approving</h3><ol><li><b>1</b><p><strong>Business identity</strong><small>Name matches incorporation or GST records.</small></p></li><li><b>2</b><p><strong>Contact ownership</strong><small>Phone and email belong to the applicant.</small></p></li><li><b>3</b><p><strong>Tax registration</strong><small>GSTIN format and business state are consistent.</small></p></li><li><b>4</b><p><strong>Bank beneficiary</strong><small>Beneficiary matches the registered entity.</small></p></li></ol><p className="guide-note">Every decision is recorded in the platform audit history.</p></aside></div>
+    <div className="compliance-layout"><div className="compliance-list">{queue.length===0?<div className="admin-empty"><span>✓</span><h2>Queue cleared</h2><p>There are no businesses waiting for review.</p></div>:queue.map(account=><article key={account.id}><header><span className="admin-account-avatar">{account.name.split(' ').map(p=>p[0]).join('')}</span><div><strong>{account.business}</strong><small>{account.id} · Submitted {formatDate(account.joined)}</small></div><em className={`admin-badge ${badgeClass(account.verification)}`}>{account.verification}</em></header><div className="compliance-facts"><div><span>Applicant</span><strong>{account.name}</strong></div><div><span>Account type</span><strong>{account.role}</strong></div><div><span>Registered city</span><strong>{account.city}</strong></div><div><span>Phone</span><strong>{account.phone}</strong></div></div><div className="document-checks">{backend ? ((storedDocs[account.id] ?? []).length === 0 ? <p className="document-none">No documents uploaded yet.</p> : (storedDocs[account.id] ?? []).map(document => <button key={document.id} onClick={()=>setOpenStored({account,document})} aria-label={`Open ${documentLabel(document.kind)} for ${account.business}`}><span><Icon name="package"/>{documentLabel(document.kind)}</span><b className={document.status==='Rejected'?'document-issue':'document-ready'}>{document.status==='Submitted'?'Received':document.status}</b><Icon name="chevron"/></button>)) : (['gst','identity','bank'] as DocumentKind[]).map(kind=>{const meta=documentMeta[kind];const reviewed=documentReviews[documentKey(account,kind)];const issue=reviewed==='Needs information'||reviewed==='Rejected'||(!reviewed&&kind==='bank'&&account.verification==='Needs information');const label=reviewed??(issue?'Unclear':'Received');return <button key={kind} onClick={()=>setSelectedDocument({account,kind})} aria-label={`Open ${meta.title} for ${account.business}`}><span><Icon name={meta.icon}/>{meta.title}</span><b className={issue?'document-issue':'document-ready'}>{label}</b><Icon name="chevron"/></button>})}</div><footer><button className="reject-business-button" onClick={()=>setRejectingAccount(account)}>Reject business</button><button onClick={()=>update(account,'Needs information')}>Request information</button><button className="admin-primary" onClick={()=>update(account,'Verified')}>Approve business</button></footer></article>)}</div><aside className="compliance-guide"><span>Review checklist</span><h3>Before approving</h3><ol><li><b>1</b><p><strong>Business identity</strong><small>Name matches incorporation or GST records.</small></p></li><li><b>2</b><p><strong>Contact ownership</strong><small>Phone and email belong to the applicant.</small></p></li><li><b>3</b><p><strong>Tax registration</strong><small>GSTIN format and business state are consistent.</small></p></li><li><b>4</b><p><strong>Bank beneficiary</strong><small>Beneficiary matches the registered entity.</small></p></li></ol><p className="guide-note">Every decision is recorded in the platform audit history.</p></aside></div>
     {selectedDocument && <DocumentReviewModal account={selectedDocument.account} kind={selectedDocument.kind} status={documentReviews[documentKey(selectedDocument.account,selectedDocument.kind)]} savedRemark={documentRemarks[documentKey(selectedDocument.account,selectedDocument.kind)]} onClose={()=>setSelectedDocument(null)} onDecision={reviewDocument}/>}
     {rejectingAccount && <RejectBusinessDialog account={rejectingAccount} onCancel={()=>setRejectingAccount(null)} onConfirm={rejectBusiness}/>}
+    {openStored && <StoredDocumentModal account={openStored.account} document={openStored.document} onClose={()=>setOpenStored(null)} onDecision={reviewStored}/>}
   </section>;
 }
 
 function Operations({ data }: { data: PortalData }) {
   const [section,setSection]=useState<'requests'|'vehicles'>('requests');
   return <section className="admin-view"><AdminHeader eyebrow="Marketplace oversight" title="Operations" description="Inspect active requests and fleet availability across the platform." action={<div className="admin-segmented"><button className={section==='requests'?'active':''} onClick={()=>setSection('requests')}>Requests</button><button className={section==='vehicles'?'active':''} onClick={()=>setSection('vehicles')}>Vehicles</button></div>}/>
-    {section==='requests'?<div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Request</th><th>Route</th><th>Goods</th><th>Requirement</th><th>Pickup</th><th>Status</th></tr></thead><tbody>{data.loads.map((load:Load)=><tr key={load.id}><td><strong>#RR{load.id}</strong></td><td><div className="operation-route"><i/><strong>{load.origin}</strong><Icon name="arrow"/><strong>{load.destination}</strong></div></td><td><strong>{load.material}</strong><small>{load.quantity} tonnes</small></td><td>{load.type==='FTL'?'Full truck':'Shared truck'}</td><td>{formatDate(load.date)}</td><td><em className={`admin-badge ${badgeClass(load.status)}`}>{load.status}</em></td></tr>)}</tbody></table></div>:<div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Registration</th><th>Vehicle</th><th>Route corridor</th><th>Capacity</th><th>Documents</th><th>Status</th></tr></thead><tbody>{data.trucks.map((truck:Truck)=><tr key={truck.id}><td><strong>{truck.registration}</strong></td><td>{truck.type}</td><td><div className="operation-route"><strong>{truck.location}</strong><Icon name="arrow"/><strong>{truck.destination}</strong></div></td><td>{truck.capacity} tonnes</td><td><em className={`admin-badge ${truck.chassisNumber?'verified':'needs-information'}`}>{truck.chassisNumber?'Submitted':'Incomplete'}</em></td><td><em className={`admin-badge ${badgeClass(truck.status)}`}>{truck.status}</em></td></tr>)}</tbody></table></div>}
+    {section==='requests'?<div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Request</th><th>Route</th><th>Goods</th><th>Requirement</th><th>Pickup</th><th>Status</th></tr></thead><tbody>{data.loads.map((load:Load)=><tr key={load.id}><td><strong>#F24-{load.id}</strong></td><td><div className="operation-route"><i/><strong>{load.origin}</strong><Icon name="arrow"/><strong>{load.destination}</strong></div></td><td><strong>{load.material}</strong><small>{load.quantity} tonnes</small></td><td>{load.type==='FTL'?'Full truck':'Shared truck'}</td><td>{formatDate(load.date)}</td><td><em className={`admin-badge ${badgeClass(load.status)}`}>{load.status}</em></td></tr>)}</tbody></table></div>:<div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Registration</th><th>Vehicle</th><th>Route corridor</th><th>Capacity</th><th>Documents</th><th>Status</th></tr></thead><tbody>{data.trucks.map((truck:Truck)=><tr key={truck.id}><td><strong>{truck.registration}</strong></td><td>{truck.type}</td><td><div className="operation-route"><strong>{truck.location}</strong><Icon name="arrow"/><strong>{truck.destination}</strong></div></td><td>{truck.capacity} tonnes</td><td><em className={`admin-badge ${truck.chassisNumber?'verified':'needs-information'}`}>{truck.chassisNumber?'Submitted':'Incomplete'}</em></td><td><em className={`admin-badge ${badgeClass(truck.status)}`}>{truck.status}</em></td></tr>)}</tbody></table></div>}
   </section>;
 }
 
@@ -178,15 +227,40 @@ function SupportRequests({ tickets, setTickets, notify }: { tickets: SupportTick
   return <section className="admin-view"><AdminHeader eyebrow="Service desk" title="Support requests" description="Review questions submitted by truck owners and customers, then track them through resolution." action={<span className="admin-queue-count"><b>{tickets.filter(ticket=>ticket.status!=='Resolved').length}</b> unresolved</span>}/><div className="support-admin-filters">{(['All','Open','In review','Resolved'] as const).map(status=><button key={status} className={filter===status?'active':''} onClick={()=>setFilter(status)}>{status}<span>{status==='All'?tickets.length:tickets.filter(ticket=>ticket.status===status).length}</span></button>)}</div>{filtered.length===0?<div className="support-admin-empty"><span><Icon name="headset"/></span><h2>No {filter==='All'?'support requests':filter.toLowerCase()+' requests'}</h2><p>New queries submitted by platform users will appear here.</p></div>:<div className="support-ticket-list">{filtered.map(ticket=><button key={ticket.id} onClick={()=>setSelected(ticket)}><span className={`support-priority ${ticket.priority.toLowerCase()}`}>{ticket.priority==='Urgent'?'!':<Icon name="inbox"/>}</span><span className="support-ticket-copy"><span><strong>{ticket.subject}</strong><em className={`admin-badge ${badgeClass(ticket.status)}`}>{ticket.status}</em></span><small>{ticket.business} · {ticket.category}</small><p>{ticket.message}</p><time>{ticket.id} · {dateLabel(ticket.createdAt)}</time></span><Icon name="chevron"/></button>)}</div>}{selected&&<div className="support-detail-backdrop" onMouseDown={event=>event.target===event.currentTarget&&setSelected(null)}><section className="support-detail-modal" role="dialog" aria-modal="true" aria-labelledby="supportDetailTitle"><header><div><span>{selected.id} · {selected.category}</span><h2 id="supportDetailTitle">{selected.subject}</h2><p>Submitted {dateLabel(selected.createdAt)}</p></div><button onClick={()=>setSelected(null)} aria-label="Close support request"><Icon name="close"/></button></header><div className="support-detail-body"><div className="support-detail-message"><span>Customer query</span><p>{selected.message}</p></div><aside><div><span>Submitted by</span><strong>{selected.userName}</strong><small>{selected.business}</small></div><div><span>Account type</span><strong>{selected.role==='load_owner'?'Load owner':'Truck owner'}</strong></div><div><span>Contact</span><strong>{selected.email}</strong><small>{selected.phone}</small></div><div><span>Priority</span><strong>{selected.priority}</strong></div><div><span>Current status</span><em className={`admin-badge ${badgeClass(selected.status)}`}>{selected.status}</em></div></aside></div><footer><button onClick={()=>setSelected(null)}>Close</button>{selected.status!=='In review'&&selected.status!=='Resolved'&&<button className="support-review-btn" onClick={()=>updateStatus(selected,'In review')}>Mark in review</button>}{selected.status!=='Resolved'&&<button className="admin-primary" onClick={()=>updateStatus(selected,'Resolved')}>Resolve query</button>}</footer></section></div>}</section>;
 }
 
-export function AdminConsole({ view, data, globalQuery, onNavigate, notify, onPendingCountChange, supportTickets, setSupportTickets }: { view: ViewName; data: PortalData; globalQuery: string; onNavigate:(view:ViewName)=>void; notify:(message:string)=>void; onPendingCountChange:(count:number)=>void; supportTickets:SupportTicket[]; setSupportTickets:React.Dispatch<React.SetStateAction<SupportTicket[]>> }) {
-  const [accounts,setAccounts]=useLocalStorage<AdminAccount[]>('returnrun-admin-accounts-v1',seedAccounts);
+export interface AdminBackend { reload: () => Promise<void>; fail: (problem: unknown) => void }
+
+export function AdminConsole({ view, data, globalQuery, onNavigate, notify, onPendingCountChange, supportTickets, setSupportTickets, backend }: { view: ViewName; data: PortalData; globalQuery: string; onNavigate:(view:ViewName)=>void; notify:(message:string)=>void; onPendingCountChange:(count:number)=>void; supportTickets:SupportTicket[]; setSupportTickets:React.Dispatch<React.SetStateAction<SupportTicket[]>>; backend?: AdminBackend }) {
+  const [localAccounts,setLocalAccounts]=useLocalStorage<AdminAccount[]>('fares24x7-admin-accounts-v1',seedAccounts);
+  const [remoteAccounts,setRemoteAccounts]=useState<AdminAccount[]>([]);
+  const backendRef=useRef(backend); backendRef.current=backend;
+  const backendEnabled=Boolean(backend);
+  const loadAccounts=useCallback(()=>api.fetchAdminAccounts().then(setRemoteAccounts).catch(problem=>backendRef.current?.fail(problem)),[]);
+  useEffect(()=>{ if(backendEnabled) void loadAccounts(); },[backendEnabled,loadAccounts,data]);
+  // In backend mode, persist whatever the existing screens change (status / verification) and keep the UI optimistic.
+  const remoteAccountsRef=useRef(remoteAccounts); remoteAccountsRef.current=remoteAccounts;
+  const remoteSetAccounts=useCallback<Dispatch<SetStateAction<AdminAccount[]>>>(update=>{
+    const previous=remoteAccountsRef.current;
+    const next=typeof update==='function'?update(previous):update;
+    remoteAccountsRef.current=next;
+    setRemoteAccounts(next);
+    const writes=next.flatMap(account=>{const before=previous.find(item=>item.id===account.id);if(!before)return [];const patch={status:before.status!==account.status?account.status:undefined,verification:before.verification!==account.verification?account.verification:undefined};return patch.status||patch.verification?[api.updateAccount(account.id,patch)]:[];});
+    if(writes.length) void Promise.all(writes).catch(problem=>{backendRef.current?.fail(problem);void loadAccounts();});
+  },[loadAccounts]);
+  const remoteSetTickets=useCallback<Dispatch<SetStateAction<SupportTicket[]>>>(update=>{
+    const next=typeof update==='function'?update(supportTickets):update;
+    const writes=next.flatMap(ticket=>{const before=supportTickets.find(item=>item.id===ticket.id);return before&&before.status!==ticket.status?[api.updateTicketStatus(ticket.id,ticket.status)]:[];});
+    void Promise.all(writes).then(()=>backendRef.current?.reload()).catch(problem=>backendRef.current?.fail(problem));
+  },[supportTickets]);
+  const accounts=backend?remoteAccounts:localAccounts;
+  const setAccounts=backend?remoteSetAccounts:setLocalAccounts;
+  const setTickets=backend?remoteSetTickets:setSupportTickets;
   useEffect(() => { onPendingCountChange(accounts.filter(needsVerificationReview).length); }, [accounts, onPendingCountChange]);
   const content=useMemo(()=>{
     if(view==='admin-users') return <Accounts accounts={accounts} setAccounts={setAccounts} query={globalQuery} notify={notify}/>;
-    if(view==='admin-compliance') return <Compliance accounts={accounts} setAccounts={setAccounts} notify={notify}/>;
+    if(view==='admin-compliance') return <Compliance accounts={accounts} setAccounts={setAccounts} notify={notify} backend={backend}/>;
     if(view==='admin-operations') return <Operations data={data}/>;
-    if(view==='admin-support') return <SupportRequests tickets={supportTickets} setTickets={setSupportTickets} notify={notify}/>;
+    if(view==='admin-support') return <SupportRequests tickets={supportTickets} setTickets={setTickets} notify={notify}/>;
     return <Overview accounts={accounts} data={data} navigate={onNavigate}/>;
-  },[accounts,data,globalQuery,notify,onNavigate,setAccounts,setSupportTickets,supportTickets,view]);
+  },[accounts,backend,data,globalQuery,notify,onNavigate,setAccounts,setTickets,supportTickets,view]);
   return content;
 }

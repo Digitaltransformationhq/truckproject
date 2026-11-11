@@ -15,7 +15,7 @@ interface AuthModalProps {
 function AuthIllustration({ mode }: { mode: AuthMode }) {
   return (
     <div className="auth-art">
-      <div className="auth-art-brand"><span>RR</span><strong>ReturnRun.</strong></div>
+      <div className="auth-art-brand"><span>F24</span><strong>Fares24x7.</strong></div>
       <div className="auth-art-copy">
         <span className="auth-kicker"><i/> Return logistics, simplified</span>
         <h2>{mode === 'login' ? <>Welcome<br/>back on route.</> : <>Start earning<br/>on every return.</>}</h2>
@@ -63,9 +63,9 @@ export function AuthModal({ mode, onClose, onModeChange, onComplete }: AuthModal
         <button className="auth-close" onClick={onClose} aria-label="Close"><Icon name="close"/></button>
         <AuthIllustration mode={mode}/>
         <div className="auth-form-panel">
-          <div className="auth-mobile-brand"><span>RR</span><strong>ReturnRun.</strong></div>
+          <div className="auth-mobile-brand"><span>F24</span><strong>Fares24x7.</strong></div>
           <span className="auth-form-eyebrow">{isLogin ? 'Welcome back' : 'Join the network'}</span>
-          <h1 id="auth-title">{isLogin ? 'Log in to ReturnRun' : 'Create your account'}</h1>
+          <h1 id="auth-title">{isLogin ? 'Log in to Fares24x7' : 'Create your account'}</h1>
           <p>{isLogin ? 'Enter your details to access your operations workspace.' : 'Set up your business profile. It only takes a minute.'}</p>
 
           <form className="auth-form" onSubmit={submit}>
@@ -82,7 +82,7 @@ export function AuthModal({ mode, onClose, onModeChange, onComplete }: AuthModal
 
           <div className="auth-divider"><span>or continue with</span></div>
           <button className="google-button" type="button" onClick={onComplete}><GoogleLogo/> <span>Continue with Google</span></button>
-          <p className="auth-switch">{isLogin ? 'New to ReturnRun?' : 'Already have an account?'} <button onClick={() => onModeChange(isLogin ? 'signup' : 'login')}>{isLogin ? 'Create an account' : 'Log in'}</button></p>
+          <p className="auth-switch">{isLogin ? 'New to Fares24x7?' : 'Already have an account?'} <button onClick={() => onModeChange(isLogin ? 'signup' : 'login')}>{isLogin ? 'Create an account' : 'Log in'}</button></p>
           <span className="auth-secure">Secure access · Review environment</span>
         </div>
       </section>
