@@ -1,8 +1,5 @@
 import { Icon } from './Icon';
-import heroArtwork from '../assets/fares24x7-logistics-hero-v2.png';
-import postLoadArt from '../assets/process/post-load.webp';
-import matchTruckArt from '../assets/process/match-truck.webp';
-import returnTripArt from '../assets/process/productive-return.webp';
+import { HeroWalkthrough } from './ProductMockups';
 
 interface LandingProps {
   onLogin: () => void;
@@ -11,17 +8,17 @@ interface LandingProps {
 
 const features = [
   {
-    number: '01', title: 'Post your load', image: postLoadArt, alt: 'A parcel next to a phone showing a pickup location form',
+    number: '01', icon: 'package' as const, title: 'Post your load',
     copy: 'Tell us the pickup city, delivery city, type of goods, weight and the date you need the truck.',
     points: ['Full truck or shared (part) load', 'Takes under a minute', 'No phone calls needed'],
   },
   {
-    number: '02', title: 'Matched with a truck', image: matchTruckArt, alt: 'A truck travelling between two location pins',
+    number: '02', icon: 'truck' as const, title: 'Matched with a truck',
     copy: 'Truck owners with an available vehicle on your route are alerted and review your request.',
     points: ['Transporters submit KYC documents', 'Trucks already heading your way', 'Capacity checked automatically'],
   },
   {
-    number: '03', title: 'Confirmed and on the move', image: returnTripArt, alt: 'A loaded truck with a circular return arrow',
+    number: '03', icon: 'route' as const, title: 'Confirmed and on the move',
     copy: 'The first owner to accept gets the trip. You are notified instantly and can see the assigned truck and contact.',
     points: ['Instant confirmation', 'Truck and owner details shared', 'Empty return trips become paid trips'],
   },
@@ -50,21 +47,33 @@ export function Landing({ onLogin, onSignup }: LandingProps) {
             <h1>Need a truck?<br/>Send one <em>request.</em></h1>
             <p>Customers post what they need. Truck owners review the request and either accept or reject it. That is the whole process.</p>
             <div className="hero-actions"><button className="hero-primary" onClick={onSignup}>Get started <Icon name="arrow"/></button><button className="hero-login" onClick={onLogin}>Log in</button><a href="#how">See how it works <span>↓</span></a></div>
-            <div className="hero-proof"><div><strong>1</strong><span>clear request</span></div><div><strong>2</strong><span>simple choices</span></div><div><strong>Fast</strong><span>owner response</span></div></div>
           </div>
-          <div className="hero-visual">
-            <div className="visual-label">Live network <span><i/> Updated now</span></div>
-            <img className="hero-illustration generated" src={heroArtwork} alt="Logistics worker beside a cargo truck and shipping containers"/>
-            <div className="floating-note"><span>₹</span><div><strong>Save every trip</strong><small>Better fleet utilisation</small></div></div>
+          <div className="hero-visual hero-product hero-video" aria-label="Walkthrough: a customer posts a truck request, a truck owner accepts it and the customer tracks the trip">
+            <HeroWalkthrough/>
           </div>
+          <ul className="hero-trust">
+              <li><strong>Verified businesses</strong><small>GST &amp; PAN reviewed</small></li>
+              <li><strong>Documented trucks</strong><small>RC, insurance &amp; PUC</small></li>
+              <li><strong>Direct contact</strong><small>No middlemen</small></li>
+            </ul>
         </section>
 
-        <section className="logo-strip" aria-label="Platform capabilities"><span>Built for Indian transport businesses</span><div><b>Fleet owners</b><i/> <b>Load owners</b><i/> <b>Transporters</b><i/> <b>Logistics teams</b></div></section>
+        <section className="audience-band" aria-label="Who uses Fares24x7">
+          <div className="audience-band-inner">
+          <p>Built for Indian <br/>transport businesses</p>
+          <ul>
+            <li><strong>Fleet owners</strong><small>Fill empty return trips</small></li>
+            <li><strong>Load owners</strong><small>Book trucks without brokers</small></li>
+            <li><strong>Transporters</strong><small>Put spare capacity to work</small></li>
+            <li><strong>Logistics teams</strong><small>Track every load in one place</small></li>
+          </ul>
+          </div>
+        </section>
 
         <section className="how-section" id="how">
           <div className="section-heading"><h2>One request.<br/>One clear answer.</h2></div>
           <p className="section-intro">From posting a load to a confirmed truck in three simple steps, for both customers and truck owners.</p>
-          <div className="steps-grid">{features.map((feature) => <article key={feature.number}><figure className="step-media"><img src={feature.image} alt={feature.alt} loading="lazy" width={720} height={480}/></figure><span>{feature.number}</span><h3>{feature.title}</h3><p>{feature.copy}</p><ul className="step-points">{feature.points.map((point) => <li key={point}><b aria-hidden="true">✓</b>{point}</li>)}</ul></article>)}</div>
+          <div className="steps-grid">{features.map((feature) => <article key={feature.number}><div className="step-head"><i className="step-head-icon"><Icon name={feature.icon}/></i><span>{feature.number}</span></div><h3>{feature.title}</h3><p>{feature.copy}</p><ul className="step-points">{feature.points.map((point) => <li key={point}><b aria-hidden="true">✓</b>{point}</li>)}</ul></article>)}</div>
         </section>
 
         <section className="platform-section" id="platform">
