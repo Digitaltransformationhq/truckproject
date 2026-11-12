@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { SplitFlapScreen, showBoard, hideBoard } from './components/SplitFlap';
 import { startGoogleOneTap } from './lib/googleIdentity';
 import type { FormEvent, RefObject } from 'react';
 import { Landing } from './components/Landing';
@@ -298,7 +299,7 @@ export default function App() {
   // Google One Tap: "Continue as …" for visitors already signed in to Google (landing page only).
   useEffect(() => {
     if (!backend || !session.ready || authenticated || authModal) return;
-    return startGoogleOneTap((token, nonce) => { api.signInWithGoogleIdToken(token, nonce).catch((problem) => notify(friendlyError(problem), 5000)); });
+    return startGoogleOneTap((token, nonce) => { showBoard('LOGGING IN'); api.signInWithGoogleIdToken(token, nonce).catch((problem) => notify(friendlyError(problem), 5000)).finally(hideBoard); });
   }, [backend, session.ready, authenticated, authModal]);
   // Show users which KYC documents were rejected and why.
   const kycState = backendProfile?.kyc_status;
@@ -310,7 +311,7 @@ export default function App() {
       .catch(() => setKycIssues([]));
   }, [profileId, kycState]);
 
-  if (backend && !session.ready) return <div className="app-loading" role="status"><span className="brand-mark">F24</span><p>Loading your workspace…</p></div>;
+  if (backend && !session.ready) return <SplitFlapScreen word="LOADING"/>;
 
   if (backend && session.recovering && session.userId) {
     return <PasswordRecovery onCancel={session.finishRecovery} onSave={async (password) => { await api.updatePassword(password); session.finishRecovery(); notify('Your password has been updated'); }}/>;
@@ -322,7 +323,7 @@ export default function App() {
 
   if (backend && backendProfile && !backendProfile.onboarded) {
     return <OnboardingScreen email={backendProfile.email} firstName={backendProfile.first_name} lastName={backendProfile.last_name} avatarUrl={backendProfile.avatar_url}
-      onSignOut={() => void api.signOut()}
+      onSignOut={() => { showBoard('LOGGING OUT'); void api.signOut().finally(hideBoard); }}
       onComplete={async (role, details) => { await api.completeOnboarding(role, details); await session.refreshProfile(); }}/>;
   }
 
@@ -478,7 +479,7 @@ export default function App() {
     live.setNotifications(current => current.map(item => ids.includes(item.id) ? { ...item, read: true } : item));
     void api.markNotificationsRead(ids).catch(fail);
   };
-  const logout = () => { if (backend) { void api.signOut(); setView('dashboard'); return; } localStorage.removeItem('fares24x7-auth'); setDemoAuthenticated(false); };
+  const logout = () => { showBoard('LOGGING OUT'); if (backend) { void api.signOut().finally(hideBoard); setView('dashboard'); return; } localStorage.removeItem('fares24x7-auth'); setDemoAuthenticated(false); hideBoard(); };
   const selectedTruck = data.trucks.find((truck) => truck.id === selectedTruckId);
   const currentRequest = (request: Load) => data.loads.find((item) => item.id === request.id) ?? request;
 
