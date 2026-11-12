@@ -2008,3 +2008,69 @@ select:not([multiple]):not([size])::-ms-expand{display:none}
 .app-shell .trip-rating-actions .secondary,.app-shell .trip-rating.done>button{border:1px solid #d7dde0;background:#fff;color:#55636b}
 .app-shell .trip-rating-actions .primary{border:1.5px solid #171717;background:#ffa51f;color:#171717;box-shadow:2px 2px 0 #171717}
 .app-shell .trip-rating-actions .primary:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+
+/* Admin: trips tab */
+.app-shell .trip-filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.app-shell .trip-filters button{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border:1px solid #dfe3e6;border-radius:20px;background:#fff;color:#4b5560;font-size:12.5px;font-weight:700;cursor:pointer}
+.app-shell .trip-filters button.active{border-color:#171717;background:#171717;color:#fff}
+.app-shell .trip-filters button b{min-width:20px;height:20px;display:grid;place-items:center;padding:0 6px;border-radius:10px;background:rgba(0,0,0,.07);font-size:11px}
+.app-shell .trip-filters button.active b{background:rgba(255,255,255,.18)}
+.app-shell .trip-filters button b.alert{background:#e5484d;color:#fff}
+.app-shell .trip-admin-table tr.clickable{cursor:pointer}
+.app-shell .trip-admin-table tr.clickable:hover td{background:#fffaf2}
+.app-shell .trip-flags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.app-shell .trip-admin-modal{width:min(640px,calc(100vw - 28px))}
+.app-shell .trip-issue.amber{border-color:#f3dfbf;border-left-color:#e48700;background:#fff8ec}
+.app-shell .trip-issue.amber strong{color:#9a5800}
+.app-shell .trip-admin-contacts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.app-shell .trip-admin-contact{padding:12px 14px;border:1px solid #e6e8ec;border-radius:12px;background:#fff}
+.app-shell .trip-admin-contact>span{display:block;color:#8a92a0;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.app-shell .trip-admin-contact>strong{display:block;margin-top:4px;font-size:14px}
+.app-shell .trip-admin-contact>small{display:block;color:#6a7280;font-size:11.5px}
+.app-shell .trip-admin-links{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 6px}
+.app-shell .trip-admin-links a{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 10px;border:1px solid #dfe3e6;border-radius:8px;color:#171717;font-size:12px;font-weight:700;text-decoration:none}
+.app-shell .trip-admin-links a:hover{border-color:#ffa51f;background:#fff8ec}
+.app-shell .trip-admin-links svg{width:13px;height:13px}
+.app-shell .trip-admin-phone{word-break:break-all}
+.app-shell .trip-admin-facts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0 0}
+.app-shell .trip-admin-facts div{padding:9px 12px;border:1px solid #eceef1;border-radius:9px}
+.app-shell .trip-admin-facts dt{color:#8a92a0;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.app-shell .trip-admin-facts dd{margin:3px 0 0;font-size:13px;font-weight:700}
+.app-shell .trip-admin-actions{display:grid;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid #eceef1}
+.app-shell .trip-admin-actions label{display:grid;gap:6px;font-size:12px;font-weight:800}
+.app-shell .trip-admin-actions textarea{width:100%;padding:10px 12px;border:1px solid #d6dde1;border-radius:10px;font:inherit;font-size:13px;font-weight:500;resize:vertical}
+.app-shell .trip-admin-actions textarea:focus{outline:0;border-color:#ffa51f;box-shadow:0 0 0 3px rgba(255,165,31,.18)}
+.app-shell .trip-admin-buttons{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.app-shell .trip-admin-buttons select{flex:1;min-width:180px;height:44px;padding-left:12px;border:1px solid #d6dde1;border-radius:9px;background-color:#fff;font:inherit;font-size:13px}
+@media(max-width:600px){.app-shell .trip-admin-contacts,.app-shell .trip-admin-facts{grid-template-columns:1fr}}
+
+/* Admin: analytics */
+.app-shell .kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:16px}
+.app-shell .kpi{padding:18px 20px;border:1px solid #e3e6ea;border-radius:14px;background:#fff}
+.app-shell .kpi span{display:block;color:#7b8494;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.app-shell .kpi strong{display:block;margin:8px 0 4px;color:#171717;font:800 30px/1.1 Manrope,sans-serif;letter-spacing:-.03em}
+.app-shell .kpi small{color:#7b8494;font-size:12px}
+.app-shell .kpi.good strong{color:#0b7a53}
+.app-shell .kpi.warn strong{color:#c25a00}
+.app-shell .analytics-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}
+.app-shell .analytics-chart header,.app-shell .analytics-routes header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px}
+.app-shell .chart-legend{display:flex;align-items:center;gap:6px;color:#6a7280;font-size:11.5px;font-weight:700}
+.app-shell .chart-legend i{width:10px;height:10px;margin-left:8px;border-radius:3px}
+.app-shell .chart-legend i.posted,.app-shell .week-bars b.posted{background:#d9dde3}
+.app-shell .chart-legend i.accepted,.app-shell .week-bars b.accepted{background:#ffa51f}
+.app-shell .chart-legend i.delivered,.app-shell .week-bars b.delivered{background:#16a36f}
+.app-shell .week-bars{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;height:220px;padding:0 4px}
+.app-shell .week{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.app-shell .week .bars{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:3px;border-bottom:1px solid #e3e6ea}
+.app-shell .week .bars b{width:28%;min-height:2px;border-radius:4px 4px 0 0;transition:height .4s ease}
+.app-shell .week small{color:#8a92a0;font-size:10.5px;white-space:nowrap}
+.app-shell .analytics-routes ol{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.app-shell .analytics-routes li strong{display:block;font-size:13px}
+.app-shell .analytics-routes li span{display:block;height:6px;margin:6px 0 4px;overflow:hidden;border-radius:6px;background:#eef0f2}
+.app-shell .analytics-routes li span b{display:block;height:100%;background:#ffa51f}
+.app-shell .analytics-routes li small{color:#7b8494;font-size:11.5px}
+.app-shell .analytics-warning{margin:16px 0 0;padding:10px 12px;border-radius:10px;background:#fff0f0;color:#9b2c2c;font-size:12.5px}
+@media(max-width:1000px){.app-shell .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.app-shell .analytics-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.app-shell .kpi-grid{grid-template-columns:1fr}.app-shell .week-bars{gap:4px;height:180px}}
+/* Language switcher (sidebar) */
+.app-shell .sidebar-lang{margin:0 6px 10px;align-self:flex-start}

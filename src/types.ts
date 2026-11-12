@@ -1,4 +1,4 @@
-export type ViewName = 'dashboard' | 'trucks' | 'drivers' | 'loads' | 'profile' | 'support' | 'admin-users' | 'admin-compliance' | 'admin-operations' | 'admin-support';
+export type ViewName = 'dashboard' | 'trucks' | 'drivers' | 'loads' | 'profile' | 'support' | 'admin-users' | 'admin-compliance' | 'admin-operations' | 'admin-support' | 'admin-analytics';
 export type TruckStatus = 'Available' | 'In transit' | 'Unavailable';
 export type LoadStatus = 'Pending' | 'Accepted' | 'Rejected' | 'Completed' | 'Cancelled';
 export type BookingStatus = 'confirmed' | 'picked_up' | 'in_transit' | 'delivered' | 'cancelled';
@@ -22,6 +22,10 @@ export interface BookingInfo {
   issue?: { note: string; at: string; byMe: boolean };
   /** The rating the signed-in user gave the other party for this trip. */
   myRating?: { stars: number; comment?: string };
+  /** 0 = on track; 2 = both sides reminded; 3 = escalated to admins. */
+  reminderStage?: number;
+  /** When the trip last changed stage. */
+  statusChangedAt?: string;
 }
 export type LoadType = 'FTL' | 'PTL';
 
@@ -53,6 +57,8 @@ export interface Load {
   /** Customer's expected freight in rupees (optional). */
   budget?: number;
   booking?: BookingInfo;
+  /** When the request was posted (live data only). */
+  createdAt?: string;
 }
 
 export interface PortalData { trucks: Truck[]; loads: Load[]; }

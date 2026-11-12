@@ -636,3 +636,36 @@
 .site-footer-wordmark{position:relative;z-index:1;margin:-8px 0 -0.1em;padding:0 24px;color:transparent;font:800 clamp(80px,17.5vw,270px)/.9 Manrope,sans-serif;letter-spacing:-.06em;text-align:center;white-space:nowrap;background:linear-gradient(100deg,#ffcf5c 0%,#ffa51f 38%,#ff7a45 72%,#e5484d 100%);-webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.95) 0%,rgba(0,0,0,.55) 55%,transparent 100%);mask-image:linear-gradient(180deg,rgba(0,0,0,.95) 0%,rgba(0,0,0,.55) 55%,transparent 100%);-webkit-background-clip:text;background-clip:text;user-select:none}
 @media(max-width:1000px){.site-footer-inner{padding:56px 28px 24px}.site-footer-top{grid-template-columns:1fr;gap:40px}}
 @media(max-width:600px){.site-footer-inner{padding:48px 18px 22px}.site-footer-cols{grid-template-columns:1fr 1fr;gap:28px 16px}.site-footer-cols>div:last-child{grid-column:1/-1}.site-footer-bottom{flex-direction:column;align-items:flex-start}}
+
+/* Language switcher (landing nav) */
+.lang-switch{display:inline-flex;align-items:center;gap:2px;padding:3px;border:1px solid #dedcd6;border-radius:10px;background:#fff}
+.lang-switch button{min-width:34px;height:30px;padding:0 8px;border:0;border-radius:7px;background:transparent;color:#5d6268;font:700 12.5px "DM Sans","Noto Sans Devanagari","Noto Sans Gujarati",sans-serif;cursor:pointer}
+.lang-switch button:hover{color:#151515}
+.lang-switch button.active{background:#151515;color:#fff}
+.landing-auth{display:flex;align-items:center;gap:14px}
+@media(max-width:700px){.landing-auth .lang-switch button{min-width:28px;height:26px;padding:0 5px;font-size:11px}.landing-auth{gap:8px}}
+
+/* Hindi / Gujarati: Indic fonts, and no tight letter-spacing (it breaks joined letters) */
+html:lang(hi) body,html:lang(hi) .landing-page{font-family:"DM Sans","Noto Sans Devanagari",sans-serif}
+html:lang(gu) body,html:lang(gu) .landing-page{font-family:"DM Sans","Noto Sans Gujarati",sans-serif}
+html:lang(hi) h1,html:lang(hi) h2,html:lang(hi) h3,html:lang(hi) strong,html:lang(hi) .al-text{font-family:Manrope,"Noto Sans Devanagari",sans-serif}
+html:lang(gu) h1,html:lang(gu) h2,html:lang(gu) h3,html:lang(gu) strong,html:lang(gu) .al-text{font-family:Manrope,"Noto Sans Gujarati",sans-serif}
+html:lang(hi) *,html:lang(gu) *{letter-spacing:normal!important}
+html:lang(hi) .landing-hero h1,html:lang(gu) .landing-hero h1{line-height:1.2}
+html:lang(hi) .al-text,html:lang(gu) .al-text{line-height:1.3;font-size:38px}
+
+/* FAQ section */
+.faq-section{max-width:1344px;margin:0 auto 90px;padding:0 48px;display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:56px;align-items:start}
+.faq-head h2{margin:16px 0 12px;font:800 clamp(32px,3.6vw,48px)/1.08 Manrope,sans-serif;letter-spacing:-.05em}
+.faq-head p{margin:0;color:#555;font-size:15px;line-height:1.7}
+.faq-head a{color:#b85f00;font-weight:700}
+.faq-list{display:grid;gap:10px}
+.faq-list details{border:1px solid rgba(17,17,17,.14);border-radius:16px;background:#fff;transition:border-color .2s,box-shadow .2s}
+.faq-list details[open]{border-color:#171717;box-shadow:4px 4px 0 #171717}
+.faq-list summary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;cursor:pointer;font:700 16px/1.4 Manrope,sans-serif;list-style:none}
+.faq-list summary::-webkit-details-marker{display:none}
+.faq-list summary::after{content:"+";flex:none;width:28px;height:28px;display:grid;place-items:center;border-radius:50%;background:#fff3df;color:#b85f00;font-size:18px;transition:transform .2s}
+.faq-list details[open] summary::after{content:"−";background:#ffa51f;color:#171717}
+.faq-list details p{margin:0;padding:0 20px 18px;color:#555;font-size:14.5px;line-height:1.7}
+@media(max-width:1000px){.faq-section{grid-template-columns:1fr;gap:24px;padding:0 28px}}
+@media(max-width:600px){.faq-section{padding:0 18px;margin-bottom:70px}.faq-list summary{font-size:15px;padding:16px}}

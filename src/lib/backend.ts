@@ -34,7 +34,7 @@ interface DriverRow {
 }
 interface LoadRow {
   id: number; owner_id: string; origin: string; destination: string; material: string; quantity_tonnes: number;
-  load_type: LoadType; pickup_date: string; status: BackendLoadStatus; budget_inr: number | null;
+  load_type: LoadType; pickup_date: string; status: BackendLoadStatus; budget_inr: number | null; created_at?: string;
 }
 type ContactRow = { first_name: string; last_name: string; business_name: string; phone: string; email: string; rating_avg?: number | string | null; rating_count?: number | null };
 type MaybeMany<T> = T | T[] | null;
@@ -42,6 +42,7 @@ interface BookingRow {
   id: string; load_id: number; status: BookingStatus; truck_id: string | null; truck_owner_id: string | null; load_owner_id: string;
   cancelled_reason: string | null; created_at: string;
   disputed_at: string | null; dispute_note: string | null; disputed_by: string | null;
+  reminder_stage?: number | null; status_changed_at?: string | null;
   booking_codes: MaybeMany<{ delivery_code: string }>;
   trip_ratings: Array<{ rater_id: string; stars: number; comment: string | null }> | null;
   trucks: MaybeMany<{ registration: string }>;
@@ -250,6 +251,8 @@ function toBooking(row: BookingRow, userId: string): BookingInfo {
     cancelledReason: row.cancelled_reason ?? undefined,
     deliveryCode: one(row.booking_codes)?.delivery_code,
     myRating: (() => { const mine = (row.trip_ratings ?? []).find((r) => r.rater_id === userId); return mine ? { stars: mine.stars, comment: mine.comment ?? undefined } : undefined; })(),
+    reminderStage: row.reminder_stage ?? 0,
+    statusChangedAt: row.status_changed_at ?? undefined,
     issue: row.disputed_at ? { note: row.dispute_note ?? '', at: row.disputed_at, byMe: row.disputed_by === userId } : undefined,
     history: (row.booking_events ?? []).map((e) => ({ status: e.status, note: e.note ?? undefined, at: e.created_at })).sort((a, b) => a.at.localeCompare(b.at)),
   };
@@ -269,7 +272,7 @@ function loadStatusFor(row: LoadRow, role: AccountRole, declined: Set<number>, m
 }
 
 const BOOKING_SELECT = `id, load_id, status, truck_id, truck_owner_id, load_owner_id, cancelled_reason, created_at,
-  disputed_at, dispute_note, disputed_by, booking_codes(delivery_code),
+  disputed_at, dispute_note, disputed_by, reminder_stage, status_changed_at, booking_codes(delivery_code),
   trucks(registration), drivers(name, phone),
   customer:profiles!bookings_load_owner_id_fkey(first_name, last_name, business_name, phone, email, rating_avg, rating_count),
   transporter:profiles!bookings_truck_owner_id_fkey(first_name, last_name, business_name, phone, email, rating_avg, rating_count),
@@ -314,6 +317,7 @@ export async function fetchWorkspace(role: AccountRole, userId: string): Promise
       return {
         id: String(row.id), origin: row.origin, destination: row.destination, material: row.material, quantity: Number(row.quantity_tonnes),
         type: row.load_type, date: row.pickup_date, status, budget: row.budget_inr == null ? undefined : Number(row.budget_inr),
+        createdAt: row.created_at,
         bookedTruck: showBooking && booking.status !== 'cancelled' ? one(booking.trucks)?.registration : undefined,
         booking: showBooking ? toBooking(booking, userId) : undefined,
       };
@@ -455,6 +459,16 @@ export async function updateBookingStatus(bookingId: string, status: Exclude<Boo
 /** Customer confirms "Goods handed over" (picked_up) or "Goods received" (delivered). */
 export async function customerConfirmBooking(bookingId: string, status: 'picked_up' | 'delivered') {
   unwrap(await requireSupabase().rpc('customer_confirm_booking', { p_booking_id: bookingId, p_status: status }));
+}
+
+/** Admin: close a reported problem on a trip; both sides get the note. */
+export async function adminResolveTripIssue(bookingId: string, note: string) {
+  unwrap(await requireSupabase().rpc('admin_resolve_trip_issue', { p_booking_id: bookingId, p_note: note.trim() }));
+}
+
+/** Admin: correct a trip's stage or cancel it (the request re-opens). A reason is required. */
+export async function adminSetTripStatus(bookingId: string, status: Exclude<BookingStatus, 'confirmed'>, note: string) {
+  unwrap(await requireSupabase().rpc('admin_set_trip_status', { p_booking_id: bookingId, p_status: status, p_note: note.trim() }));
 }
 
 /** Rate the other party once a trip is delivered (1-5 stars, optional comment). Re-rating updates it. */

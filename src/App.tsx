@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { SplitFlapScreen, showBoard, hideBoard } from './components/SplitFlap';
 import { startGoogleOneTap } from './lib/googleIdentity';
+import { LanguageSwitcher, useT } from './lib/i18n';
 import type { FormEvent, RefObject } from 'react';
 
 import type { AccountRole, AuthMode, RegistrationProfile } from './components/RoleAuthModal';
@@ -44,10 +45,12 @@ interface SidebarProps {
 }
 
 function Sidebar({ view, role, profile, counts, open, onClose, onNavigate, onLogout }: SidebarProps) {
+  const { t } = useT();
   const storedRole = localStorage.getItem('fares24x7-role');
   const activeRole: AccountRole = role ?? (storedRole === 'admin' ? 'admin' : storedRole === 'load_owner' ? 'load_owner' : 'truck_owner');
   const items: Array<{ view?: ViewName; label: string; icon: IconName; count?: number; disabled?: boolean }> = activeRole === 'admin' ? [
     { view: 'dashboard', label: 'Control centre', icon: 'overview' },
+    { view: 'admin-analytics', label: 'Analytics', icon: 'trend' },
     { view: 'admin-users', label: 'User accounts', icon: 'building' },
     { view: 'admin-compliance', label: 'KYC verification', icon: 'inbox', count: counts.approvals > 0 ? counts.approvals : undefined },
     { view: 'admin-operations', label: 'Operations', icon: 'route' },
@@ -70,17 +73,18 @@ function Sidebar({ view, role, profile, counts, open, onClose, onNavigate, onLog
       <button className="brand" type="button" onClick={() => onNavigate('dashboard')} aria-label="Return to dashboard"><span className="brand-mark">F24</span><span>Fares24x7<small>Fleet platform</small></span></button>
       <button className="mobile-close" onClick={onClose} aria-label="Close menu"><Icon name="close" /></button>
       <nav>
-        <p className="nav-label">Main menu</p>
+        <p className="nav-label">{t('Main menu')}</p>
         {items.map((item) => (
           <button key={item.label} className={`nav-item ${item.view === view ? 'active' : ''}`} aria-current={item.view === view ? 'page' : undefined} onClick={() => item.view && onNavigate(item.view)}>
-            <span><Icon name={item.icon} /></span>{item.label}
+            <span><Icon name={item.icon} /></span>{t(item.label)}
             {(item.count ?? 0) > 0 && <b className="accent-count">{item.count}</b>}
           </button>
         ))}
-        {activeRole !== 'admin' && <><p className="nav-label">Account</p>
-        <button className={`nav-item ${view === 'profile' ? 'active' : ''}`} aria-current={view === 'profile' ? 'page' : undefined} onClick={() => onNavigate('profile')}><span><Icon name="building" /></span>Business profile</button>
-        <button className={`nav-item ${view === 'support' ? 'active' : ''}`} aria-current={view === 'support' ? 'page' : undefined} onClick={() => onNavigate('support')}><span><Icon name="headset" /></span>Support{counts.support > 0 && <b className="accent-count">{counts.support}</b>}</button></>}
+        {activeRole !== 'admin' && <><p className="nav-label">{t('Account')}</p>
+        <button className={`nav-item ${view === 'profile' ? 'active' : ''}`} aria-current={view === 'profile' ? 'page' : undefined} onClick={() => onNavigate('profile')}><span><Icon name="building" /></span>{t('Business profile')}</button>
+        <button className={`nav-item ${view === 'support' ? 'active' : ''}`} aria-current={view === 'support' ? 'page' : undefined} onClick={() => onNavigate('support')}><span><Icon name="headset" /></span>{t('Support')}{counts.support > 0 && <b className="accent-count">{counts.support}</b>}</button></>}
       </nav>
+      <LanguageSwitcher className="sidebar-lang"/>
       <div className="sidebar-user"><div className="avatar">{initials}</div><div><strong>{displayName}</strong><span>{activeRole === 'admin' ? 'Platform administrator' : activeRole === 'load_owner' ? 'Customer / shipper' : 'Truck owner / transporter'}</span></div><button onClick={onLogout} title="Sign out" aria-label="Sign out"><Icon name="logout" /></button></div>
     </aside>
     </>
@@ -88,6 +92,7 @@ function Sidebar({ view, role, profile, counts, open, onClose, onNavigate, onLog
 }
 
 function MobileBottomNav({ view, role, onNavigate }: { view: ViewName; role: AccountRole; onNavigate: (view: ViewName) => void }) {
+  const { t } = useT();
   const items: Array<{ view: ViewName; label: string; icon: IconName }> = role === 'admin' ? [
     { view: 'dashboard', label: 'Overview', icon: 'overview' },
     { view: 'admin-users', label: 'Accounts', icon: 'building' },
@@ -106,7 +111,7 @@ function MobileBottomNav({ view, role, onNavigate }: { view: ViewName; role: Acc
     { view: 'loads', label: 'Requests', icon: 'inbox' },
     { view: 'profile', label: 'Profile', icon: 'building' },
   ];
-  return <nav className="mobile-bottom-nav" aria-label="Mobile navigation">{items.map((item) => <button key={item.view} className={view === item.view ? 'active' : ''} aria-current={view === item.view ? 'page' : undefined} onClick={() => onNavigate(item.view)}><span><Icon name={item.icon}/></span><small>{item.label}</small></button>)}</nav>;
+  return <nav className="mobile-bottom-nav" aria-label="Mobile navigation">{items.map((item) => <button key={item.view} className={view === item.view ? 'active' : ''} aria-current={view === item.view ? 'page' : undefined} onClick={() => onNavigate(item.view)}><span><Icon name={item.icon}/></span><small>{t(item.label)}</small></button>)}</nav>;
 }
 
 interface TopbarProps {

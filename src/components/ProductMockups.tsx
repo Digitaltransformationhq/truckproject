@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Icon } from './Icon';
+import { useT } from '../lib/i18n';
 
 /** Renders children at a fixed design size and scales them to fit the container. */
 function Scaled({ width, height, children, className }: { width: number; height: number; children: ReactNode; className?: string }) {
@@ -318,7 +319,8 @@ const TYPE_MS = 55;
 
 /** One round: a phrase writes itself, the button is pressed, a thumbs-up bursts out, the phrase erases. */
 function AuthRound({ mode, phrase, t }: { mode: 'login' | 'signup'; phrase: readonly [string, string]; t: number }) {
-  const full = `${phrase[0]}\n${phrase[1]}`;
+  const { t: tr } = useT();
+  const full = `${tr(phrase[0])}\n${tr(phrase[1])}`;
   const typedEnd = 250 + full.length * TYPE_MS;
   const eraseStart = 7000;
   const count = t < eraseStart ? Math.max(0, Math.min(full.length, Math.floor((t - 250) / TYPE_MS))) : Math.max(0, full.length - Math.floor((t - eraseStart) / 22));
@@ -333,7 +335,7 @@ function AuthRound({ mode, phrase, t }: { mode: 'login' | 'signup'; phrase: read
     <p className="al-text">{line1}{shown.includes('\n') && <><br/><em>{line2}</em></>}<i className={`al-caret ${count >= full.length && t < eraseStart ? 'idle' : ''}`}/></p>
     <div className="al-action">
       <div data-cursor="button" className={`al-button ${hover ? 'hover' : ''} ${pressed ? 'pressed' : ''} ${sending ? 'sending' : ''} ${done ? 'done' : ''}`}>
-        {done ? <><DrawCheck/> {mode === 'login' ? 'Signed in' : 'Created'}</> : sending ? <><i className="wt-spinner"/> {mode === 'login' ? 'Signing in' : 'Creating'}</> : <>{label} <Icon name="arrow"/></>}
+        {done ? <><DrawCheck/> {tr(mode === 'login' ? 'Signed in' : 'Created')}</> : sending ? <><i className="wt-spinner"/> {tr(mode === 'login' ? 'Signing in' : 'Creating')}</> : <>{tr(label)} <Icon name="arrow"/></>}
       </div>
       {t > 4700 && t < 6900 && <div className={`al-burst ${mode === 'login' ? 'green' : 'orange'}`}>
         <i className="wt-celebrate-ring"/><i className="wt-celebrate-ring r2"/>
