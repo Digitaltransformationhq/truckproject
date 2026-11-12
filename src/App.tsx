@@ -322,7 +322,7 @@ export default function App() {
 
   if (!authenticated) {
     const enterWorkspace = (profile?: RegistrationProfile) => { if (profile) { localStorage.setItem('fares24x7-role', profile.role); localStorage.setItem('fares24x7-profile', JSON.stringify(profile)); localStorage.setItem('fares24x7-kyc', 'pending'); } localStorage.setItem('fares24x7-auth', '1'); setAuthModal(null); setDemoAuthenticated(true); };
-    const authBackend = backend ? { signIn: api.signIn, signUp: api.signUp, google: api.signInWithGoogle, resetPassword: api.sendPasswordReset } : undefined;
+    const authBackend = backend ? { signIn: api.signIn, signUp: api.signUp, google: api.signInWithGoogle, googleIdToken: api.signInWithGoogleIdToken, resetPassword: api.sendPasswordReset } : undefined;
     return <><Landing onLogin={() => setAuthModal('login')} onSignup={() => setAuthModal('signup')} />{authModal && <RoleAuthModal mode={authModal} backend={authBackend} initialMessage={oauthError || undefined} onClose={() => setAuthModal(null)} onModeChange={setAuthModal} onComplete={enterWorkspace}/>}</>;
   }
 
@@ -436,6 +436,17 @@ export default function App() {
     }
     setSupportTickets(current => [ticket, ...current]); setSupportOpen(false); notify(`Query ${ticket.id} submitted to support`);
   };
+  const followUpSupport = async (ticket: SupportTicket, message: string) => {
+    const reopened = ticket.status === 'Resolved';
+    if (backend) {
+      if (!await attempt(() => api.followUpTicket(ticket.id, message))) return false;
+    } else {
+      const entry = { from: 'user' as const, text: message.trim(), at: new Date().toISOString() };
+      setSupportTickets(current => current.map(item => item.id === ticket.id ? { ...item, status: 'Open', thread: [...(item.thread?.length ? item.thread : item.adminReply ? [{ from: 'support' as const, text: item.adminReply, at: item.repliedAt ?? item.createdAt }] : []), entry] } : item));
+    }
+    notify(reopened ? `Query ${ticket.id} reopened — support has been notified` : 'Message sent to support');
+    return true;
+  };
   const saveProfile = backend ? async (values: Parameters<typeof api.updateProfile>[1]) => {
     try { await api.updateProfile(userId, values); await session.refreshProfile(); notify('Business profile updated'); } catch (problem) { fail(problem); throw problem; }
   } : undefined;
@@ -461,7 +472,7 @@ export default function App() {
         {view === 'trucks' && <TrucksView trucks={data.trucks} drivers={drivers} query={truckQuery} setQuery={setTruckQuery} status={truckStatus} setStatus={setTruckStatus} onAdd={() => setVehicleForm({})} onOpen={(truck) => setSelectedTruckId(truck.id)}/>}
         {view === 'drivers' && activeRole === 'truck_owner' && <DriversView drivers={drivers} query={driverQuery} setQuery={setDriverQuery} status={driverStatus} setStatus={setDriverStatus} onAdd={() => setDriverForm({})} onEdit={(driver) => setDriverForm({ initial: driver })} onDelete={setDriverToDelete}/>}
         {view === 'loads' && <RequestsView requests={data.loads} query={loadQuery} setQuery={setLoadQuery} status={requestStatus} setStatus={setRequestStatus} role={activeRole} onAdd={openLoadForm} onOpenRequest={setRequestModal} onViewRequest={setViewRequest}/>}
-        {view === 'support' && <SupportView tickets={supportTickets} onNew={() => setSupportOpen(true)}/>}
+        {view === 'support' && <SupportView tickets={supportTickets} onNew={() => setSupportOpen(true)} onFollowUp={followUpSupport}/>}
         {view === 'profile' && <ProfileView key={backendProfile?.business_name ?? 'demo'} profile={activeProfile} role={activeRole} kycStatus={kycStatus} onSave={saveProfile} onSaved={() => notify('Business profile updated')}/>}
       </>}
     </div></main>

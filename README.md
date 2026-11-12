@@ -33,7 +33,7 @@ The app runs in one of two modes:
    - `npx supabase login`, then `npx supabase link --project-ref <your-project-ref>` and `npx supabase db push`, or
    - pasting `supabase/migrations/20261111000000_initial_schema.sql` into the Supabase *SQL Editor* and running it.
 4. In *Authentication → URL Configuration*, set the Site URL to `https://www.fares24x7.com` and add these redirect URLs: `https://www.fares24x7.com/**`, `https://fares24x7.com/**`, `http://localhost:5173/**`.
-5. Google sign-in: create a Google OAuth *Web application* client with JavaScript origins `https://www.fares24x7.com`, `https://fares24x7.com`, `http://localhost:5173` and redirect URI `https://<project-ref>.supabase.co/auth/v1/callback`, then enable Google under *Authentication → Sign In / Providers* with that client ID and secret.
+5. Google sign-in: create a Google OAuth *Web application* client with JavaScript origins `https://www.fares24x7.com`, `https://fares24x7.com`, `http://localhost:5173` and redirect URI `https://<project-ref>.supabase.co/auth/v1/callback`, then enable Google under *Authentication → Sign In / Providers* with that client ID and secret. Also set `VITE_GOOGLE_CLIENT_ID` to the same client ID (locally and in Vercel): the app then uses Google's own sign-in button, so Google shows fares24x7.com instead of the Supabase URL. Without it the app falls back to the redirect flow.
 6. Create the first admin: sign up normally in the app, then run in the SQL Editor:
 
    ```sql

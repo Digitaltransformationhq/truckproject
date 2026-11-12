@@ -443,6 +443,10 @@ body { background: var(--paper); }
 .app-shell .kyc-modal .auth-form input,
 .app-shell .kyc-modal .auth-form select { height: 46px; font-size: 13px; }
 .app-shell .kyc-modal .upload-field { min-height: 92px; }
+.kyc-modal .upload-field.has-file { border-color: #83cdb2 !important; border-style: solid !important; background: #f6fcf9 !important; }
+.kyc-modal .upload-field.has-file > span:first-child { border-color: #bfe6d7; background: #e8f8f1; color: #087956; }
+.kyc-modal .upload-field.has-file small { color: #087956; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kyc-modal .upload-field.has-file > b { border-color: #83cdb2; background: #dff5ec; color: #087956; }
 .app-shell .kyc-modal .upload-field strong { font-size: 11px; }
 .app-shell .kyc-modal .upload-field small { font-size: 9px; line-height: 1.4; }
 .app-shell .kyc-modal .upload-field > b { font-size: 10px; }
@@ -1159,8 +1163,21 @@ body { background: var(--paper); }
 .app-shell .review-request-btn{min-width:78px;height:34px;border:1px solid #d7dfeb;border-radius:8px;background:#fff;color:#245aca;font-size:10px;font-weight:800}
 .app-shell .review-request-btn:hover{border-color:#245aca;background:#f3f7ff}
 .app-shell .request-result{color:#8994a3;font-size:10px;font-weight:700}
-.app-shell .request-decision-modal{width:min(560px,calc(100vw - 28px));overflow:hidden}
-.app-shell .request-decision-body{padding:20px 28px 24px}
+.app-shell .request-backdrop{display:grid;place-items:center;padding:16px;overflow:hidden}
+.app-shell .request-decision-modal{width:min(560px,calc(100vw - 28px));max-height:calc(100dvh - 32px);margin:auto;display:flex;flex-direction:column;overflow:hidden}
+.app-shell .request-decision-modal .modal-head{flex:none}
+.app-shell .request-decision-body{min-height:0;flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;padding:20px 28px 24px}
+.app-shell .request-decision-actions{flex:none}
+.app-shell .truck-choice-list,.app-shell .truck-choice,.app-shell .driver-choice select{min-width:0;max-width:100%}
+@media(max-height:760px){
+  .app-shell .request-decision-modal .modal-head{padding-top:16px;padding-bottom:14px}
+  .app-shell .request-decision-body{padding-top:14px;padding-bottom:16px}
+  .app-shell .request-route-hero{min-height:84px;padding:14px 18px}
+  .app-shell .request-detail-grid{gap:8px;margin-top:10px}
+  .app-shell .request-detail-grid>div{padding:9px 12px}
+  .app-shell .request-decision-actions{padding-top:12px;padding-bottom:14px}
+  .app-shell .request-decision-actions button{height:42px}
+}
 .app-shell .request-route-hero{min-height:108px;display:grid;grid-template-columns:minmax(0,1fr) 130px minmax(0,1fr);align-items:center;gap:18px;padding:22px;border:1px solid #dfe5ee;border-radius:13px;background:linear-gradient(135deg,#f8fbff,#fffaf4)}
 .app-shell .request-route-point{display:flex;min-width:0;align-items:center;gap:12px}
 .app-shell .request-route-point>div{display:flex;min-width:0;flex-direction:column}
@@ -1875,9 +1892,12 @@ td>small{display:block;margin-top:4px;color:#777;font-size:11px}
 .support-reply{display:grid;gap:10px;padding:0 24px 16px}
 .support-reply label{display:grid;gap:6px;font-size:12px;font-weight:800}
 .support-reply textarea{border:1px solid #dcdcd8;border-radius:10px;padding:10px;font:inherit;font-weight:500;resize:vertical}
-.support-reply-actions{display:flex;justify-content:flex-end;gap:8px}
-.support-reply-actions button{height:36px;padding:0 14px;border:1px solid #dcdcd8;border-radius:9px;background:#fff;font-weight:700;cursor:pointer}
-.support-reply-actions button:disabled{opacity:.5}
+.support-reply-actions{display:flex;justify-content:flex-end;align-items:stretch;gap:10px}
+.support-reply-actions button{display:inline-flex;align-items:center;justify-content:center;height:42px;min-height:42px;min-width:132px;margin:0;padding:0 16px;border:1px solid #c9d1d6;border-radius:9px;background:#fff;color:#22313a;font:750 13px/1 inherit;box-shadow:none;white-space:nowrap;cursor:pointer}
+.support-reply-actions button.admin-primary{border-color:#183a88;background:#2859c5;color:#fff}
+.support-reply-actions button.admin-primary:hover:not(:disabled){background:#204da9}
+.support-reply-actions button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:560px){.support-reply-actions{display:grid;grid-template-columns:1fr 1fr}.support-reply-actions button{width:100%;min-width:0;padding:0 10px}}
 .support-reply-previous{padding:10px 12px;border-radius:10px;background:#fff8ec}
 .support-reply-previous span{font-size:11px;font-weight:800;color:#7a4b00}
 .support-reply-previous p{margin:4px 0 0;white-space:pre-wrap}
@@ -1900,3 +1920,22 @@ td>small{display:block;margin-top:4px;color:#777;font-size:11px}
 .admin-row-actions{display:flex;gap:6px;flex-wrap:wrap}
 .admin-action.danger-outline{color:#b42318;border-color:#f3c7c3;background:#fff}
 .admin-action.danger-outline:hover{background:#fef3f2}
+
+/* Google Identity Services button (renders Google's own iframe) */
+.google-identity-button{display:flex;justify-content:center;width:100%;min-height:44px}
+.google-identity-button>div{max-width:100%}
+
+/* Support conversation: follow-ups and reopening */
+.support-thread{display:grid;gap:8px}
+.user-ticket-followup{margin-left:auto;width:min(100%,92%);padding:12px 14px;border-right:3px solid #2859c5;border-radius:10px 0 0 10px;background:#f2f6ff}
+.user-ticket-followup span{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:#1f4596}
+.user-ticket-followup svg{width:14px;height:14px}
+.user-ticket-followup p{margin:6px 0 0;white-space:pre-wrap}
+.user-ticket-actions{display:flex;justify-content:flex-end}
+.user-ticket-actions .secondary-btn{min-height:38px;padding:0 14px;font-size:13px}
+.user-ticket-compose{display:grid;gap:10px;padding-top:4px}
+.user-ticket-compose label{display:grid;gap:6px;font-size:12px;font-weight:800}
+.user-ticket-compose textarea{width:100%;border:1px solid #dcdcd8;border-radius:10px;padding:10px;font:inherit;font-weight:500;resize:vertical}
+.user-ticket-compose-actions{display:flex;justify-content:flex-end;gap:8px}
+.user-ticket-compose-actions button{min-height:40px;padding:0 16px}
+@media(max-width:560px){.user-ticket-actions .secondary-btn{width:100%}.user-ticket-compose-actions{display:grid;grid-template-columns:1fr 1fr}.user-ticket-compose-actions button{width:100%}}

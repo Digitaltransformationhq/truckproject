@@ -6,7 +6,7 @@ import { filesFromForm, type UploadItem } from '../lib/backend';
 import { friendlyError } from '../lib/supabase';
 
 interface Props { role: AccountRole; onClose: () => void; onComplete: () => void; /** Backend mode: persist details and upload files. */ onSubmit?: (details: Record<string, string>, documents: UploadItem[]) => Promise<void>; }
-function Upload({label,name,required=true}:{label:string;name:string;required?:boolean}) { return <label className="upload-field"><span><Icon name="package"/></span><div><strong>{label}</strong>{!required&&<em>Optional</em>}<small>PDF, JPG or PNG · Max 10 MB</small></div><input type="file" name={name} accept=".pdf,image/*" required={required}/><b>Choose file</b></label>; }
+function Upload({label,name,required=true}:{label:string;name:string;required?:boolean}) { const [fileName,setFileName]=useState(''); return <label className={`upload-field ${fileName?'has-file':''}`}><span><Icon name={fileName?'check':'package'}/></span><div><strong>{label}</strong>{!required&&<em>Optional</em>}<small title={fileName||undefined}>{fileName?`✓ ${fileName}`:'PDF, JPG or PNG · Max 10 MB'}</small></div><input type="file" name={name} accept=".pdf,image/*" required={required} onChange={event=>setFileName(event.target.files?.[0]?.name||'')}/><b>{fileName?'Change file':'Choose file'}</b></label>; }
 
 export function KycModal({role,onClose,onComplete,onSubmit}:Props){
   const [busy,setBusy]=useState(false);const [error,setError]=useState('');

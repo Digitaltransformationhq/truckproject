@@ -5,6 +5,7 @@ import { requestLabel } from './RequestViews';
 import { VEHICLE_DOCUMENTS } from './FleetViews';
 import { ConfirmDialog, bookingLabel, formatDateTime, formatInr, statusClass } from './ui';
 import { Icon } from './Icon';
+import { SupportThread, ticketThread } from './SupportView';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { formatDate } from '../lib/matching';
 import type { AdminAccount, Driver, Load, PortalData, StoredDocument, SupportTicket, SupportTicketStatus, Truck, VerificationStatus, ViewName } from '../types';
@@ -259,8 +260,8 @@ function SupportReply({ ticket, onReply }: { ticket: SupportTicket; onReply: (ti
   const [busy, setBusy] = useState(false);
   const send = async (status: SupportTicketStatus) => { if (!reply.trim() || busy) return; setBusy(true); if (await onReply(ticket, reply, status)) setReply(''); setBusy(false); };
   return <div className="support-reply">
-    {ticket.adminReply && <div className="support-reply-previous"><span>Last reply{ticket.repliedAt ? ` · ${formatDateTime(ticket.repliedAt)}` : ''}</span><p>{ticket.adminReply}</p></div>}
-    <label><span>{ticket.adminReply ? 'Send another reply' : 'Reply to the user'}</span><textarea value={reply} onChange={(event) => setReply(event.target.value)} rows={4} maxLength={2000} placeholder="Write your answer. The user is notified and sees it under Support."/></label>
+    <SupportThread ticket={ticket} viewer="support"/>
+    <label><span>{ticketThread(ticket).length ? 'Send another reply' : 'Reply to the user'}</span><textarea value={reply} onChange={(event) => setReply(event.target.value)} rows={4} maxLength={2000} placeholder="Write your answer. The user is notified and sees it under Support."/></label>
     <div className="support-reply-actions"><button onClick={() => void send('In review')} disabled={!reply.trim() || busy}>Send reply</button><button className="admin-primary" onClick={() => void send('Resolved')} disabled={!reply.trim() || busy}>{busy ? 'Sending…' : 'Send & resolve'}</button></div>
   </div>;
 }
@@ -301,7 +302,7 @@ export function AdminConsole({ view, data, drivers, globalQuery, onNavigate, not
   const [alerts,setAlerts]=useState<api.AdminAlerts|null>(null);
   useEffect(()=>{ if(backendEnabled && view==='dashboard') api.fetchAdminAlerts().then(setAlerts).catch(()=>setAlerts(null)); },[backendEnabled,view,data,supportTickets]);
   const replyToTicket=useCallback(async(ticket:SupportTicket,reply:string,status:SupportTicketStatus)=>{
-    if(!backendRef.current){ setSupportTickets(current=>current.map(item=>item.id===ticket.id?{...item,adminReply:reply.trim(),repliedAt:new Date().toISOString(),status}:item)); notify('Reply saved'); return true; }
+    if(!backendRef.current){ setSupportTickets(current=>current.map(item=>item.id===ticket.id?{...item,adminReply:reply.trim(),repliedAt:new Date().toISOString(),status,thread:[...ticketThread(item),{from:'support',text:reply.trim(),at:new Date().toISOString()}]}:item)); notify('Reply saved'); return true; }
     try{ await api.replyToTicket(ticket.id,reply,status); await backendRef.current.reload(); notify(status==='Resolved'?'Reply sent and query resolved':'Reply sent to the user'); return true; }
     catch(problem){ backendRef.current.fail(problem); return false; }
   },[notify,setSupportTickets]);

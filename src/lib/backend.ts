@@ -55,7 +55,7 @@ interface DocumentRow {
 interface TicketRow {
   id: number; user_id: string; category: string; subject: string; message: string; priority: SupportTicket['priority'];
   status: SupportTicketStatus; contact_email: string; contact_phone: string; created_at: string;
-  admin_reply: string | null; replied_at: string | null;
+  admin_reply: string | null; replied_at: string | null; thread: SupportTicket['thread'] | null;
   profiles: { first_name: string; last_name: string; business_name: string; role: AccountRole } | null;
 }
 interface NotificationRow { id: string; title: string; body: string; link_view: string | null; read_at: string | null; created_at: string; }
@@ -115,6 +115,13 @@ export async function signInWithGoogle(preferredRole?: AccountRole) {
     provider: 'google',
     options: { redirectTo: window.location.origin, queryParams: { prompt: 'select_account' } },
   });
+  if (error) throw error;
+}
+
+/** Completes a "Sign in with Google" button sign-in: Supabase verifies Google's ID token. */
+export async function signInWithGoogleIdToken(token: string, nonce: string, preferredRole?: AccountRole) {
+  try { if (preferredRole) localStorage.setItem(PENDING_ROLE_KEY, preferredRole); } catch { /* storage unavailable */ }
+  const { error } = await requireSupabase().auth.signInWithIdToken({ provider: 'google', token, nonce });
   if (error) throw error;
 }
 
@@ -315,7 +322,7 @@ export async function fetchWorkspace(role: AccountRole, userId: string): Promise
     business: row.profiles?.business_name ?? '', email: row.contact_email, phone: row.contact_phone,
     role: row.profiles?.role === 'load_owner' ? 'load_owner' : 'truck_owner', category: row.category, subject: row.subject,
     message: row.message, priority: row.priority, status: row.status, createdAt: row.created_at,
-    adminReply: row.admin_reply ?? undefined, repliedAt: row.replied_at ?? undefined,
+    adminReply: row.admin_reply ?? undefined, repliedAt: row.replied_at ?? undefined, thread: Array.isArray(row.thread) ? row.thread : [],
   }));
 
   return { data: { trucks, loads }, drivers, tickets };
@@ -444,6 +451,11 @@ export async function cancelBooking(bookingId: string, reason?: string) {
 /** Admin answers a support ticket (the user is notified by the database). */
 export async function replyToTicket(ticketId: string, reply: string, status: SupportTicketStatus) {
   unwrap(await requireSupabase().from('support_tickets').update({ admin_reply: reply.trim(), status }).eq('id', Number(ticketId.replace(/^SUP-/, ''))));
+}
+
+/** The user adds to their own query; a resolved query re-opens and admins are notified. */
+export async function followUpTicket(ticketId: string, message: string) {
+  unwrap(await requireSupabase().rpc('follow_up_support_ticket', { p_ticket_id: Number(ticketId.replace(/^SUP-/, '')), p_message: message.trim() }));
 }
 
 export async function updatePassword(password: string) {

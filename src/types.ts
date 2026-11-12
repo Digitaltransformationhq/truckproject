@@ -92,7 +92,10 @@ export interface SupportTicket {
   createdAt: string;
   adminReply?: string;
   repliedAt?: string;
+  /** The conversation after the first message, oldest first. */
+  thread?: SupportMessage[];
 }
+export interface SupportMessage { from: 'support' | 'user'; text: string; at: string }
 
 export interface AppNotification {
   id: string;
