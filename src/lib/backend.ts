@@ -41,6 +41,8 @@ type MaybeMany<T> = T | T[] | null;
 interface BookingRow {
   id: string; load_id: number; status: BookingStatus; truck_id: string | null; truck_owner_id: string | null; load_owner_id: string;
   cancelled_reason: string | null; created_at: string;
+  disputed_at: string | null; dispute_note: string | null; disputed_by: string | null;
+  booking_codes: MaybeMany<{ delivery_code: string }>;
   trucks: MaybeMany<{ registration: string }>;
   drivers: MaybeMany<{ name: string; phone: string }>;
   customer: MaybeMany<ContactRow>;
@@ -239,11 +241,13 @@ const toContact = (row: ContactRow | null): Contact | undefined => row ? {
   name: `${row.first_name} ${row.last_name}`.trim(), business: row.business_name, phone: row.phone ? `+91 ${row.phone.replace(/^\+91\s*/, '')}` : '', email: row.email,
 } : undefined;
 
-function toBooking(row: BookingRow): BookingInfo {
+function toBooking(row: BookingRow, userId: string): BookingInfo {
   return {
     id: row.id, status: row.status, truckId: row.truck_id ?? undefined, truck: one(row.trucks)?.registration,
     driver: one(row.drivers) ?? undefined, customer: toContact(one(row.customer)), transporter: toContact(one(row.transporter)),
     cancelledReason: row.cancelled_reason ?? undefined,
+    deliveryCode: one(row.booking_codes)?.delivery_code,
+    issue: row.disputed_at ? { note: row.dispute_note ?? '', at: row.disputed_at, byMe: row.disputed_by === userId } : undefined,
     history: (row.booking_events ?? []).map((e) => ({ status: e.status, note: e.note ?? undefined, at: e.created_at })).sort((a, b) => a.at.localeCompare(b.at)),
   };
 }
@@ -262,6 +266,7 @@ function loadStatusFor(row: LoadRow, role: AccountRole, declined: Set<number>, m
 }
 
 const BOOKING_SELECT = `id, load_id, status, truck_id, truck_owner_id, load_owner_id, cancelled_reason, created_at,
+  disputed_at, dispute_note, disputed_by, booking_codes(delivery_code),
   trucks(registration), drivers(name, phone),
   customer:profiles!bookings_load_owner_id_fkey(first_name, last_name, business_name, phone, email),
   transporter:profiles!bookings_truck_owner_id_fkey(first_name, last_name, business_name, phone, email),
@@ -306,7 +311,7 @@ export async function fetchWorkspace(role: AccountRole, userId: string): Promise
         id: String(row.id), origin: row.origin, destination: row.destination, material: row.material, quantity: Number(row.quantity_tonnes),
         type: row.load_type, date: row.pickup_date, status, budget: row.budget_inr == null ? undefined : Number(row.budget_inr),
         bookedTruck: showBooking && booking.status !== 'cancelled' ? one(booking.trucks)?.registration : undefined,
-        booking: showBooking ? toBooking(booking) : undefined,
+        booking: showBooking ? toBooking(booking, userId) : undefined,
       };
     });
 
@@ -439,8 +444,18 @@ export async function createTicket(userId: string, ticket: SupportTicket) {
 }
 
 /** Trip progress by the transporter: picked_up → in_transit → delivered. */
-export async function updateBookingStatus(bookingId: string, status: Exclude<BookingStatus, 'confirmed' | 'cancelled'>, note?: string) {
-  unwrap(await requireSupabase().rpc('update_booking_status', { p_booking_id: bookingId, p_status: status, p_note: note ?? null }));
+export async function updateBookingStatus(bookingId: string, status: Exclude<BookingStatus, 'confirmed' | 'cancelled'>, note?: string, code?: string) {
+  unwrap(await requireSupabase().rpc('update_booking_status', { p_booking_id: bookingId, p_status: status, p_note: note ?? null, p_code: code ?? null }));
+}
+
+/** Customer confirms "Goods handed over" (picked_up) or "Goods received" (delivered). */
+export async function customerConfirmBooking(bookingId: string, status: 'picked_up' | 'delivered') {
+  unwrap(await requireSupabase().rpc('customer_confirm_booking', { p_booking_id: bookingId, p_status: status }));
+}
+
+/** Either side reports a problem with a trip; the other side and admins are notified. */
+export async function reportBookingIssue(bookingId: string, note: string) {
+  unwrap(await requireSupabase().rpc('report_booking_issue', { p_booking_id: bookingId, p_note: note.trim() }));
 }
 
 /** Either party cancels before pickup. A transporter cancel re-opens the request for others. */
@@ -463,20 +478,22 @@ export async function updatePassword(password: string) {
   if (error) throw error;
 }
 
-export interface AdminAlerts { pendingKyc: number; vehicleDocsToReview: number; licencesExpiring: number; urgentTickets: number }
+export interface AdminAlerts { pendingKyc: number; vehicleDocsToReview: number; licencesExpiring: number; urgentTickets: number; tripsNeedingAttention: number }
 
 /** Real numbers for the admin control centre's "Needs attention" panel. */
 export async function fetchAdminAlerts(): Promise<AdminAlerts> {
   const client = requireSupabase();
   const soon = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
   const count = async (query: PromiseLike<{ count: number | null; error: unknown }>) => { const { count: n, error } = await query; if (error) throw error; return n ?? 0; };
-  const [pendingKyc, vehicleDocsToReview, licencesExpiring, urgentTickets] = await Promise.all([
+  const [pendingKyc, vehicleDocsToReview, licencesExpiring, urgentTickets, tripsNeedingAttention] = await Promise.all([
     count(client.from('profiles').select('id', { count: 'exact', head: true }).in('kyc_status', ['pending', 'needs_information'])),
     count(client.from('documents').select('id', { count: 'exact', head: true }).eq('entity_type', 'truck').eq('status', 'submitted')),
     count(client.from('drivers').select('id', { count: 'exact', head: true }).lte('licence_expiry', soon).neq('status', 'Inactive')),
     count(client.from('support_tickets').select('id', { count: 'exact', head: true }).eq('priority', 'Urgent').neq('status', 'Resolved')),
+    // Active trips with a reported problem or that stopped being updated (reminder stage 3).
+    count(client.from('bookings').select('id', { count: 'exact', head: true }).in('status', ['confirmed', 'picked_up', 'in_transit']).or('disputed_at.not.is.null,reminder_stage.gte.3')),
   ]);
-  return { pendingKyc, vehicleDocsToReview, licencesExpiring, urgentTickets };
+  return { pendingKyc, vehicleDocsToReview, licencesExpiring, urgentTickets, tripsNeedingAttention };
 }
 
 export async function updateTicketStatus(ticketId: string, status: SupportTicketStatus) {

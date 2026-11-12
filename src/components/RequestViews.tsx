@@ -14,8 +14,12 @@ export interface RequestActions {
   accept: (request: Load, truckId?: string, driverId?: string) => Promise<boolean>;
   decline: (request: Load) => Promise<boolean>;
   cancelRequest: (request: Load) => Promise<boolean>;
-  advance: (request: Load, status: Exclude<BookingStatus, 'confirmed' | 'cancelled'>) => Promise<boolean>;
+  /** Transporter moves the trip forward; delivery needs the customer's 4-digit code. */
+  advance: (request: Load, status: Exclude<BookingStatus, 'confirmed' | 'cancelled'>, code?: string) => Promise<boolean>;
   cancelBooking: (request: Load, reason: string) => Promise<boolean>;
+  /** Customer confirms "Goods handed over" or "Goods received". */
+  customerConfirm: (request: Load, status: 'picked_up' | 'delivered') => Promise<boolean>;
+  reportIssue: (request: Load, note: string) => Promise<boolean>;
 }
 
 const isActiveBooking = (request: Load) => Boolean(request.booking && !['cancelled', 'delivered'].includes(request.booking.status));
@@ -161,7 +165,7 @@ const ContactCard = ({ title, contact, extra }: { title: string; contact?: Conta
 
 export function RequestDetailsModal({ request, role, actions, onClose, onRespond }: { request: Load; role: AccountRole; actions: RequestActions; onClose: () => void; onRespond: (request: Load) => void }) {
   const [busy, setBusy] = useState(false);
-  const [confirm, setConfirm] = useState<'cancel-request' | 'cancel-booking' | 'deliver' | null>(null);
+  const [confirm, setConfirm] = useState<'cancel-request' | 'cancel-booking' | 'deliver' | 'handed-over' | 'received' | 'report' | null>(null);
   const booking = request.booking;
   const label = requestLabel(request, role);
   const active = isActiveBooking(request);
@@ -171,7 +175,9 @@ export function RequestDetailsModal({ request, role, actions, onClose, onRespond
   const statusHelp = (() => {
     if (booking?.status === 'cancelled' || request.status === 'Cancelled') return booking?.cancelledReason ? `Cancelled. Reason: ${booking.cancelledReason}` : 'This request was cancelled.';
     if (request.status === 'Completed') return 'Delivered. This trip is complete.';
-    if (booking && active) return role === 'load_owner' ? `Your goods are with ${booking.transporter?.business || 'the transporter'}${booking.truck ? ` (${booking.truck})` : ''}.` : 'Update the trip as it progresses so the customer stays informed.';
+    if (booking && active) return role === 'load_owner'
+      ? `Your goods are with ${booking.transporter?.business || 'the transporter'}${booking.truck ? ` (${booking.truck})` : ''}. You can confirm pickup and delivery yourself too.`
+      : 'Update the trip as it progresses. To mark it delivered you will need the customer’s 4-digit delivery code.';
     if (role === 'truck_owner' && request.status === 'Rejected') return 'You marked this request as not for you. You can still accept it while it is open.';
     return role === 'load_owner' ? 'Waiting for a truck owner to accept. You will be notified as soon as someone does.' : 'This request is waiting for a truck owner.';
   })();
@@ -181,6 +187,9 @@ export function RequestDetailsModal({ request, role, actions, onClose, onRespond
     <div className="request-decision-body">
       <div className={`request-status-banner ${statusClass(request.status === 'Completed' ? 'accepted' : label)}`}><span className={`status ${statusClass(label)}`}>{label}</span><p>{statusHelp}</p></div>
       {booking && booking.status !== 'cancelled' && <ol className="trip-steps" aria-label="Trip progress">{STEPS.map((step) => { const reached = STEPS.indexOf(booking.status as typeof step) >= STEPS.indexOf(step); const event = booking.history.find((item) => item.status === step); return <li key={step} className={reached ? 'done' : ''}><i aria-hidden="true">{reached ? '✓' : ''}</i><span>{bookingLabel[step]}</span>{event && <small>{formatDateTime(event.at)}</small>}</li>; })}</ol>}
+      {booking?.issue && <div className="trip-issue" role="note"><strong>{booking.issue.byMe ? 'You reported a problem' : 'A problem was reported on this trip'}</strong><p>{booking.issue.note}</p><small>{formatDateTime(booking.issue.at)} · Our team has been alerted and will contact both sides.</small></div>}
+      {role === 'load_owner' && booking && active && booking.deliveryCode && <div className="delivery-code"><div><span>Delivery code</span><strong aria-label={`Delivery code ${booking.deliveryCode.split('').join(' ')}`}>{booking.deliveryCode.split('').map((digit, index) => <b key={index}>{digit}</b>)}</strong></div><p>Share this code with the driver <b>only when your goods arrive</b>. The transporter needs it to mark the trip delivered.</p></div>}
+      {booking && active && <button type="button" className="trip-report-link" onClick={() => setConfirm('report')}>Something not right? Report a problem</button>}
       <RouteHero request={request}/>
       <DetailGrid request={request}/>
       {booking && booking.status !== 'cancelled' && <div className="contact-grid">
@@ -194,11 +203,34 @@ export function RequestDetailsModal({ request, role, actions, onClose, onRespond
       {role === 'truck_owner' && isPendingRequest(request) ? <><button className="reject-request-btn" onClick={onClose}>Close</button><button className="accept-request-btn" onClick={() => onRespond(request)}>Respond to request <Icon name="arrow"/></button></>
         : next ? <>{booking?.status === 'confirmed' ? <button className="reject-request-btn" onClick={() => setConfirm('cancel-booking')} disabled={busy}>Cancel trip</button> : <button className="reject-request-btn" onClick={onClose}>Close</button>}<button className="accept-request-btn" onClick={() => next.status === 'delivered' ? setConfirm('deliver') : void run(() => actions.advance(request, next.status))} disabled={busy}>{busy ? 'Updating…' : next.label} <Icon name="arrow"/></button></>
         : role === 'load_owner' && request.status === 'Pending' ? <><button className="reject-request-btn" onClick={() => setConfirm('cancel-request')} disabled={busy}>Cancel request</button><button className="accept-request-btn" onClick={onClose}>Close</button></>
-        : role === 'load_owner' && booking?.status === 'confirmed' ? <><button className="reject-request-btn" onClick={() => setConfirm('cancel-booking')} disabled={busy}>Cancel booking</button><button className="accept-request-btn" onClick={onClose}>Close</button></>
+        : role === 'load_owner' && booking?.status === 'confirmed' ? <><button className="reject-request-btn" onClick={() => setConfirm('cancel-booking')} disabled={busy}>Cancel booking</button><button className="accept-request-btn" onClick={() => setConfirm('handed-over')} disabled={busy}>Goods handed over <Icon name="arrow"/></button></>
+        : role === 'load_owner' && booking && active ? <><button className="reject-request-btn" onClick={onClose}>Close</button><button className="accept-request-btn" onClick={() => setConfirm('received')} disabled={busy}>Goods received <Icon name="arrow"/></button></>
         : <button className="accept-request-btn request-details-close" onClick={onClose}>Close</button>}
     </div>
     {confirm === 'cancel-request' && <ConfirmDialog title="Cancel this request?" message="Truck owners will no longer see it. You can post a new request any time." confirmLabel="Cancel request" danger onCancel={() => setConfirm(null)} onConfirm={async () => { if (await run(() => actions.cancelRequest(request))) onClose(); }}/>}
     {confirm === 'cancel-booking' && <ConfirmDialog title={role === 'truck_owner' ? 'Cancel this trip?' : 'Cancel this booking?'} message={role === 'truck_owner' ? 'The customer will be notified and the request will be open again for other truck owners.' : 'The transporter will be notified and the request will be closed.'} reasonLabel="Reason (shared with the other party)" confirmLabel={role === 'truck_owner' ? 'Cancel trip' : 'Cancel booking'} danger onCancel={() => setConfirm(null)} onConfirm={async (reason) => { if (await run(() => actions.cancelBooking(request, reason))) onClose(); }}/>}
-    {confirm === 'deliver' && <ConfirmDialog title="Mark as delivered?" message="Confirm the goods have been handed over. The customer is notified and the truck becomes available at the destination city." confirmLabel="Mark delivered" onCancel={() => setConfirm(null)} onConfirm={async () => { await run(() => actions.advance(request, 'delivered')); }}/>}
+    {confirm === 'deliver' && <InputDialog title="Enter the delivery code" message="Ask the customer for the 4-digit delivery code shown in their app. They share it once the goods have arrived." label="Delivery code" placeholder="4-digit code" code confirmLabel="Mark delivered" onCancel={() => setConfirm(null)} onConfirm={async (code) => { await run(() => actions.advance(request, 'delivered', code)); }}/>}
+    {confirm === 'handed-over' && <ConfirmDialog title="Goods handed over?" message="Confirm the truck has collected your goods. The transporter is notified and the trip moves to Picked up." confirmLabel="Yes, handed over" onCancel={() => setConfirm(null)} onConfirm={async () => { await run(() => actions.customerConfirm(request, 'picked_up')); }}/>}
+    {confirm === 'received' && <ConfirmDialog title="Received your goods?" message="Confirm your goods have arrived. The trip is marked delivered and the transporter is notified." confirmLabel="Yes, received" onCancel={() => setConfirm(null)} onConfirm={async () => { await run(() => actions.customerConfirm(request, 'delivered')); }}/>}
+    {confirm === 'report' && <InputDialog title="Report a problem" message={`Tell us what is wrong with this trip. ${role === 'load_owner' ? 'The transporter' : 'The customer'} and the Fares24x7 team will be notified.`} label="What happened?" placeholder="For example: status says picked up but the truck has not arrived" confirmLabel="Report problem" danger onCancel={() => setConfirm(null)} onConfirm={async (note) => { await run(() => actions.reportIssue(request, note)); }}/>}
   </div></div>;
+}
+
+/** Small dialog that collects a required value: a 4-digit code or a short note. */
+function InputDialog({ title, message, label, placeholder, confirmLabel, code, danger, onCancel, onConfirm }: { title: string; message: string; label: string; placeholder: string; confirmLabel: string; code?: boolean; danger?: boolean; onCancel: () => void; onConfirm: (value: string) => Promise<void> }) {
+  const [value, setValue] = useState('');
+  const [busy, setBusy] = useState(false);
+  const valid = code ? /^[0-9]{4}$/.test(value) : value.trim().length >= 5;
+  const submit = async () => { if (!valid || busy) return; setBusy(true); try { await onConfirm(value.trim()); } finally { setBusy(false); } };
+  return <div className="modal-backdrop confirm-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}>
+    <form className="modal confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="inputDialogTitle" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
+      <h2 id="inputDialogTitle">{title}</h2>
+      <p>{message}</p>
+      <label className="confirm-reason">{label}
+        {code ? <input className="delivery-code-input" value={value} onChange={(event) => setValue(event.target.value.replace(/\D/g, '').slice(0, 4))} inputMode="numeric" autoComplete="one-time-code" placeholder={placeholder} autoFocus/>
+          : <textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} maxLength={500} placeholder={placeholder} autoFocus/>}
+      </label>
+      <div className="confirm-actions"><button type="button" className="secondary-btn" onClick={onCancel}>Back</button><button type="submit" className={danger ? 'primary-btn danger-btn' : 'primary-btn'} disabled={!valid || busy}>{busy ? 'Please wait…' : confirmLabel}</button></div>
+    </form>
+  </div>;
 }

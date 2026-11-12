@@ -16,6 +16,10 @@ export interface BookingInfo {
   transporter?: Contact;
   cancelledReason?: string;
   history: Array<{ status: BookingStatus; note?: string; at: string }>;
+  /** Only the customer can see this; the transporter needs it to mark the trip delivered. */
+  deliveryCode?: string;
+  /** Set when either side reported a problem with the trip. */
+  issue?: { note: string; at: string; byMe: boolean };
 }
 export type LoadType = 'FTL' | 'PTL';
 

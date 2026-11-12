@@ -547,3 +547,9 @@
   .landing-page .platform-copy{align-self:center;padding-bottom:80px}
   .landing-page .platform-copy ul{margin:22px 0 28px}
 }
+
+/* Hero buttons centred across the page, between the hero and the trust row */
+.landing-page .landing-hero>.hero-actions{grid-column:1/-1;justify-content:center;margin:4px 0 0}
+@media(min-width:701px){.landing-page .landing-hero>.hero-actions{flex-direction:row;align-items:center}}
+@media(max-width:1000px){.landing-page .hero-copy{order:1}.landing-page .landing-hero>.hero-actions{order:2;margin-top:-16px}.landing-page .hero-visual{order:3}.landing-page .hero-trust{order:4}}
+@media(max-width:700px){.landing-page .landing-hero>.hero-actions{justify-content:center}}

@@ -399,7 +399,7 @@ export default function App() {
       const driver = drivers.find((item) => item.id === driverId);
       if (backend) return attempt(() => api.acceptLoad(request.id, truckId, driverId), `Request accepted with ${truck?.registration ?? 'your truck'} — the customer has been notified`, 4000);
       const now = new Date().toISOString();
-      patchDemoLoad(request.id, (load) => ({ ...load, status: 'Accepted', bookedTruck: truck?.registration, booking: { id: `BK-${Date.now()}`, status: 'confirmed', truck: truck?.registration, truckId, driver: driver ? { name: driver.name, phone: driver.phone } : undefined, customer: { name: 'Ananya Mehta', business: 'Mehta Foods', phone: '+91 98765 41002', email: 'customer@fares24x7.demo' }, history: [{ status: 'confirmed', at: now }] } }));
+      patchDemoLoad(request.id, (load) => ({ ...load, status: 'Accepted', bookedTruck: truck?.registration, booking: { id: `BK-${Date.now()}`, status: 'confirmed', deliveryCode: String(Math.floor(Math.random() * 10000)).padStart(4, '0'), truck: truck?.registration, truckId, driver: driver ? { name: driver.name, phone: driver.phone } : undefined, customer: { name: 'Ananya Mehta', business: 'Mehta Foods', phone: '+91 98765 41002', email: 'customer@fares24x7.demo' }, history: [{ status: 'confirmed', at: now }] } }));
       if (driver) setDrivers((current) => current.map((item) => item.id === driver.id ? { ...item, status: 'Assigned', assignedTruckId: truckId, assignedVehicle: truck?.registration } : item));
       notify('Request accepted — the customer has been notified'); return true;
     },
@@ -411,10 +411,23 @@ export default function App() {
       if (backend) return attempt(() => api.cancelLoad(request.id), 'Request cancelled');
       patchDemoLoad(request.id, (load) => ({ ...load, status: 'Cancelled' })); notify('Request cancelled'); return true;
     },
-    advance: async (request, status) => {
+    advance: async (request, status, code) => {
       const message = status === 'delivered' ? 'Trip marked as delivered — well done!' : `Trip updated: ${status === 'picked_up' ? 'picked up' : 'in transit'}`;
-      if (backend) return attempt(() => api.updateBookingStatus(request.booking!.id, status), message);
+      if (backend) return attempt(() => api.updateBookingStatus(request.booking!.id, status, undefined, code), message);
+      if (status === 'delivered' && request.booking?.deliveryCode && code !== request.booking.deliveryCode) { fail(new Error('The delivery code is not correct. Ask the customer for the 4-digit code shown in their app.')); return false; }
       patchDemoLoad(request.id, (load) => ({ ...load, status: status === 'delivered' ? 'Completed' : load.status, booking: load.booking && { ...load.booking, status, history: [...load.booking.history, { status, at: new Date().toISOString() }] } }));
+      notify(message); return true;
+    },
+    customerConfirm: async (request, status) => {
+      const message = status === 'delivered' ? 'Delivery confirmed — the transporter has been notified' : 'Pickup confirmed — the transporter has been notified';
+      if (backend) return attempt(() => api.customerConfirmBooking(request.booking!.id, status), message);
+      patchDemoLoad(request.id, (load) => ({ ...load, status: status === 'delivered' ? 'Completed' : load.status, booking: load.booking && { ...load.booking, status, history: [...load.booking.history, { status, note: status === 'delivered' ? 'Receipt confirmed by the customer' : 'Confirmed by the customer', at: new Date().toISOString() }] } }));
+      notify(message); return true;
+    },
+    reportIssue: async (request, note) => {
+      const message = 'Problem reported — our team and the other party have been notified';
+      if (backend) return attempt(() => api.reportBookingIssue(request.booking!.id, note), message);
+      patchDemoLoad(request.id, (load) => ({ ...load, booking: load.booking && { ...load.booking, issue: { note, at: new Date().toISOString(), byMe: true } } }));
       notify(message); return true;
     },
     cancelBooking: async (request, reason) => {

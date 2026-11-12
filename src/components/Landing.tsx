@@ -46,11 +46,11 @@ export function Landing({ onLogin, onSignup }: LandingProps) {
             <span className="landing-eyebrow"><i/> Simple truck booking</span>
             <h1>Need a truck?<br/>Send one <em>request.</em></h1>
             <p>Customers post what they need. Truck owners review the request and either accept or reject it. That is the whole process.</p>
-            <div className="hero-actions"><button className="hero-primary" onClick={onSignup}>Get started <Icon name="arrow"/></button><button className="hero-login" onClick={onLogin}>Log in</button><a href="#how">See how it works <span>↓</span></a></div>
           </div>
           <div className="hero-visual hero-product hero-video" aria-label="Walkthrough: a customer posts a truck request, a truck owner accepts it and the customer tracks the trip">
             <HeroWalkthrough/>
           </div>
+          <div className="hero-actions"><button className="hero-primary" onClick={onSignup}>Get started <Icon name="arrow"/></button><button className="hero-login" onClick={onLogin}>Log in</button><a href="#how">See how it works <span>↓</span></a></div>
           <ul className="hero-trust">
               <li><strong>Verified businesses</strong><small>GST &amp; PAN reviewed</small></li>
               <li><strong>Documented trucks</strong><small>RC, insurance &amp; PUC</small></li>
