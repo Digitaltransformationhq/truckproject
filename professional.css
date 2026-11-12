@@ -1953,3 +1953,58 @@ td>small{display:block;margin-top:4px;color:#777;font-size:11px}
 .app-shell .trip-report-link{display:block;margin:10px 0 2px auto;padding:0;border:0;background:none;color:#a64646;font-size:11.5px;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .delivery-code-input{width:100%;height:52px;margin-top:6px;border:1.5px solid #171717;border-radius:10px;font:800 24px Manrope,sans-serif;letter-spacing:.5em;text-align:center}
 @media(max-width:560px){.app-shell .delivery-code{grid-template-columns:1fr;gap:10px}}
+.app-shell .sidebar-user>button{width:38px;height:38px;border-radius:9px}
+.app-shell .sidebar-user>button svg{width:21px;height:21px;stroke-width:2}
+
+/* All dropdowns: same inset chevron (16px from the edge) instead of the browser arrow at the border */
+select:not([multiple]):not([size]){appearance:none!important;-webkit-appearance:none!important;padding-right:42px!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2337434b' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 8 4 4 4-4'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 16px center!important;background-size:16px 16px!important}
+select:not([multiple]):not([size])::-ms-expand{display:none}
+
+/* Support query modal: same look as the other modals (fixed header/footer, plain close, orange accents) */
+.support-query-backdrop .support-query-modal{display:flex;flex-direction:column;overflow:hidden;max-height:calc(100dvh - 40px);border:1px solid #e3e3df;border-radius:18px;box-shadow:0 30px 80px -20px rgba(8,18,35,.4)}
+.support-query-backdrop .support-query-modal>header{flex:none;padding:25px 28px 19px;border-bottom:1px solid #ececea}
+.support-query-backdrop .support-query-modal>header span{color:#e48700;font-size:11px;letter-spacing:.14em}
+.support-query-backdrop .support-query-modal>header h2{color:#171717;font:800 24px/1.2 Manrope,sans-serif;letter-spacing:-.03em}
+.support-query-backdrop .support-query-modal>header p{color:#6f747a;font-size:12.5px}
+.support-query-backdrop .support-query-modal>header>button{width:34px;height:34px;border:0;border-radius:9px;background:transparent;box-shadow:none;color:#657181;cursor:pointer}
+.support-query-backdrop .support-query-modal>header>button:hover{background:rgba(25,35,48,.055);color:#171717}
+.support-query-backdrop .support-query-modal>header>button svg{width:18px;height:18px}
+.support-query-backdrop .support-query-modal form{flex:1;min-height:0;display:flex;flex-direction:column;padding:0}
+.support-query-backdrop .support-query-modal form>.support-query-grid,.support-query-backdrop .support-query-modal form>label,.support-query-backdrop .support-query-modal form>.support-query-note{margin-left:28px;margin-right:28px}
+.support-query-backdrop .support-query-modal form>:first-child{margin-top:22px}
+.support-query-backdrop .support-query-modal form{overflow-y:auto;overscroll-behavior:contain}
+.support-query-backdrop .support-query-modal form>footer{position:sticky;bottom:0;z-index:2;margin:22px 0 0;padding:16px 28px 20px;display:grid;grid-template-columns:1fr 1.5fr;gap:10px;border-top:1px solid #ececea;background:#fafbfc}
+.support-query-backdrop .support-query-modal form>footer>button{height:46px;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer}
+.support-query-backdrop .support-query-modal form>footer>button:not(.admin-primary){border:1px solid #d7dde0;background:#fff;color:#55636b}
+.support-query-backdrop .support-query-modal form>footer>.support-submit{display:flex;align-items:center;justify-content:center;gap:8px;min-height:0;border:1.5px solid #171717;background:#ffa51f;color:#171717;box-shadow:3px 3px 0 #171717}
+.support-query-backdrop .support-query-modal form>footer>.support-submit:hover{background:#f39500}
+.support-query-backdrop .support-query-modal form>footer>.support-submit svg{width:16px;height:16px}
+.support-query-backdrop .support-query-modal input:focus,.support-query-backdrop .support-query-modal select:focus,.support-query-backdrop .support-query-modal textarea:focus{border-color:#ffa51f;box-shadow:0 0 0 3px rgba(255,165,31,.2)}
+.support-query-backdrop .support-query-note{padding:13px 14px;border:1px solid #f3dfbf;border-radius:11px;background:#fff8ec;color:#b86500}
+.support-query-backdrop .support-query-note strong{color:#171717}
+.support-query-backdrop .support-query-note small{color:#6f6a62}
+@media(max-width:600px){.support-query-backdrop .support-query-modal>header{padding:20px 20px 16px}.support-query-backdrop .support-query-modal form>.support-query-grid,.support-query-backdrop .support-query-modal form>label,.support-query-backdrop .support-query-modal form>.support-query-note{margin-left:20px;margin-right:20px}.support-query-backdrop .support-query-modal form>footer{padding:14px 20px 18px}}
+
+/* Trip ratings */
+.app-shell .rating-badge{display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:2px 8px;border-radius:20px;background:#fff3df;color:#9a5800;font-size:11px;font-weight:800;vertical-align:middle;white-space:nowrap}
+.app-shell .rating-badge small{color:#9a7a4f;font-size:10px;font-weight:600}
+.app-shell .rating-badge.new{background:#eef0f2;color:#6a7280;font-weight:700}
+.app-shell .trip-rating{margin:14px 0 4px;padding:14px 16px;border:1px solid #f0dcbc;border-radius:12px;background:#fffaf2}
+.app-shell .trip-rating.done{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.app-shell .trip-rating-title{display:block;color:#171717;font-size:12.5px;font-weight:800}
+.app-shell .trip-rating-row{display:flex;align-items:center;gap:12px;margin-top:8px}
+.app-shell .trip-rating-row small{color:#7a6a52;font-size:12px;font-weight:700}
+.app-shell .trip-rating-stars{display:inline-flex;gap:2px}
+.app-shell .trip-rating-stars button,.app-shell .trip-rating-stars b{padding:0 2px;border:0;background:none;color:#d9d3c7;font-size:28px;line-height:1;cursor:pointer;transition:transform .12s,color .12s}
+.app-shell .trip-rating-stars b{font-size:18px;cursor:default}
+.app-shell .trip-rating-stars .on{color:#ffa51f}
+.app-shell .trip-rating-stars button:hover{transform:scale(1.15)}
+.app-shell .trip-rating-stars.static{display:flex;margin-top:4px}
+.app-shell .trip-rating p{margin:6px 0 0;color:#5f5a52;font-size:12px;font-style:italic}
+.app-shell .trip-rating textarea{width:100%;margin-top:10px;padding:9px 11px;border:1px solid #e3d8c6;border-radius:9px;background:#fff;font:inherit;font-size:12.5px;resize:vertical}
+.app-shell .trip-rating textarea:focus{outline:0;border-color:#ffa51f;box-shadow:0 0 0 3px rgba(255,165,31,.18)}
+.app-shell .trip-rating-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.app-shell .trip-rating-actions button,.app-shell .trip-rating.done>button{height:36px;padding:0 14px;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer}
+.app-shell .trip-rating-actions .secondary,.app-shell .trip-rating.done>button{border:1px solid #d7dde0;background:#fff;color:#55636b}
+.app-shell .trip-rating-actions .primary{border:1.5px solid #171717;background:#ffa51f;color:#171717;box-shadow:2px 2px 0 #171717}
+.app-shell .trip-rating-actions .primary:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}

@@ -3,7 +3,7 @@ export type TruckStatus = 'Available' | 'In transit' | 'Unavailable';
 export type LoadStatus = 'Pending' | 'Accepted' | 'Rejected' | 'Completed' | 'Cancelled';
 export type BookingStatus = 'confirmed' | 'picked_up' | 'in_transit' | 'delivered' | 'cancelled';
 
-export interface Contact { name: string; business: string; phone: string; email: string; }
+export interface Contact { name: string; business: string; phone: string; email: string; /** Average stars from past trips. */ rating?: { avg: number; count: number }; }
 
 /** The active (or last) booking behind a request: who carries it, and the trip's progress. */
 export interface BookingInfo {
@@ -20,6 +20,8 @@ export interface BookingInfo {
   deliveryCode?: string;
   /** Set when either side reported a problem with the trip. */
   issue?: { note: string; at: string; byMe: boolean };
+  /** The rating the signed-in user gave the other party for this trip. */
+  myRating?: { stars: number; comment?: string };
 }
 export type LoadType = 'FTL' | 'PTL';
 

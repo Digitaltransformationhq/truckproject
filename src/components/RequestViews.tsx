@@ -20,6 +20,8 @@ export interface RequestActions {
   /** Customer confirms "Goods handed over" or "Goods received". */
   customerConfirm: (request: Load, status: 'picked_up' | 'delivered') => Promise<boolean>;
   reportIssue: (request: Load, note: string) => Promise<boolean>;
+  /** Rate the other party after delivery. */
+  rateTrip: (request: Load, stars: number, comment: string) => Promise<boolean>;
 }
 
 const isActiveBooking = (request: Load) => Boolean(request.booking && !['cancelled', 'delivered'].includes(request.booking.status));
@@ -161,7 +163,9 @@ const NEXT_STEP: Partial<Record<BookingStatus, { status: Exclude<BookingStatus, 
   in_transit: { status: 'delivered', label: 'Mark delivered' },
 };
 
-const ContactCard = ({ title, contact, extra }: { title: string; contact?: Contact; extra?: ReactNode }) => contact ? <div className="contact-card"><span className="contact-card-title">{title}</span><strong>{contact.business || contact.name}</strong>{contact.business && <small>{contact.name}</small>}<div className="contact-card-links">{contact.phone && <a href={`tel:${contact.phone.replace(/\s/g, '')}`}><Icon name="headset"/> {contact.phone}</a>}{contact.email && <a href={`mailto:${contact.email}`}><Icon name="inbox"/> {contact.email}</a>}</div>{extra}</div> : null;
+const RatingBadge = ({ rating }: { rating?: Contact['rating'] }) => rating ? <span className="rating-badge" title={`${rating.avg.toFixed(1)} out of 5 from ${rating.count} trip${rating.count === 1 ? '' : 's'}`}>★ {rating.avg.toFixed(1)} <small>· {rating.count} trip{rating.count === 1 ? '' : 's'}</small></span> : <span className="rating-badge new">New on Fares24x7</span>;
+
+const ContactCard = ({ title, contact, extra }: { title: string; contact?: Contact; extra?: ReactNode }) => contact ? <div className="contact-card"><span className="contact-card-title">{title}</span><strong>{contact.business || contact.name} <RatingBadge rating={contact.rating}/></strong>{contact.business && <small>{contact.name}</small>}<div className="contact-card-links">{contact.phone && <a href={`tel:${contact.phone.replace(/\s/g, '')}`}><Icon name="headset"/> {contact.phone}</a>}{contact.email && <a href={`mailto:${contact.email}`}><Icon name="inbox"/> {contact.email}</a>}</div>{extra}</div> : null;
 
 export function RequestDetailsModal({ request, role, actions, onClose, onRespond }: { request: Load; role: AccountRole; actions: RequestActions; onClose: () => void; onRespond: (request: Load) => void }) {
   const [busy, setBusy] = useState(false);
@@ -197,6 +201,7 @@ export function RequestDetailsModal({ request, role, actions, onClose, onRespond
           : <ContactCard title="Customer" contact={booking.customer}/>}
         {role === 'truck_owner' && (booking.truck || booking.driver) && <div className="contact-card"><span className="contact-card-title">Your assignment</span>{booking.truck && <strong>{booking.truck}</strong>}{booking.driver ? <small>Driver: {booking.driver.name} · {booking.driver.phone}</small> : <small>No driver assigned</small>}</div>}
       </div>}
+      {booking?.status === 'delivered' && <TripRating key={booking.id} existing={booking.myRating} otherName={(role === 'load_owner' ? booking.transporter : booking.customer)?.business || (role === 'load_owner' ? 'the transporter' : 'the customer')} onSubmit={(stars, comment) => actions.rateTrip(request, stars, comment)}/>}
       {booking && booking.history.some((item) => item.note) && <ul className="trip-notes">{booking.history.filter((item) => item.note).map((item) => <li key={item.at}><b>{bookingLabel[item.status]}</b> · {formatDateTime(item.at)} — {item.note}</li>)}</ul>}
     </div>
     <div className="request-decision-actions">
@@ -232,5 +237,27 @@ function InputDialog({ title, message, label, placeholder, confirmLabel, code, d
       </label>
       <div className="confirm-actions"><button type="button" className="secondary-btn" onClick={onCancel}>Back</button><button type="submit" className={danger ? 'primary-btn danger-btn' : 'primary-btn'} disabled={!valid || busy}>{busy ? 'Please wait…' : confirmLabel}</button></div>
     </form>
+  </div>;
+}
+
+/** Star rating for the other party, shown once a trip is delivered. */
+function TripRating({ existing, otherName, onSubmit }: { existing?: { stars: number; comment?: string }; otherName: string; onSubmit: (stars: number, comment: string) => Promise<boolean> }) {
+  const [editing, setEditing] = useState(!existing);
+  const [stars, setStars] = useState(existing?.stars ?? 0);
+  const [hover, setHover] = useState(0);
+  const [comment, setComment] = useState(existing?.comment ?? '');
+  const [busy, setBusy] = useState(false);
+  const labels = ['', 'Poor', 'Below average', 'Good', 'Very good', 'Excellent'];
+  const shown = hover || stars;
+  if (!editing && existing) return <div className="trip-rating done"><div><span className="trip-rating-title">Your rating for {otherName}</span><span className="trip-rating-stars static" aria-label={`${existing.stars} out of 5 stars`}>{[1, 2, 3, 4, 5].map((n) => <b key={n} className={n <= existing.stars ? 'on' : ''}>★</b>)}</span>{existing.comment && <p>“{existing.comment}”</p>}</div><button type="button" onClick={() => setEditing(true)}>Edit</button></div>;
+  const submit = async () => { if (!stars || busy) return; setBusy(true); if (await onSubmit(stars, comment)) setEditing(false); setBusy(false); };
+  return <div className="trip-rating">
+    <span className="trip-rating-title">How was the trip with {otherName}?</span>
+    <div className="trip-rating-row">
+      <span className="trip-rating-stars" role="radiogroup" aria-label="Rating" onMouseLeave={() => setHover(0)}>{[1, 2, 3, 4, 5].map((n) => <button key={n} type="button" role="radio" aria-checked={stars === n} aria-label={`${n} star${n === 1 ? '' : 's'}`} className={n <= shown ? 'on' : ''} onMouseEnter={() => setHover(n)} onClick={() => setStars(n)}>★</button>)}</span>
+      <small>{labels[shown] || 'Tap a star'}</small>
+    </div>
+    {stars > 0 && <textarea value={comment} onChange={(event) => setComment(event.target.value)} rows={2} maxLength={500} placeholder="Add a short comment (optional)"/>}
+    <div className="trip-rating-actions">{existing && <button type="button" className="secondary" onClick={() => { setEditing(false); setStars(existing.stars); setComment(existing.comment ?? ''); }}>Cancel</button>}<button type="button" className="primary" disabled={!stars || busy} onClick={() => void submit()}>{busy ? 'Saving…' : existing ? 'Update rating' : 'Submit rating'}</button></div>
   </div>;
 }

@@ -1,15 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { SplitFlapScreen, showBoard, hideBoard } from './components/SplitFlap';
 import { startGoogleOneTap } from './lib/googleIdentity';
 import type { FormEvent, RefObject } from 'react';
-import { Landing } from './components/Landing';
-import { RoleAuthModal, type AccountRole, type AuthMode, type RegistrationProfile } from './components/RoleAuthModal';
-import { KycModal } from './components/KycModal';
+
+import type { AccountRole, AuthMode, RegistrationProfile } from './components/RoleAuthModal';
+
 import { Icon, type IconName } from './components/Icon';
-import { AdminConsole } from './components/AdminConsole';
-import { SupportQueryModal } from './components/SupportQueryModal';
-import { OnboardingScreen } from './components/OnboardingScreen';
-import { PasswordRecovery } from './components/PasswordRecovery';
+
 import { SupportView } from './components/SupportView';
 import { DriverFormModal, DriversView, TrucksView, VehicleDetailsModal, VehicleFormModal, type FleetActions } from './components/FleetViews';
 import { LoadFormModal, RequestDecisionModal, RequestDetailsModal, RequestsView, requestLabel, type RequestActions } from './components/RequestViews';
@@ -22,6 +19,15 @@ import * as api from './lib/backend';
 import { type UploadItem } from './lib/backend';
 import { useSession, useWorkspace } from './hooks/useBackend';
 import type { AppNotification, Driver, Load, PortalData, SupportTicket, Truck, VerificationStatus, ViewName } from './types';
+
+// Screens that not every visitor needs load on demand (smaller first download).
+const Landing = lazy(() => import('./components/Landing').then((m) => ({ default: m.Landing })));
+const RoleAuthModal = lazy(() => import('./components/RoleAuthModal').then((m) => ({ default: m.RoleAuthModal })));
+const KycModal = lazy(() => import('./components/KycModal').then((m) => ({ default: m.KycModal })));
+const AdminConsole = lazy(() => import('./components/AdminConsole').then((m) => ({ default: m.AdminConsole })));
+const SupportQueryModal = lazy(() => import('./components/SupportQueryModal').then((m) => ({ default: m.SupportQueryModal })));
+const OnboardingScreen = lazy(() => import('./components/OnboardingScreen').then((m) => ({ default: m.OnboardingScreen })));
+const PasswordRecovery = lazy(() => import('./components/PasswordRecovery').then((m) => ({ default: m.PasswordRecovery })));
 
 const STORE_KEY = 'fares24x7-phase1-v2';
 const greeting = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening';
@@ -213,7 +219,7 @@ function Dashboard({ data, role, profile, onOpenModal, onNavigate, onOpenRequest
       <button className="metric" onClick={() => onOpenTrucks('In transit')}><div className="metric-icon"><Icon name="route"/></div><div><span>On the road</span><strong>{inTransit.length}</strong><small>Trucks currently moving</small></div></button>
     </>}</div>
     <section className="panel request-panel"><div className="panel-head"><div><h2>{activeRole === 'load_owner' ? 'Your recent requests' : 'Incoming truck requests'}</h2><p>{activeRole === 'load_owner' ? 'See whether a truck owner has accepted your request.' : 'Open a request to accept or reject it.'}</p></div><button className="text-link view-all-link" onClick={() => onNavigate('loads')}>View all <Icon name="chevron"/></button></div><div className="request-list">{data.loads.slice(0, 4).map((request) => <button className="request-list-item" key={request.id} onClick={() => activeRole === 'truck_owner' && isPendingRequest(request) ? onOpenRequest(request) : onViewRequest(request)}><span className="request-route"><strong>{request.origin} → {request.destination}</strong><small>{request.material} · {request.quantity} tonnes · {formatDate(request.date)}</small></span><span className={`status ${statusClass(requestLabel(request, activeRole))}`}>{requestLabel(request, activeRole)}</span><Icon name="chevron"/></button>)}</div></section>
-    {kycOpen && <KycModal role={activeRole} onSubmit={onSubmitKyc} onClose={() => setKycOpen(false)} onComplete={() => { if (!onSubmitKyc) setKycComplete(true); setKycOpen(false); }}/>} 
+    {kycOpen && <Suspense fallback={null}><KycModal role={activeRole} onSubmit={onSubmitKyc} onClose={() => setKycOpen(false)} onComplete={() => { if (!onSubmitKyc) setKycComplete(true); setKycOpen(false); }}/></Suspense>} 
   </section>;
 }
 
@@ -314,7 +320,7 @@ export default function App() {
   if (backend && !session.ready) return <SplitFlapScreen word="LOADING"/>;
 
   if (backend && session.recovering && session.userId) {
-    return <PasswordRecovery onCancel={session.finishRecovery} onSave={async (password) => { await api.updatePassword(password); session.finishRecovery(); notify('Your password has been updated'); }}/>;
+    return <Suspense fallback={<SplitFlapScreen/>}><PasswordRecovery onCancel={session.finishRecovery} onSave={async (password) => { await api.updatePassword(password); session.finishRecovery(); notify('Your password has been updated'); }}/></Suspense>;
   }
 
   if (backend && backendProfile?.account_status === 'suspended') {
@@ -322,15 +328,15 @@ export default function App() {
   }
 
   if (backend && backendProfile && !backendProfile.onboarded) {
-    return <OnboardingScreen email={backendProfile.email} firstName={backendProfile.first_name} lastName={backendProfile.last_name} avatarUrl={backendProfile.avatar_url}
+    return <Suspense fallback={<SplitFlapScreen/>}><OnboardingScreen email={backendProfile.email} firstName={backendProfile.first_name} lastName={backendProfile.last_name} avatarUrl={backendProfile.avatar_url}
       onSignOut={() => { showBoard('LOGGING OUT'); void api.signOut().finally(hideBoard); }}
-      onComplete={async (role, details) => { await api.completeOnboarding(role, details); await session.refreshProfile(); }}/>;
+      onComplete={async (role, details) => { await api.completeOnboarding(role, details); await session.refreshProfile(); }}/></Suspense>;
   }
 
   if (!authenticated) {
     const enterWorkspace = (profile?: RegistrationProfile) => { if (profile) { localStorage.setItem('fares24x7-role', profile.role); localStorage.setItem('fares24x7-profile', JSON.stringify(profile)); localStorage.setItem('fares24x7-kyc', 'pending'); } localStorage.setItem('fares24x7-auth', '1'); setAuthModal(null); setDemoAuthenticated(true); };
     const authBackend = backend ? { signIn: api.signIn, signUp: api.signUp, google: api.signInWithGoogle, googleIdToken: api.signInWithGoogleIdToken, resetPassword: api.sendPasswordReset } : undefined;
-    return <><Landing onLogin={() => setAuthModal('login')} onSignup={() => setAuthModal('signup')} />{authModal && <RoleAuthModal mode={authModal} backend={authBackend} initialMessage={oauthError || undefined} onClose={() => setAuthModal(null)} onModeChange={setAuthModal} onComplete={enterWorkspace}/>}</>;
+    return <><Suspense fallback={<SplitFlapScreen/>}><Landing onLogin={() => setAuthModal('login')} onSignup={() => setAuthModal('signup')} /></Suspense>{authModal && <Suspense fallback={null}><RoleAuthModal mode={authModal} backend={authBackend} initialMessage={oauthError || undefined} onClose={() => setAuthModal(null)} onModeChange={setAuthModal} onComplete={enterWorkspace}/></Suspense>}</>;
   }
 
   const userId = session.userId ?? '';
@@ -431,6 +437,12 @@ export default function App() {
       patchDemoLoad(request.id, (load) => ({ ...load, status: status === 'delivered' ? 'Completed' : load.status, booking: load.booking && { ...load.booking, status, history: [...load.booking.history, { status, note: status === 'delivered' ? 'Receipt confirmed by the customer' : 'Confirmed by the customer', at: new Date().toISOString() }] } }));
       notify(message); return true;
     },
+    rateTrip: async (request, stars, comment) => {
+      const message = 'Thanks! Your rating has been saved';
+      if (backend) return attempt(() => api.rateTrip(request.booking!.id, stars, comment), message);
+      patchDemoLoad(request.id, (load) => ({ ...load, booking: load.booking && { ...load.booking, myRating: { stars, comment: comment.trim() || undefined } } }));
+      notify(message); return true;
+    },
     reportIssue: async (request, note) => {
       const message = 'Problem reported — our team and the other party have been notified';
       if (backend) return attempt(() => api.reportBookingIssue(request.booking!.id, note), message);
@@ -487,7 +499,7 @@ export default function App() {
     <Sidebar view={view} role={activeRole} profile={activeProfile} counts={counts} open={menuOpen} onClose={() => setMenuOpen(false)} onNavigate={navigate} onLogout={() => setConfirmLogout(true)}/>
     <main className="main"><Topbar role={activeRole} onMenu={() => setMenuOpen(true)} onSearch={globalSearch} onNavigate={navigate} searchRef={searchRef} onOpenSupport={() => setSupportOpen(true)} notifications={backend ? live.notifications : undefined} onMarkRead={markNotificationsRead}/><div className="content">
       {backend && live.error && <div className="workspace-error" role="alert">Could not load the latest data: {live.error} <button onClick={() => void live.reload()}>Retry</button></div>}
-      {activeRole === 'admin' ? <AdminConsole view={view} data={data} drivers={drivers} globalQuery={adminQuery} onNavigate={navigate} notify={notify} onPendingCountChange={setAdminPendingCount} supportTickets={supportTickets} setSupportTickets={setSupportTickets} backend={backend ? { reload: live.reload, fail } : undefined}/> : <>
+      {activeRole === 'admin' ? <Suspense fallback={null}><AdminConsole view={view} data={data} drivers={drivers} globalQuery={adminQuery} onNavigate={navigate} notify={notify} onPendingCountChange={setAdminPendingCount} supportTickets={supportTickets} setSupportTickets={setSupportTickets} backend={backend ? { reload: live.reload, fail } : undefined}/></Suspense> : <>
         {view === 'dashboard' && <Dashboard data={data} role={activeRole} profile={activeProfile} onOpenModal={(type) => type === 'truck' ? setVehicleForm({}) : openLoadForm()} onNavigate={navigate} onOpenRequest={setRequestModal} onViewRequest={setViewRequest} onOpenRequests={openRequests} onOpenTrucks={openTrucks} kycStatus={kycStatus} kycIssues={kycIssues} onSubmitKyc={submitKyc}/>}
         {view === 'trucks' && <TrucksView trucks={data.trucks} drivers={drivers} query={truckQuery} setQuery={setTruckQuery} status={truckStatus} setStatus={setTruckStatus} onAdd={() => setVehicleForm({})} onOpen={(truck) => setSelectedTruckId(truck.id)}/>}
         {view === 'drivers' && activeRole === 'truck_owner' && <DriversView drivers={drivers} query={driverQuery} setQuery={setDriverQuery} status={driverStatus} setStatus={setDriverStatus} onAdd={() => setDriverForm({})} onEdit={(driver) => setDriverForm({ initial: driver })} onDelete={setDriverToDelete}/>}
@@ -503,7 +515,7 @@ export default function App() {
     {driverToDelete && <ConfirmDialog title={`Remove ${driverToDelete.name}?`} message="The driver and their photo, licence and ID documents will be permanently deleted. Past trips keep their history." confirmLabel="Remove driver" danger onCancel={() => setDriverToDelete(null)} onConfirm={async () => { await fleet.deleteDriver(driverToDelete); setDriverToDelete(null); }}/>}
     {requestModal && activeRole === 'truck_owner' && <RequestDecisionModal request={currentRequest(requestModal)} trucks={data.trucks} drivers={drivers} actions={requests} onClose={() => setRequestModal(null)} onAddTruck={() => { setRequestModal(null); setVehicleForm({}); }}/>}
     {selectedTruck && activeRole === 'truck_owner' && <VehicleDetailsModal key={selectedTruck.id} truck={selectedTruck} driver={drivers.find((driver) => driver.assignedTruckId ? driver.assignedTruckId === selectedTruck.id : driver.assignedVehicle === selectedTruck.registration)} actions={fleet} onEdit={() => { setVehicleForm({ initial: selectedTruck }); setSelectedTruckId(null); }} onClose={() => setSelectedTruckId(null)}/>}
-    {supportOpen && activeRole !== 'admin' && <SupportQueryModal profile={activeProfile} onClose={() => setSupportOpen(false)} onSubmit={ticket => void submitSupport(ticket)}/>}
+    {supportOpen && activeRole !== 'admin' && <Suspense fallback={null}><SupportQueryModal profile={activeProfile} onClose={() => setSupportOpen(false)} onSubmit={ticket => void submitSupport(ticket)}/></Suspense>}
     {viewRequest && activeRole !== 'admin' && <RequestDetailsModal request={currentRequest(viewRequest)} role={activeRole} actions={requests} onClose={() => setViewRequest(null)} onRespond={(request) => { setViewRequest(null); setRequestModal(request); }}/>}
     {confirmLogout && <ConfirmDialog title="Log out of Fares24x7?" message="You will need to sign in again to access your workspace." confirmLabel="Log out" onCancel={() => setConfirmLogout(false)} onConfirm={() => { setConfirmLogout(false); logout(); }}/>}
     <div className={`toast ${toast ? 'show' : ''}`} role="status">{toast}</div>
