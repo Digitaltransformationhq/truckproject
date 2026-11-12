@@ -110,7 +110,7 @@ export async function signIn(email: string, password: string) {
   if (error) throw error;
 }
 
-/** Redirects to Google. A role chosen on the sign-up screen is remembered to pre-fill onboarding. */
+/** Fallback when Google's own button can't load: redirect sign-in. A chosen role pre-fills onboarding. */
 export async function signInWithGoogle(preferredRole?: AccountRole) {
   try { if (preferredRole) localStorage.setItem(PENDING_ROLE_KEY, preferredRole); } catch { /* storage unavailable */ }
   const { error } = await requireSupabase().auth.signInWithOAuth({

@@ -295,3 +295,63 @@ function SceneTrack({ t }: { t: number }) {
     <Celebrate show={t > 1200 && t < 3300} icon="check" tone="green" title="Truck confirmed!" sub="Sharma Roadways will carry your load"/>
   </div>;
 }
+
+// ---------------------------------------------------------------------------
+// Login / sign-up panel: looping "button pressed → thumbs up" animation
+// ---------------------------------------------------------------------------
+
+function useLoop(length: number, playing: boolean) {
+  const [state, setState] = useState({ t: 0, round: 0 });
+  useEffect(() => {
+    if (!playing) return;
+    const id = window.setInterval(() => setState((current) => current.t + TICK >= length ? { t: 0, round: current.round + 1 } : { t: current.t + TICK, round: current.round }), TICK);
+    return () => window.clearInterval(id);
+  }, [playing, length]);
+  return state;
+}
+
+const AUTH_PHRASES = {
+  login: [['Log in to your', 'dashboard.'], ['Your trips are', 'waiting.'], ['Welcome back,', 'partner.']],
+  signup: [['Create your', 'account.'], ['Start getting', 'return loads.'], ['Your trucks,', 'always earning.']],
+} as const;
+const TYPE_MS = 55;
+
+/** One round: a phrase writes itself, the button is pressed, a thumbs-up bursts out, the phrase erases. */
+function AuthRound({ mode, phrase, t }: { mode: 'login' | 'signup'; phrase: readonly [string, string]; t: number }) {
+  const full = `${phrase[0]}\n${phrase[1]}`;
+  const typedEnd = 250 + full.length * TYPE_MS;
+  const eraseStart = 7000;
+  const count = t < eraseStart ? Math.max(0, Math.min(full.length, Math.floor((t - 250) / TYPE_MS))) : Math.max(0, full.length - Math.floor((t - eraseStart) / 22));
+  const shown = full.slice(0, count);
+  const [line1, line2 = ''] = shown.split('\n');
+  const hover = t > 3200 && t < 3700;
+  const pressed = t >= 3700 && t < 3950;
+  const sending = t >= 3950 && t < 4650;
+  const done = t >= 4650 && t < eraseStart;
+  const label = mode === 'login' ? 'Log in' : 'Create account';
+  return <div className="al-round">
+    <p className="al-text">{line1}{shown.includes('\n') && <><br/><em>{line2}</em></>}<i className={`al-caret ${count >= full.length && t < eraseStart ? 'idle' : ''}`}/></p>
+    <div className="al-action">
+      <div data-cursor="button" className={`al-button ${hover ? 'hover' : ''} ${pressed ? 'pressed' : ''} ${sending ? 'sending' : ''} ${done ? 'done' : ''}`}>
+        {done ? <><DrawCheck/> {mode === 'login' ? 'Signed in' : 'Created'}</> : sending ? <><i className="wt-spinner"/> {mode === 'login' ? 'Signing in' : 'Creating'}</> : <>{label} <Icon name="arrow"/></>}
+      </div>
+      {t > 4700 && t < 6900 && <div className={`al-burst ${mode === 'login' ? 'green' : 'orange'}`}>
+        <i className="wt-celebrate-ring"/><i className="wt-celebrate-ring r2"/>
+        {PARTICLES.map((p, index) => <i key={index} className={`wt-particle ${p.shape}`} style={{ ['--a' as string]: `${p.angle}deg`, ['--d' as string]: `${p.distance * 0.72}px`, ['--c' as string]: p.color, animationDelay: `${80 + p.delay}ms` }}/>)}
+        <span className="al-thumb">{CELEBRATE_ICONS.thumb}</span>
+      </div>}
+    </div>
+    <Cursor target={t > typedEnd - 400 && t < 5200 ? 'button' : 'rest'} pressed={pressed}/>
+  </div>;
+}
+
+/** Login / sign-up panel animation: writing, a button press and a thumbs-up, looping through phrases. */
+export function AuthLoop({ mode }: { mode: 'login' | 'signup' }) {
+  const reduced = useReducedMotion();
+  const { t, round } = useLoop(7800, !reduced);
+  const phrases = AUTH_PHRASES[mode];
+  const phrase = phrases[round % phrases.length]!;
+  return <div className="auth-loop" aria-hidden="true">
+    <div key={`${mode}-${round}`} className="wt-scene al-scene"><AuthRound mode={mode} phrase={phrase} t={reduced ? 6000 : t}/></div>
+  </div>;
+}

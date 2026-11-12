@@ -33,7 +33,7 @@ export function GoogleSignInButton({ text, onCredential, fallback }: Props) {
         });
         const width = Math.round(Math.min(400, Math.max(200, host.current.clientWidth || 320)));
         host.current.innerHTML = '';
-        gis.renderButton(host.current, { type: 'standard', theme: 'outline', size: 'large', text, shape: 'rectangular', logo_alignment: 'center', width });
+        gis.renderButton(host.current, { type: 'standard', theme: 'outline', size: 'large', text, shape: 'pill', logo_alignment: 'center', width });
       } catch {
         if (!cancelled) setFailed(true);
       }

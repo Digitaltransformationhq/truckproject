@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { startGoogleOneTap } from './lib/googleIdentity';
 import type { FormEvent, RefObject } from 'react';
 import { Landing } from './components/Landing';
 import { RoleAuthModal, type AccountRole, type AuthMode, type RegistrationProfile } from './components/RoleAuthModal';
@@ -294,6 +295,11 @@ export default function App() {
   const fail = (problem: unknown) => notify(friendlyError(problem), 5000);
   useEffect(() => { const handler = (event: KeyboardEvent) => { if (event.key === 'Escape') { setVehicleForm(null); setLoadFormOpen(false); setDriverForm(null); setRequestModal(null); setSelectedTruckId(null); setViewRequest(null); } }; document.addEventListener('keydown', handler); return () => document.removeEventListener('keydown', handler); }, []);
   useEffect(() => { if (authenticated) setAuthModal(null); }, [authenticated]);
+  // Google One Tap: "Continue as …" for visitors already signed in to Google (landing page only).
+  useEffect(() => {
+    if (!backend || !session.ready || authenticated || authModal) return;
+    return startGoogleOneTap((token, nonce) => { api.signInWithGoogleIdToken(token, nonce).catch((problem) => notify(friendlyError(problem), 5000)); });
+  }, [backend, session.ready, authenticated, authModal]);
   // Show users which KYC documents were rejected and why.
   const kycState = backendProfile?.kyc_status;
   const profileId = backendProfile?.id;

@@ -19,8 +19,9 @@ export interface GoogleButtonOptions {
 }
 
 interface GoogleAccountsId {
-  initialize(config: { client_id: string; callback: (response: { credential: string }) => void; nonce?: string; ux_mode?: 'popup' | 'redirect'; auto_select?: boolean; cancel_on_tap_outside?: boolean; use_fedcm_for_button?: boolean }): void;
+  initialize(config: { client_id: string; callback: (response: { credential: string }) => void; nonce?: string; ux_mode?: 'popup' | 'redirect'; auto_select?: boolean; cancel_on_tap_outside?: boolean; use_fedcm_for_button?: boolean; use_fedcm_for_prompt?: boolean; itp_support?: boolean; context?: 'signin' | 'signup' | 'use' }): void;
   renderButton(parent: HTMLElement, options: GoogleButtonOptions): void;
+  prompt(): void;
   cancel(): void;
 }
 
@@ -54,4 +55,31 @@ export async function createNonce(): Promise<{ raw: string; hashed: string }> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
   const hashed = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
   return { raw, hashed };
+}
+
+/**
+ * Google One Tap: a small "Continue as …" prompt for visitors already signed in to Google.
+ * Uses the browser's FedCM sign-in where available. Returns a cleanup that dismisses the prompt.
+ */
+export function startGoogleOneTap(onCredential: (token: string, nonce: string) => void): () => void {
+  if (!googleClientId) return () => undefined;
+  let cancelled = false;
+  void (async () => {
+    try {
+      const [gis, nonce] = await Promise.all([loadGoogleIdentity(), createNonce()]);
+      if (cancelled) return;
+      gis.initialize({
+        client_id: googleClientId,
+        nonce: nonce.hashed,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+        use_fedcm_for_prompt: true,
+        itp_support: true,
+        context: 'signin',
+        callback: (response) => onCredential(response.credential, nonce.raw),
+      });
+      gis.prompt();
+    } catch { /* One Tap is optional */ }
+  })();
+  return () => { cancelled = true; try { window.google?.accounts?.id?.cancel(); } catch { /* ignore */ } };
 }

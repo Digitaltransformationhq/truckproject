@@ -553,3 +553,43 @@
 @media(min-width:701px){.landing-page .landing-hero>.hero-actions{flex-direction:row;align-items:center}}
 @media(max-width:1000px){.landing-page .hero-copy{order:1}.landing-page .landing-hero>.hero-actions{order:2;margin-top:-16px}.landing-page .hero-visual{order:3}.landing-page .hero-trust{order:4}}
 @media(max-width:700px){.landing-page .landing-hero>.hero-actions{justify-content:center}}
+
+/* Google sign-in fallback button: Google's current (Material 3) branding.
+   Matches Google's own button: white, #747775 outline, pill shape, 20px multicolour G. */
+.gsi-material-button{width:100%;max-width:400px;height:44px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:12px;padding:0 16px;border:1px solid #747775;border-radius:22px;background:#fff;color:#1f1f1f;font:500 14px/20px Roboto,"DM Sans",Arial,sans-serif;letter-spacing:.25px;cursor:pointer;box-shadow:none;transition:background-color .2s,box-shadow .2s}
+.gsi-material-button:hover{background:#f8f9fa;box-shadow:0 1px 2px rgba(60,64,67,.3),0 1px 3px 1px rgba(60,64,67,.15)}
+.gsi-material-button:focus-visible{outline:2px solid #0b57d0;outline-offset:2px}
+.gsi-material-button:disabled{opacity:.6;cursor:not-allowed}
+.gsi-material-button .google-logo,.google-logo{width:20px!important;height:20px!important;flex:none;stroke:none!important;fill:initial}
+.google-logo path{stroke:none!important}
+
+
+
+
+/* Auth side panel: a phrase writes itself, the button is pressed, a thumbs-up bursts out */
+.auth-loop{position:absolute;z-index:2;left:31px;right:31px;top:150px;bottom:60px}
+.al-scene{position:absolute;inset:0;animation:none}
+.al-round{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:30px}
+.al-text{min-height:104px;margin:0;color:#151515;font:800 44px/1.08 Manrope,sans-serif;letter-spacing:-.05em}
+.al-text em{font-style:normal;color:#ffa51f;-webkit-text-stroke:1.5px #151515;paint-order:stroke fill}
+.al-caret{display:inline-block;width:4px;height:.9em;margin-left:4px;vertical-align:-.08em;border-radius:2px;background:#ffa51f}
+.al-caret.idle{animation:wt-rec .9s steps(2,start) infinite}
+.al-action{position:relative;display:flex;align-items:center;height:64px}
+.al-button{position:relative;z-index:2;display:inline-flex;align-items:center;gap:10px;height:54px;padding:0 26px;border:1.5px solid #111;border-radius:12px;background:#ffa51f;color:#111;font:700 17px Manrope,sans-serif;box-shadow:4px 5px 0 #111;transition:transform .12s,box-shadow .12s,background .3s,color .3s}
+.al-button svg{width:18px!important;height:18px!important}
+.al-button.hover{background:#f39500}
+.al-button.pressed{transform:translate(4px,5px);box-shadow:0 0 0 #111}
+.al-button.sending{background:#ffc164}
+.al-button.done{background:#16a36f;color:#fff;animation:wt-pop .45s cubic-bezier(.2,1.6,.4,1)}
+.al-burst{position:absolute;z-index:3;left:230px;top:50%;width:96px;height:96px;margin:-48px 0 0;display:grid;place-items:center}
+.al-burst.green .wt-celebrate-ring{color:rgba(22,163,111,.6)}
+.al-burst.orange .wt-celebrate-ring{color:rgba(255,165,31,.7)}
+.al-thumb{position:relative;z-index:2;width:84px;height:84px;display:grid;place-items:center;border:1.5px solid #111;border-radius:50%;color:#fff;box-shadow:4px 5px 0 #111;animation:wt-cel-bounce .9s cubic-bezier(.2,1.8,.35,1) both}
+.al-burst.green .al-thumb{background:#16a36f}
+.al-burst.orange .al-thumb{background:#ffa51f;color:#111}
+.al-thumb svg{width:40px!important;height:40px!important;fill:none!important;stroke:currentColor!important;stroke-width:2.2!important;animation:wt-cel-wiggle .9s .5s ease-in-out both}
+@media(prefers-reduced-motion:reduce){.al-caret,.al-thumb,.al-thumb svg{animation:none}}
+.role-selection>button>b svg{width:18px!important;height:18px!important;color:#8f949a;stroke-width:2!important}
+.role-selection>button:hover>b svg{color:#171717}
+.role-selection>button.gsi-material-button{width:100%;max-width:400px;height:44px;margin:0 auto;display:flex;grid-template-columns:none;align-items:center;justify-content:center;gap:12px;padding:0 16px;border:1px solid #747775;border-radius:22px;background:#fff;text-align:center;box-shadow:none}
+.role-selection>button.gsi-material-button:hover{border-color:#747775;background:#f8f9fa;box-shadow:0 1px 2px rgba(60,64,67,.3),0 1px 3px 1px rgba(60,64,67,.15)}
