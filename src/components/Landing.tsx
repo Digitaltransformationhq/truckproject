@@ -24,13 +24,6 @@ const features = [
   },
 ];
 
-const audiences = [
-  { icon: 'truck' as const, title: 'Truck owners & fleet operators', copy: 'Find loads for return journeys so your trucks earn on both legs of the trip.' },
-  { icon: 'package' as const, title: 'Manufacturers & traders', copy: 'Book reliable transport for raw material and finished goods without chasing brokers.' },
-  { icon: 'building' as const, title: 'Wholesalers & distributors', copy: 'Move FMCG, building material, food and agricultural goods between cities on time.' },
-  { icon: 'route' as const, title: 'Transport & logistics companies', copy: 'Fill spare capacity and source loads efficiently across your operating routes.' },
-];
-
 export function Landing({ onLogin, onSignup }: LandingProps) {
   return (
     <div className="landing-page">
@@ -91,24 +84,44 @@ export function Landing({ onLogin, onSignup }: LandingProps) {
 
         <section className="about-section" id="about">
           <div className="about-intro">
-            <div><span className="landing-eyebrow"><i/> About Fares24x7</span><h2>No truck should<br/>return empty.</h2></div>
-            <div className="about-copy">
-              <p>Across India, thousands of trucks finish a delivery and drive back empty, burning fuel and earning nothing. At the same time, businesses on that very route struggle to find a reliable truck at a fair price.</p>
-              <p>Fares24x7 connects the two. Businesses post their loads, truck owners already going that way accept them, and an empty return becomes a paid trip. Businesses submit GST, PAN and vehicle documents for review, so both sides know who they are dealing with.</p>
+            <div className="about-head"><span className="landing-eyebrow"><i/> About Fares24x7</span><h2>No truck should<br/>return empty.</h2></div>
+            <div className="about-story">
+              <article><span className="about-label">The problem</span><p>Across India, thousands of trucks finish a delivery and drive back empty, burning fuel and earning nothing. Businesses on that same route struggle to find a reliable truck at a fair price.</p></article>
+              <article><span className="about-label">What we do</span><p>Fares24x7 connects the two. Businesses post their loads, truck owners already heading that way accept them, and an empty return becomes a paid trip.</p></article>
             </div>
           </div>
           <div className="about-pillars">
-            <article><strong>Verified network</strong><p>KYC review for businesses, plus RC, insurance, fitness and PUC documents for every vehicle.</p></article>
-            <article><strong>Built for return loads</strong><p>Requests reach owners whose trucks are already near the pickup or heading to the destination.</p></article>
-            <article><strong>Simple by design</strong><p>One request, one clear answer. No middlemen, no endless phone calls.</p></article>
+            <article><span><Icon name="building"/></span><strong>Verified network</strong><p>Businesses pass GST and PAN checks. Every truck carries RC, insurance, fitness and PUC documents.</p></article>
+            <article><span><Icon name="route"/></span><strong>Built for return loads</strong><p>Requests reach owners whose trucks are already near the pickup or heading to the destination.</p></article>
+            <article><span><Icon name="inbox"/></span><strong>Simple by design</strong><p>One request, one clear answer. No middlemen and no endless phone calls.</p></article>
           </div>
-          <div className="about-audience"><h3>Who Fares24x7 is for</h3><div>{audiences.map((item) => <article key={item.title}><span><Icon name={item.icon}/></span><div><strong>{item.title}</strong><p>{item.copy}</p></div></article>)}</div></div>
         </section>
 
         <section className="landing-cta"><div><span>Ready to move your goods?</span><h2>Post your first truck request.</h2></div><div><button className="cta-light" onClick={onSignup}>Create account <Icon name="arrow"/></button><button className="cta-dark" onClick={onLogin}>Log in</button></div></section>
       </main>
 
-      <footer className="landing-footer"><a className="landing-brand" href="#top"><span>F24</span><strong>Fares24x7.</strong></a><p>Simple truck requests for modern transport businesses.</p><nav className="landing-legal-links"><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="mailto:support@fares24x7.com">Contact</a></nav><span>© 2026 Fares24x7</span></footer>
+      <footer className="site-footer">
+        <div className="site-footer-inner">
+          <div className="site-footer-top">
+            <div className="site-footer-brand">
+              <a className="landing-brand" href="#top" aria-label="Fares24x7 home"><span>F24</span><strong>Fares24x7.</strong></a>
+              <p>Simple truck requests for Indian transport businesses. Post a load, get a clear answer, move.</p>
+              <a className="site-footer-mail" href="mailto:support@fares24x7.com"><Icon name="inbox"/> support@fares24x7.com</a>
+            </div>
+            <nav className="site-footer-cols" aria-label="Footer">
+              <div><h4>Product</h4><a href="#how">How it works</a><a href="#platform">Platform</a><a href="#about">About</a></div>
+              <div><h4>Get started</h4><button type="button" onClick={onSignup}>I need trucks</button><button type="button" onClick={onSignup}>I own trucks</button><button type="button" onClick={onLogin}>Log in</button></div>
+              <div><h4>Company</h4><a href="mailto:support@fares24x7.com">Contact</a><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a></div>
+            </nav>
+          </div>
+          <div className="site-footer-bottom">
+            <span>© 2026 Fares24x7. All rights reserved.</span>
+            <span>Built in India for Indian transport businesses</span>
+            <a href="#top" className="site-footer-top-link">Back to top <span>↑</span></a>
+          </div>
+        </div>
+        <div className="site-footer-wordmark" aria-hidden="true">Fares24x7</div>
+      </footer>
     </div>
   );
 }

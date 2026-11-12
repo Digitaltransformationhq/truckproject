@@ -593,3 +593,46 @@
 .role-selection>button:hover>b svg{color:#171717}
 .role-selection>button.gsi-material-button{width:100%;max-width:400px;height:44px;margin:0 auto;display:flex;grid-template-columns:none;align-items:center;justify-content:center;gap:12px;padding:0 16px;border:1px solid #747775;border-radius:22px;background:#fff;text-align:center;box-shadow:none}
 .role-selection>button.gsi-material-button:hover{border-color:#747775;background:#f8f9fa;box-shadow:0 1px 2px rgba(60,64,67,.3),0 1px 3px 1px rgba(60,64,67,.15)}
+.landing-page .auth-modal .auth-switch,.auth-modal .auth-switch{font-size:14px!important;line-height:1.5}
+.auth-modal .auth-switch button{font-size:14px;font-weight:700}
+.auth-modal .auth-secure{font-size:12px!important;margin-top:4px}
+.auth-modal .auth-divider{margin:12px 0 10px}
+.auth-modal .role-selection>.auth-divider{margin:0}
+
+/* About: aligned intro, labelled story columns, matching pillar cards */
+.landing-page .about-intro{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:64px;align-items:end}
+.about-head h2{margin-bottom:0}
+.about-story{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.about-story article{padding-top:16px;border-top:2px solid #151515}
+.about-label{display:block;margin-bottom:10px;color:#c26a00;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.about-story p{margin:0;color:#4f555c;font-size:15.5px;line-height:1.7}
+.landing-page .about-pillars{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:56px}
+.landing-page .about-pillars article{display:flex;flex-direction:column;gap:10px;padding:26px;border:1px solid rgba(17,17,17,.14);border-radius:20px;background:#fff;box-shadow:0 12px 28px -18px rgba(22,30,45,.25)}
+.about-pillars article>span{width:46px;height:46px;display:grid;place-items:center;margin-bottom:6px;border:1.25px solid #111;border-radius:13px;background:#ffa51f;color:#111;box-shadow:3px 3px 0 #111}
+.about-pillars article>span svg{width:21px;height:21px}
+.landing-page .about-pillars strong{margin:0;font:800 19px/1.25 Manrope,sans-serif;letter-spacing:-.03em}
+.landing-page .about-pillars p{margin:0;color:#555;font-size:14.5px;line-height:1.6}
+@media(max-width:1000px){.landing-page .about-intro{grid-template-columns:1fr;gap:28px}.landing-page .about-pillars{grid-template-columns:1fr}}
+@media(max-width:600px){.about-story{grid-template-columns:1fr;gap:22px}.about-story p{font-size:14.5px}}
+
+/* Footer: dark, modern, with a giant outlined wordmark and a travelling route line */
+.site-footer{position:relative;margin-top:24px;overflow:hidden;background:#151515;color:#fff}
+.site-footer-inner{position:relative;z-index:2;max-width:1440px;margin:0 auto;padding:72px 48px 28px}
+.site-footer-top{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.4fr);gap:64px}
+.site-footer .landing-brand strong{color:#fff}
+.site-footer .landing-brand>span{border-color:#ffa51f}
+.site-footer-brand p{max-width:360px;margin:18px 0 22px;color:#a3a7ad;font-size:15px;line-height:1.65}
+.site-footer-mail{display:inline-flex;align-items:center;gap:10px;padding:11px 16px;border:1px solid rgba(255,255,255,.18);border-radius:12px;color:#fff;font-size:14px;font-weight:600;text-decoration:none;transition:border-color .2s,background .2s}
+.site-footer-mail:hover{border-color:#ffa51f;background:rgba(255,165,31,.08)}
+.site-footer-mail svg{width:17px;height:17px;color:#ffa51f}
+.site-footer-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.site-footer-cols h4{margin:0 0 16px;color:#7d8288;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.site-footer-cols a,.site-footer-cols button{display:block;width:fit-content;margin:0 0 11px;padding:0;border:0;background:none;color:#e6e7e9;font:600 15px "DM Sans",sans-serif;text-align:left;text-decoration:none;cursor:pointer;transition:color .2s,transform .2s}
+.site-footer-cols a:hover,.site-footer-cols button:hover{color:#ffa51f;transform:translateX(3px)}
+.site-footer-bottom{margin-top:56px;padding-top:22px;border-top:1px solid rgba(255,255,255,.12);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;color:#7d8288;font-size:13px}
+.site-footer-top-link{display:inline-flex;align-items:center;gap:8px;color:#e6e7e9;font-weight:700;text-decoration:none}
+.site-footer-top-link span{width:28px;height:28px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.2);border-radius:50%;transition:background .2s,color .2s}
+.site-footer-top-link:hover span{background:#ffa51f;color:#151515;border-color:#ffa51f}
+.site-footer-wordmark{position:relative;z-index:1;margin:-8px 0 -0.1em;padding:0 24px;color:transparent;font:800 clamp(80px,17.5vw,270px)/.9 Manrope,sans-serif;letter-spacing:-.06em;text-align:center;white-space:nowrap;background:linear-gradient(100deg,#ffcf5c 0%,#ffa51f 38%,#ff7a45 72%,#e5484d 100%);-webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.95) 0%,rgba(0,0,0,.55) 55%,transparent 100%);mask-image:linear-gradient(180deg,rgba(0,0,0,.95) 0%,rgba(0,0,0,.55) 55%,transparent 100%);-webkit-background-clip:text;background-clip:text;user-select:none}
+@media(max-width:1000px){.site-footer-inner{padding:56px 28px 24px}.site-footer-top{grid-template-columns:1fr;gap:40px}}
+@media(max-width:600px){.site-footer-inner{padding:48px 18px 22px}.site-footer-cols{grid-template-columns:1fr 1fr;gap:28px 16px}.site-footer-cols>div:last-child{grid-column:1/-1}.site-footer-bottom{flex-direction:column;align-items:flex-start}}
