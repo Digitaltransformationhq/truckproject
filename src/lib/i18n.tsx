@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { APP_STRINGS } from './i18n-app';
 
 /**
  * Lightweight translations: English text is the key; Hindi and Gujarati are looked up,
@@ -184,7 +185,7 @@ const D: Record<string, Entry> = {
   'Business details': { hi: 'व्यवसाय की जानकारी', gu: 'વ્યવસાયની વિગતો' },
   'Tell us about your loads': { hi: 'अपने लोड के बारे में बताएँ', gu: 'તમારા લોડ વિશે જણાવો' },
   'Tell us about your fleet': { hi: 'अपने ट्रकों के बारे में बताएँ', gu: 'તમારી ટ્રકો વિશે જણાવો' },
-  'Verification documents can be added later from your profile.': { hi: 'सत्यापन दस्तावेज़ बाद में प्रोफ़ाइल से जोड़े जा सकते हैं।', gu: 'ચકાસણી દસ્તાવેજો પછીથી પ્રોફાઇલમાંથી ઉમેરી શકાય છે.' },
+  'After signing up, verify your business from the Overview page.': { hi: 'साइन अप के बाद, सारांश पेज से अपना व्यवसाय सत्यापित करें।', gu: 'સાઇન અપ પછી, સારાંશ પેજ પરથી તમારો વ્યવસાય ચકાસો.' },
   'First name': { hi: 'पहला नाम', gu: 'પ્રથમ નામ' },
   'Last name': { hi: 'उपनाम', gu: 'અટક' },
   'Business name': { hi: 'व्यवसाय का नाम', gu: 'વ્યવસાયનું નામ' },
@@ -282,7 +283,97 @@ export function setLang(lang: Lang) {
   listeners.forEach((listener) => listener(lang));
 }
 
-export const translate = (lang: Lang, text: string) => (lang === 'en' ? text : D[text]?.[lang] ?? text);
+export const translate = (lang: Lang, text: string) => {
+  if (lang === 'en') return text;
+  const fromLanding = D[text]?.[lang];
+  if (fromLanding) return fromLanding;
+  const fromApp = APP_STRINGS[text];
+  return fromApp ? fromApp[lang === 'hi' ? 0 : 1] : text;
+};
+const hasTranslation = (text: string) => Boolean(D[text] || APP_STRINGS[text]);
+
+// --- Whole-interface translation ----------------------------------------------
+// Translates every visible text, placeholder, title and aria-label on the page, including content React
+// renders later (dialogs, toasts). User data (names, cities, numbers) never matches the dictionary, so it is
+// left alone. Switching back to English restores the original text.
+const SKIP = 'script,style,noscript,textarea,input,[contenteditable],[data-no-translate],.sf-board';
+const ATTRS = ['placeholder', 'title', 'aria-label'] as const;
+const textOriginal = new Map<Text, string>();
+const textWritten = new WeakMap<Text, string>();
+const attrOriginal = new Map<Element, Map<string, string>>();
+const attrWritten = new WeakMap<Element, Map<string, string>>();
+let observer: MutationObserver | null = null;
+
+const split = (value: string) => { const core = value.trim(); const lead = value.slice(0, value.indexOf(core)); return { core, lead, trail: value.slice(lead.length + core.length) }; };
+
+function translateTextNode(node: Text) {
+  const parent = node.parentElement;
+  if (!parent || parent.closest(SKIP)) return;
+  if (textWritten.get(node) !== node.data) textOriginal.set(node, node.data);
+  const original = textOriginal.get(node) ?? node.data;
+  const { core, lead, trail } = split(original);
+  if (!core || !hasTranslation(core)) return;
+  const next = lead + translate(current, core) + trail;
+  if (node.data !== next) { textWritten.set(node, next); node.data = next; }
+}
+
+function translateAttrs(el: Element) {
+  if (el.closest(SKIP) && !(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return;
+  for (const name of ATTRS) {
+    const value = el.getAttribute(name);
+    if (value === null) continue;
+    const written = attrWritten.get(el)?.get(name);
+    if (written !== value) { const map = attrOriginal.get(el) ?? new Map(); map.set(name, value); attrOriginal.set(el, map); }
+    const original = attrOriginal.get(el)?.get(name) ?? value;
+    if (!hasTranslation(original.trim())) continue;
+    const next = translate(current, original.trim());
+    if (value !== next) {
+      const map = attrWritten.get(el) ?? new Map(); map.set(name, next); attrWritten.set(el, map);
+      el.setAttribute(name, next);
+    }
+  }
+}
+
+function walk(root: Node) {
+  if (root.nodeType === Node.TEXT_NODE) { translateTextNode(root as Text); return; }
+  if (!(root instanceof Element)) return;
+  translateAttrs(root);
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (node.nodeType === Node.TEXT_NODE) translateTextNode(node as Text); else translateAttrs(node as Element);
+  }
+}
+
+function startDomTranslation() {
+  if (observer || typeof document === 'undefined' || !document.body) return;
+  walk(document.body);
+  observer = new MutationObserver((records) => {
+    for (const record of records) {
+      if (record.type === 'characterData') translateTextNode(record.target as Text);
+      else if (record.type === 'attributes') translateAttrs(record.target as Element);
+      else record.addedNodes.forEach(walk);
+    }
+  });
+  observer.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: [...ATTRS] });
+}
+
+function stopDomTranslation() {
+  observer?.disconnect();
+  observer = null;
+  textOriginal.forEach((original, node) => { if (node.isConnected && textWritten.get(node) === node.data) node.data = original; });
+  attrOriginal.forEach((map, el) => { if (!el.isConnected) return; map.forEach((original, name) => { if (attrWritten.get(el)?.get(name) === el.getAttribute(name)) el.setAttribute(name, original); }); });
+  textOriginal.clear(); attrOriginal.clear();
+}
+
+function syncDomTranslation() {
+  stopDomTranslation();
+  if (current !== 'en') startDomTranslation();
+}
+if (typeof window !== 'undefined') {
+  listeners.add(() => syncDomTranslation());
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', syncDomTranslation, { once: true });
+  else queueMicrotask(syncDomTranslation);
+}
 
 /** Current language plus a `t(englishText)` translator; re-renders when the language changes. */
 export function useT() {
@@ -292,9 +383,12 @@ export function useT() {
 }
 
 /** EN · हिं · ગુ switcher. */
-export function LanguageSwitcher({ className = '' }: { className?: string }) {
+export function LanguageSwitcher({ className = '', variant = 'compact' }: { className?: string; variant?: 'compact' | 'list' }) {
   const { lang } = useT();
-  return <div className={`lang-switch ${className}`} role="group" aria-label="Language / भाषा / ભાષા">
+  if (variant === 'list') return <div className={`lang-list ${className}`} role="group" aria-label="Language / भाषा / ભાષા" data-no-translate>
+    {LANGS.map((item) => <button key={item.code} type="button" lang={item.code} className={lang === item.code ? 'active' : ''} aria-pressed={lang === item.code} onClick={() => setLang(item.code)}><b>{item.label}</b>{item.name}{lang === item.code && <i aria-hidden="true">✓</i>}</button>)}
+  </div>;
+  return <div className={`lang-switch ${className}`} role="group" aria-label="Language / भाषा / ભાષા" data-no-translate>
     {LANGS.map((item) => <button key={item.code} type="button" lang={item.code} className={lang === item.code ? 'active' : ''} aria-pressed={lang === item.code} title={item.name} onClick={() => setLang(item.code)}>{item.label}</button>)}
   </div>;
 }

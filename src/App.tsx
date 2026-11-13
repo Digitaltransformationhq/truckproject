@@ -83,8 +83,9 @@ function Sidebar({ view, role, profile, counts, open, onClose, onNavigate, onLog
         {activeRole !== 'admin' && <><p className="nav-label">{t('Account')}</p>
         <button className={`nav-item ${view === 'profile' ? 'active' : ''}`} aria-current={view === 'profile' ? 'page' : undefined} onClick={() => onNavigate('profile')}><span><Icon name="building" /></span>{t('Business profile')}</button>
         <button className={`nav-item ${view === 'support' ? 'active' : ''}`} aria-current={view === 'support' ? 'page' : undefined} onClick={() => onNavigate('support')}><span><Icon name="headset" /></span>{t('Support')}{counts.support > 0 && <b className="accent-count">{counts.support}</b>}</button></>}
+        <p className="nav-label">{t('Language')}</p>
+        <LanguageSwitcher variant="list" className="sidebar-lang"/>
       </nav>
-      <LanguageSwitcher className="sidebar-lang"/>
       <div className="sidebar-user"><div className="avatar">{initials}</div><div><strong>{displayName}</strong><span>{activeRole === 'admin' ? 'Platform administrator' : activeRole === 'load_owner' ? 'Customer / shipper' : 'Truck owner / transporter'}</span></div><button onClick={onLogout} title="Sign out" aria-label="Sign out"><Icon name="logout" /></button></div>
     </aside>
     </>
@@ -165,10 +166,9 @@ function Topbar({ onMenu, onSearch, onNavigate, searchRef, role, onOpenSupport, 
 
         {openPanel === 'support' && <aside className="header-popover support-popover" role="dialog" aria-label="Support options">
           <div className="popover-head"><div><span>Fares24x7 support</span><strong>How can we help?</strong></div><button onClick={() => setOpenPanel(null)} aria-label="Close support"><Icon name="close"/></button></div>
-          <a href="mailto:support@fares24x7.com?subject=Fares24x7%20support%20request"><span className="popover-action-icon"><Icon name="inbox"/></span><span><strong>Email support</strong><small>Usually replies within 2 hours</small></span><Icon name="chevron"/></a>
-          <a href="tel:+919876543210"><span className="popover-action-icon"><Icon name="headset"/></span><span><strong>Call operations desk</strong><small>+91 98765 43210 · 9 AM–7 PM</small></span><Icon name="chevron"/></a>
+          <a href="mailto:support@fares24x7.com?subject=Fares24x7%20support%20request"><span className="popover-action-icon"><Icon name="inbox"/></span><span><strong>Email support</strong><small>support@fares24x7.com</small></span><Icon name="chevron"/></a>
           <button className="support-query-trigger" onClick={() => { setOpenPanel(null); onOpenSupport(); }}><span className="popover-action-icon"><Icon name="building"/></span><span><strong>Submit your query</strong><small>Send full details to the admin team</small></span><Icon name="chevron"/></button>
-          <div className="popover-foot"><i/> Support team is online</div>
+          <div className="popover-foot"><i/> Replies also appear under Support</div>
         </aside>}
 
         {openPanel === 'notifications' && <aside className="header-popover notifications-popover" role="dialog" aria-label="Notifications">
@@ -199,7 +199,7 @@ function Dashboard({ data, role, profile, onOpenModal, onNavigate, onOpenRequest
   const kycCopy = kycState === 'Pending' ? { title: 'Verification under review', text: 'Our team is checking your documents. We will notify you once it is complete.', badge: 'In review', action: false, button: '' }
     : kycState === 'Needs information' ? { title: 'More information needed', text: 'Some KYC details could not be verified. Please review them and submit again.', badge: 'Action needed', action: true, button: 'Update KYC' }
     : kycState === 'Rejected' ? { title: 'Verification was not approved', text: 'Contact support if you believe this is a mistake.', badge: 'Rejected', action: false, button: '' }
-    : { title: activeRole === 'load_owner' ? 'Verify your customer account' : 'Complete your business KYC', text: activeRole === 'load_owner' ? 'Confirm your business, GST and billing details before posting truck requests.' : 'Verify identity, company details and GST registration to activate full platform access.', badge: 'Pending', action: true, button: activeRole === 'load_owner' ? 'Verify business' : 'Complete KYC' };
+    : { title: activeRole === 'load_owner' ? 'Verify your customer account' : 'Complete your business KYC', text: activeRole === 'load_owner' ? 'Confirm your business, GST and billing details before posting truck requests.' : 'Verify identity, company details and GST registration to activate full platform access.', badge: 'Not started', action: true, button: activeRole === 'load_owner' ? 'Verify business' : 'Complete KYC' };
   const available = data.trucks.filter(({ status }) => status === 'Available');
   const inTransit = data.trucks.filter(({ status }) => status === 'In transit');
   return <section className="view active">
